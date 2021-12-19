@@ -20,7 +20,15 @@ function Main() {
     });
   }, []);
 
-  return <TaskList tasks={tasks} send={send} />;
+  return (
+    <div className={style.outerContainer}>
+      <div className={style.topBar} />
+      <div className={style.sidebar} />
+      <div className={style.taskList}>
+        <TaskList tasks={tasks} send={send} />
+      </div>
+    </div>
+  );
 }
 
 ReactDOM.render(<Main />, document.getElementById("root"));

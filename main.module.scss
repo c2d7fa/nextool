@@ -3,10 +3,34 @@
 
   body {
     background-color: #fcfcfc;
+    margin: 0;
+  }
+
+  :global(#root) {
+    min-height: 100vh;
   }
 }
 
-.hello {
-  color: blue;
-  font-weight: bold;
+.outerContainer {
+  min-height: 100vh;
+
+  display: grid;
+  grid: "top-bar top-bar" 3em "sidebar main" 1fr / 18em 1fr;
+
+  .topBar {
+    grid-area: top-bar;
+    background-color: #db7fb8;
+    border-bottom: 1px solid #00000040;
+  }
+
+  .sidebar {
+    grid-area: sidebar;
+    background-color: #f0f0f0;
+    border-right: 1px solid #00000020;
+  }
+
+  .taskList {
+    padding: 1em;
+    grid-area: main;
+  }
 }
