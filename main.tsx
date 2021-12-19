@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import {loadTasks, saveTasks} from "./storage";
 import {CheckedEvent, Task, TaskList} from "./task-list";
 
 const style = require("./main.module.scss");
@@ -9,14 +10,14 @@ function update(tasks: Task[], ev: CheckedEvent): Task[] {
 }
 
 function Main() {
-  const [tasks, setTasks] = React.useState<Task[]>([
-    {id: "0", title: "Task 1", done: false},
-    {id: "1", title: "Task 2", done: true},
-    {id: "2", title: "Task 3", done: false},
-  ]);
+  const [tasks, setTasks] = React.useState<Task[]>(loadTasks());
 
   const send = React.useCallback((ev: CheckedEvent) => {
-    setTasks((tasks) => update(tasks, ev));
+    setTasks((tasks) => {
+      const newTasks = update(tasks, ev);
+      saveTasks(newTasks);
+      return newTasks;
+    });
   }, []);
 
   return <TaskList tasks={tasks} send={send} />;
