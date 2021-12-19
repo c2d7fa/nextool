@@ -19,7 +19,7 @@ function CheckBox(props: {task: Task; send: EventHandler<CheckedEvent>}) {
 function Title(props: {task: Task}) {
   return (
     <span className={[style.task, props.task.done ? style.done : style.todo].join(" ")}>
-      <span className={style.title}>{props.task.title}</span> <span className={style.id}>{props.task.id}</span>
+      <span className={style.title}>{props.task.title}</span>
     </span>
   );
 }
@@ -32,6 +32,9 @@ function TaskRow(props: {task: Task; send: EventHandler<CheckedEvent>}) {
       </td>
       <td>
         <Title task={props.task} />
+      </td>
+      <td>
+        <span className={style.id}>{props.task.id}</span>
       </td>
     </tr>
   );
