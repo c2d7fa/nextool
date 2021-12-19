@@ -4,8 +4,16 @@ const style = require("./task-list.module.scss");
 
 export type Task = {id: string; title: string; done: boolean};
 
-function CheckBox(props: {task: Task}) {
-  return <div className={[style.checkBox, props.task.done ? style.checked : style.unchecked].join(" ")} />;
+export type CheckedEvent = {tag: "checked"; id: string; checked: boolean};
+export type EventHandler<T> = (event: T) => void;
+
+function CheckBox(props: {task: Task; send: EventHandler<CheckedEvent>}) {
+  return (
+    <div
+      className={[style.checkBox, props.task.done ? style.checked : style.unchecked].join(" ")}
+      onClick={() => props.send({tag: "checked", id: props.task.id, checked: !props.task.done})}
+    />
+  );
 }
 
 function Title(props: {task: Task}) {
@@ -16,11 +24,11 @@ function Title(props: {task: Task}) {
   );
 }
 
-function TaskRow(props: {task: Task}) {
+function TaskRow(props: {task: Task; send: EventHandler<CheckedEvent>}) {
   return (
     <tr>
       <td>
-        <CheckBox task={props.task} />
+        <CheckBox task={props.task} send={props.send} />
       </td>
       <td>
         <Title task={props.task} />
@@ -29,12 +37,12 @@ function TaskRow(props: {task: Task}) {
   );
 }
 
-export function TaskList(props: {tasks: Task[]}) {
+export function TaskList(props: {tasks: Task[]; send: EventHandler<CheckedEvent>}) {
   return (
     <table className={style.taskList}>
       <tbody>
         {props.tasks.map((task) => (
-          <TaskRow key={task.id} task={task} />
+          <TaskRow key={task.id} task={task} send={props.send} />
         ))}
       </tbody>
     </table>
