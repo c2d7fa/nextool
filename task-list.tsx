@@ -5,7 +5,7 @@ const style = require("./task-list.module.scss");
 export type Task = {id: string; title: string; done: boolean};
 
 function CheckBox(props: {task: Task}) {
-  return <input type="checkbox" checked={props.task.done} readOnly />;
+  return <div className={[style.checkBox, props.task.done ? style.checked : style.unchecked].join(" ")} />;
 }
 
 function Title(props: {task: Task}) {

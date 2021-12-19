@@ -1,35 +1,61 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;1,400;1,500&display=swap');
 
-.taskList {
-  font-family: "Roboto";
+.task {
+  cursor: default;
 
-  .task {
+  .title {
+    color: #222;
+    font-weight: 500;
+  }
+
+  .id {
     cursor: default;
 
-    .title {
-      color: #222;
-      font-weight: 500;
-    }
+    color: #aaa;
+    margin-left: 0.25em;
+    font-size: 0.8em;
 
-    .id {
-      cursor: default;
-
-      color: #aaa;
-      margin-left: 0.25em;
-      font-size: 0.8em;
-
-      &::before {
-        content: "#";
-      }
-    }
-
-    &.done {
-      .title {
-        color: #888;
-        text-decoration: line-through;
-      }
+    &::before {
+      content: "#";
     }
   }
+
+  &.done {
+    .title {
+      color: #888;
+      text-decoration: line-through;
+    }
+  }
+}
+
+.checkBox {
+  width: 1em;
+  height: 1em;
+
+  border-radius: 3px;
+  border: 1px solid #aaa;
+
+  &:hover {
+    border-color: #888;
+  }
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.checked {
+    background-color: #f0f0f0;
+    &::after {
+      content: "✕";
+      color: #888;
+      margin-bottom: -0.09em;
+      margin-right: -0.02em;
+    }
+  }
+}
+
+.taskList {
+  font-family: "Roboto";
 
   background-color: white;
 
