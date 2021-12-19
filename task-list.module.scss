@@ -1,0 +1,17 @@
+.taskList {
+  background-color: white;
+
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  border-spacing: 0;
+
+  tr:not(:first-child) {
+    td {
+      border-top: 1px solid #ddd;
+    }
+  }
+
+  td {
+    padding: 0.5em;
+  }
+}
