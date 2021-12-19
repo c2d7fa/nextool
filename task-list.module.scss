@@ -1,17 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;1,400;1,500&display=swap');
+
 .taskList {
+  font-family: "Roboto";
+
+  .task {
+    cursor: default;
+
+    .title {
+      color: #222;
+      font-weight: 500;
+    }
+
+    .id {
+      cursor: default;
+
+      color: #aaa;
+      margin-left: 0.25em;
+      font-size: 0.8em;
+
+      &::before {
+        content: "#";
+      }
+    }
+
+    &.done {
+      .title {
+        color: #888;
+        text-decoration: line-through;
+      }
+    }
+  }
+
   background-color: white;
 
-  border: 1px solid #ddd;
+  border: 1px solid #c8c8c8;
   border-radius: 3px;
   border-spacing: 0;
 
   tr:not(:first-child) {
     td {
-      border-top: 1px solid #ddd;
+      border-top: 1px solid #c8c8c8;
     }
   }
 
   td {
-    padding: 0.5em;
+    padding: 0.35em 0.5em;
   }
 }

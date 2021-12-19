@@ -10,8 +10,8 @@ function CheckBox(props: {task: Task}) {
 
 function Title(props: {task: Task}) {
   return (
-    <span>
-      <strong>{props.task.title}</strong> ({props.task.id})
+    <span className={[style.task, props.task.done ? style.done : style.todo].join(" ")}>
+      <span className={style.title}>{props.task.title}</span> <span className={style.id}>{props.task.id}</span>
     </span>
   );
 }
