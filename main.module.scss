@@ -39,3 +39,8 @@
     align-items: flex-start;
   }
 }
+
+.newTask {
+  display: flex;
+  column-gap: 0.5em;
+}

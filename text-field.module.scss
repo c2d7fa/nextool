@@ -1,0 +1,33 @@
+@mixin reset-input {
+  outline: none;
+  border: none;
+  box-shadow: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+}
+
+.textField {
+  @include reset-input;
+  font-family: "Roboto", sans-serif;
+  padding: 0.3em 0.6em;
+
+  color: #444;
+  background-color: #f8f8f8;
+  box-shadow: 0 3px 3px -3px #aaa inset;
+  border: 1px solid #aaa;
+  border-radius: 3px;
+
+  &:hover, &:focus {
+    border-color: #888;
+  }
+
+  &:focus {
+    background-color: #f4f4f4;
+  }
+
+  &::placeholder {
+    color: #b8b8b8;
+  }
+}

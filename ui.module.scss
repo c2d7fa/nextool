@@ -20,16 +20,15 @@
   border: 1px solid #aaa;
   border-radius: 3px;
 
-  transition: margin 50ms ease-out;
+  transition: transform 50ms ease-out;
 
-  &:hover {
+  &:hover, &:focus {
     border: 1px solid #888;
   }
 
   &:active {
     box-shadow: none;
-    margin-top: 3px;
-    margin-bottom: -3px;
+    transform: translateY(3px);
     background: linear-gradient(to top, #ededed, #f0f0f0);
   }
 }

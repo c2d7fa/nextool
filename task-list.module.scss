@@ -46,7 +46,7 @@
   box-shadow: 0 1px 1px -1px #aaa;
   background: linear-gradient(to top, #f4f4f4, #fdfdfd);
 
-  &:hover {
+  &:hover, &:focus {
     border-color: #888;
   }
 
