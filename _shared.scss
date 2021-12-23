@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;1,400;1,500&display=swap');
+
+$border-radius: 3px;
+$padding-x: 0.6em;
+$padding-y: 0.3em;
+
+@mixin input-hover {
+  &:hover, &:focus {
+    border-color: #888;
+  }
+}
+
+@mixin input-border {
+  border-radius: $border-radius;
+  border: 1px solid #aaa;
+}
+
+@mixin input-shadow($size: 3px, $inset: "") {
+  box-shadow: 0px $size $size (-$size) #aaa unquote($inset);
+}
+
+@mixin input-color {
+  color: #444;
+}
+
+@mixin input-padding {
+  padding: $padding-y $padding-x;
+}

@@ -1,3 +1,5 @@
+@use "./shared";
+
 @mixin reset-button {
   outline: none;
   border: none;
@@ -12,19 +14,15 @@
   @include reset-button;
   font-family: "Roboto", sans-serif;  
   cursor: default;
-  padding: 0.3em 0.6em;
 
-  color: #444;
   background: linear-gradient(to top, #f0f0f0, #f4f4f4);
-  box-shadow: 0 3px 3px -3px #aaa;
-  border: 1px solid #aaa;
-  border-radius: 3px;
+  @include shared.input-padding;
+  @include shared.input-color;
+  @include shared.input-shadow;
+  @include shared.input-border;
+  @include shared.input-hover;
 
   transition: transform 50ms ease-out;
-
-  &:hover, &:focus {
-    border: 1px solid #888;
-  }
 
   &:active {
     box-shadow: none;
@@ -39,7 +37,7 @@
   border-radius: 3px;
   box-sizing: border-box;
 
-  padding: 0.1em 0.3em;
+  padding: (shared.$padding-y * 0.5) (shared.$padding-x * 0.5);
 
   &.green {
     border: 1px solid #00000040;
