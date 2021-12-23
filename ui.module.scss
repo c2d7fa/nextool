@@ -33,3 +33,18 @@
     background: linear-gradient(to top, #ededed, #f0f0f0);
   }
 }
+
+.badge {
+  font-family: "Roboto", sans-serif;
+  font-size: 0.8em;
+  border-radius: 3px;
+  box-sizing: border-box;
+
+  padding: 0.1em 0.3em;
+
+  &.green {
+    border: 1px solid #00000040;
+    background: #b9daac;
+    color: #6c776b;
+  }
+}

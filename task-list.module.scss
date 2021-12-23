@@ -1,11 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;1,400;1,500&display=swap');
 
 .task {
+  display: inline-flex;
+  align-items: center;
+
   cursor: default;
 
   .title {
     color: #222;
     font-weight: 500;
+  }
+
+  .badge {
+    margin-left: 1em;
+    display: inline-flex;
+    align-items: center;
   }
 
   &.done {
@@ -74,10 +83,16 @@
 
   tr {
     padding: 0.3em 0.6em;
+    min-height: 22px;
 
     @include border-between(1px solid #c8c8c8);
     display: grid;
     grid-template-columns: max-content 1fr max-content;
+
+    td {
+      display: inline-flex;
+      align-items: center;
+    }
 
     td:nth-child(1) {
       justify-self: center;

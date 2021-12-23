@@ -1,5 +1,6 @@
 import * as React from "react";
 import {Task} from "./tasks";
+import {Badge} from "./ui";
 
 const style = require("./task-list.module.scss");
 
@@ -15,10 +16,19 @@ function CheckBox(props: {task: Task; send: EventHandler<CheckedEvent>}) {
   );
 }
 
+function ActionBadge(props: {task: Task}) {
+  if (!props.task.action) return null;
+
+  return <Badge color="green">Action</Badge>;
+}
+
 function Title(props: {task: Task}) {
   return (
     <span className={[style.task, props.task.done ? style.done : style.todo].join(" ")}>
       <span className={style.title}>{props.task.title}</span>
+      <span className={style.badge}>
+        <ActionBadge task={props.task} />
+      </span>
     </span>
   );
 }
