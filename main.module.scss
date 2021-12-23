@@ -32,5 +32,10 @@
   .taskList {
     padding: 1em;
     grid-area: main;
+
+    display: flex;
+    flex-direction: column;
+    row-gap: 1em;
+    align-items: flex-start;
   }
 }

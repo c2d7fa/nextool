@@ -1,0 +1,35 @@
+@mixin reset-button {
+  outline: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
+.button {
+  @include reset-button;
+  font-family: "Roboto", sans-serif;  
+  cursor: default;
+  padding: 0.3em 0.6em;
+
+  color: #444;
+  background: linear-gradient(to top, #f0f0f0, #f4f4f4);
+  box-shadow: 0 3px 3px -3px #aaa;
+  border: 1px solid #aaa;
+  border-radius: 3px;
+
+  transition: margin 50ms ease-out;
+
+  &:hover {
+    border: 1px solid #888;
+  }
+
+  &:active {
+    box-shadow: none;
+    margin-top: 3px;
+    margin-bottom: -3px;
+    background: linear-gradient(to top, #ededed, #f0f0f0);
+  }
+}
