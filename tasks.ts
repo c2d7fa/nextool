@@ -27,3 +27,7 @@ export function add(tasks: Tasks, values: Partial<Task>): Tasks {
     },
   ];
 }
+
+export function hasBadge(task: Task, badge: "action"): boolean {
+  return task.action && !task.done;
+}

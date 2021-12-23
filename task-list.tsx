@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Task} from "./tasks";
+import {hasBadge, Task} from "./tasks";
 import {Badge} from "./ui";
 
 const style = require("./task-list.module.scss");
@@ -17,8 +17,7 @@ function CheckBox(props: {task: Task; send: EventHandler<CheckedEvent>}) {
 }
 
 function ActionBadge(props: {task: Task}) {
-  if (!props.task.action) return null;
-
+  if (!hasBadge(props.task, "action")) return null;
   return <Badge color="green">Action</Badge>;
 }
 
