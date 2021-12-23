@@ -43,9 +43,19 @@
 
   border-radius: 3px;
   border: 1px solid #aaa;
+  box-shadow: 0 1px 1px -1px #aaa;
+  background: linear-gradient(to top, #f4f4f4, #fdfdfd);
 
   &:hover {
     border-color: #888;
+  }
+
+  transition: margin 50ms ease-out;
+  &:active {
+    box-shadow: none;
+    margin-top: 1px;
+    margin-bottom: -1px;
+    background: linear-gradient(to top, #ededed, #f0f0f0);
   }
 
   display: flex;
@@ -53,7 +63,7 @@
   justify-content: center;
 
   &.checked {
-    background-color: #f0f0f0;
+    background: linear-gradient(to top, #ededed, #f0f0f0);
     &::after {
       content: "✕";
       color: #888;
