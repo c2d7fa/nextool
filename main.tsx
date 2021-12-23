@@ -1,12 +1,13 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import {loadTasks, saveTasks} from "./storage";
-import {CheckedEvent, Task, TaskList} from "./task-list";
+import {CheckedEvent, TaskList} from "./task-list";
+import {merge, Task} from "./tasks";
 
 const style = require("./main.module.scss");
 
 function update(tasks: Task[], ev: CheckedEvent): Task[] {
-  return tasks.map((task) => (task.id === ev.id ? {...task, done: ev.checked} : task));
+  return merge(tasks, [{id: ev.id, done: ev.checked}]);
 }
 
 function Main() {

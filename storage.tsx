@@ -1,4 +1,4 @@
-import {Task} from "./task-list";
+import {Task} from "./tasks";
 
 export function loadTasks() {
   const tasks = window.localStorage.getItem("tasks");

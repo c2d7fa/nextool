@@ -1,8 +1,7 @@
 import * as React from "react";
+import {Task} from "./tasks";
 
 const style = require("./task-list.module.scss");
-
-export type Task = {id: string; title: string; done: boolean};
 
 export type CheckedEvent = {tag: "checked"; id: string; checked: boolean};
 export type EventHandler<T> = (event: T) => void;
