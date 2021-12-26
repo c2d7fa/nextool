@@ -29,14 +29,26 @@
     border-right: 1px solid #00000020;
   }
 
-  .taskList {
+  .innerContainer {
     padding: 1em;
     grid-area: main;
 
-    display: flex;
-    flex-direction: column;
-    row-gap: 1em;
-    align-items: flex-start;
+    display: grid;
+    grid: "left right" 1fr / 1fr 1fr;
+    column-gap: 1em;
+
+    .left {
+      grid-area: left;
+      display: flex;
+      flex-direction: column;
+      row-gap: 1em;
+      align-items: flex-start;
+    }
+
+    .right {
+      grid-area: right;
+      display: grid;
+    }
   }
 }
 

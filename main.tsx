@@ -8,20 +8,22 @@ import {
   value as textFieldValue,
 } from "./text-field";
 import {loadTasks, saveTasks} from "./storage";
-import {CheckedEvent, TaskList} from "./task-list";
+import {CheckedEvent, SelectEditingTask, TaskList} from "./task-list";
 import {add, merge, Task} from "./tasks";
 import {Button} from "./ui";
+import {TaskEditor} from "./task-editor";
 
 const style = require("./main.module.scss");
 
 type AddEvent = {tag: "add"};
 
 type TextFieldId = "addTitle";
-type Event = CheckedEvent | AddEvent | TextFieldEvent<TextFieldId>;
+type Event = CheckedEvent | AddEvent | TextFieldEvent<TextFieldId> | SelectEditingTask;
 
 type App = {
   tasks: Task[];
   textFields: TextFieldStates<TextFieldId>;
+  editingTask: {id: string} | null;
 };
 
 const AppContext = React.createContext<App>(null);
@@ -46,7 +48,12 @@ function updateApp(app: App, ev: Event): App {
     else return app.textFields;
   })();
 
-  return {tasks, textFields};
+  const editingTask = (() => {
+    if (ev.tag === "selectEditingTask") return {id: ev.id};
+    else return app.editingTask;
+  })();
+
+  return {tasks, textFields, editingTask};
 }
 
 function AddTask(props: {send(ev: Event): void}) {
@@ -65,7 +72,7 @@ function AddTask(props: {send(ev: Event): void}) {
 }
 
 function Main() {
-  const [app, setApp] = React.useState<App>({tasks: [], textFields: {addTitle: ""}});
+  const [app, setApp] = React.useState<App>({tasks: [], textFields: {addTitle: ""}, editingTask: null});
 
   React.useEffect(() => {
     setApp((app) => ({...app, tasks: loadTasks()}));
@@ -84,9 +91,14 @@ function Main() {
       <div className={style.outerContainer}>
         <div className={style.topBar} />
         <div className={style.sidebar} />
-        <div className={style.taskList}>
-          <AddTask send={send} />
-          <TaskList tasks={app.tasks} send={send} />
+        <div className={style.innerContainer}>
+          <div className={style.left}>
+            <AddTask send={send} />
+            <TaskList tasks={app.tasks} send={send} />
+          </div>
+          <div className={style.right}>
+            <TaskEditor task={app.tasks.find((task) => task.id === app.editingTask?.id)} />
+          </div>
         </div>
       </div>
     </AppContext.Provider>

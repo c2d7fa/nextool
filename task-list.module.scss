@@ -95,6 +95,10 @@
     display: grid;
     grid-template-columns: max-content 1fr max-content;
 
+    &:hover {
+      background-color: #f8f8f8;
+    }
+
     td {
       display: inline-flex;
       align-items: center;

@@ -5,6 +5,7 @@ import {Badge} from "./ui";
 const style = require("./task-list.module.scss");
 
 export type CheckedEvent = {tag: "checked"; id: string; checked: boolean};
+export type SelectEditingTask = {tag: "selectEditingTask"; id: string};
 export type EventHandler<T> = (event: T) => void;
 
 function CheckBox(props: {task: Task; send: EventHandler<CheckedEvent>}) {
@@ -41,9 +42,9 @@ function Title(props: {task: Task}) {
   );
 }
 
-function TaskRow(props: {task: Task; send: EventHandler<CheckedEvent>}) {
+function TaskRow(props: {task: Task; send: EventHandler<CheckedEvent | SelectEditingTask>}) {
   return (
-    <tr>
+    <tr onClick={() => props.send({tag: "selectEditingTask", id: props.task.id})}>
       <td>
         <CheckBox task={props.task} send={props.send} />
       </td>
@@ -57,7 +58,7 @@ function TaskRow(props: {task: Task; send: EventHandler<CheckedEvent>}) {
   );
 }
 
-export function TaskList(props: {tasks: Task[]; send: EventHandler<CheckedEvent>}) {
+export function TaskList(props: {tasks: Task[]; send: EventHandler<CheckedEvent | SelectEditingTask>}) {
   return (
     <table className={style.taskList}>
       <tbody>
