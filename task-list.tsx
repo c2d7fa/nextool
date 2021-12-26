@@ -1,5 +1,5 @@
 import * as React from "react";
-import {hasBadge, Task} from "./tasks";
+import {badges, Task} from "./tasks";
 import {Badge} from "./ui";
 
 const style = require("./task-list.module.scss");
@@ -16,18 +16,27 @@ function CheckBox(props: {task: Task; send: EventHandler<CheckedEvent>}) {
   );
 }
 
-function ActionBadge(props: {task: Task}) {
-  if (!hasBadge(props.task, "action")) return null;
-  return <Badge color="green">Action</Badge>;
+function BadgeFor(props: {type: "action" | "stalled"}) {
+  if (props.type === "action") return <Badge color="green">Action</Badge>;
+  else if (props.type === "stalled") return <Badge color="orange">Stalled</Badge>;
+  else return null;
+}
+
+function Badges(props: {task: Task}) {
+  return (
+    <span className={style.badge}>
+      {badges(props.task).map((badge) => (
+        <BadgeFor key={badge} type={badge} />
+      ))}
+    </span>
+  );
 }
 
 function Title(props: {task: Task}) {
   return (
     <span className={[style.task, props.task.done ? style.done : style.todo].join(" ")}>
       <span className={style.title}>{props.task.title}</span>
-      <span className={style.badge}>
-        <ActionBadge task={props.task} />
-      </span>
+      <Badges task={props.task} />
     </span>
   );
 }

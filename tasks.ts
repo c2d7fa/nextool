@@ -28,6 +28,8 @@ export function add(tasks: Tasks, values: Partial<Task>): Tasks {
   ];
 }
 
-export function hasBadge(task: Task, badge: "action"): boolean {
-  return task.action && !task.done;
+export function badges(task: Task): ("action" | "stalled")[] {
+  if (task.action && !task.done) return ["action"];
+  else if (!task.done) return ["stalled"];
+  else return [];
 }
