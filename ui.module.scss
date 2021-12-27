@@ -12,6 +12,8 @@
   @include shared.input-border;
   @include shared.input-hover;
 
+  color: #666;
+
   transition: transform 50ms ease-out;
 
   &:active {

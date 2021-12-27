@@ -141,8 +141,8 @@ function Main() {
         </div>
         <div className={style.innerContainer}>
           <div className={style.left}>
-            <AddTask send={send} />
             <TaskList taskList={list(app.tasks, app.filter)} send={send} />
+            <AddTask send={send} />
           </div>
           <div className={style.right}>
             <TaskEditor task={app.tasks.find((task) => task.id === app.editingTask?.id)} />
