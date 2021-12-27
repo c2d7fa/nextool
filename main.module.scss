@@ -1,3 +1,5 @@
+@use "./shared";
+
 :global(:root) {
   font-family: sans-serif;
 
@@ -48,6 +50,46 @@
     .right {
       grid-area: right;
       display: grid;
+    }
+  }
+}
+
+.filterSelector {
+  display: flex;
+  flex-direction: column;
+
+  button {
+    @include shared.reset-button;
+    @include shared.input-padding(1.5);
+    @include shared.input-color;
+    font-family: "Roboto", sans-serif;
+
+    cursor: default;
+    text-align: left;
+
+    color: #888;
+
+    background-color: #ebebeb;
+    border-bottom: 1px solid #c0c0c0;
+
+    .label {
+      display: inline-block;
+      transition: transform 50ms ease-out;
+    }
+
+    &:active .label {
+      transform: translateY(1px);
+    }
+
+    &:hover, &:active {
+      background-color: #f0f0f0;
+    }
+
+    &.selected {
+      color: #666;
+      font-weight: 500;
+      background-color: #f4f4f4;
+      @include shared.input-shadow(3px, inset);
     }
   }
 }

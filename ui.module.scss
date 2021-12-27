@@ -1,17 +1,7 @@
 @use "./shared";
 
-@mixin reset-button {
-  outline: none;
-  border: none;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  padding: 0;
-  font: inherit;
-}
-
 .button {
-  @include reset-button;
+  @include shared.reset-button;
   font-family: "Roboto", sans-serif;  
   cursor: default;
 

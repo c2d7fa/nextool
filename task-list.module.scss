@@ -69,12 +69,6 @@
   }
 }
 
-@mixin border-between($border) {
-  &:not(:first-child) {
-    border-top: $border;
-  }
-}
-
 .taskList {
   font-family: "Roboto";
 
@@ -91,7 +85,7 @@
     @include shared.input-padding;
     min-height: 22px;
 
-    @include border-between(1px solid #c8c8c8);
+    @include shared.border-between(1px solid #c8c8c8);
     display: grid;
     grid-template-columns: max-content 1fr max-content;
 

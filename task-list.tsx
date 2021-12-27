@@ -1,5 +1,5 @@
 import * as React from "react";
-import {badges, Task} from "./tasks";
+import {badges, TaskList} from "./tasks";
 import {Badge} from "./ui";
 
 const style = require("./task-list.module.scss");
@@ -8,11 +8,11 @@ export type CheckedEvent = {tag: "checked"; id: string; checked: boolean};
 export type SelectEditingTask = {tag: "selectEditingTask"; id: string};
 export type EventHandler<T> = (event: T) => void;
 
-function CheckBox(props: {task: Task; send: EventHandler<CheckedEvent>}) {
+function CheckBox(props: {checked: boolean; id: string; send: EventHandler<CheckedEvent>}) {
   return (
     <div
-      className={[style.checkBox, props.task.done ? style.checked : style.unchecked].join(" ")}
-      onClick={() => props.send({tag: "checked", id: props.task.id, checked: !props.task.done})}
+      className={[style.checkBox, props.checked ? style.checked : style.unchecked].join(" ")}
+      onClick={() => props.send({tag: "checked", id: props.id, checked: !props.checked})}
     />
   );
 }
@@ -23,17 +23,17 @@ function BadgeFor(props: {type: "action" | "stalled"}) {
   else return null;
 }
 
-function Badges(props: {task: Task}) {
+function Badges(props: {task: TaskList[number]}) {
   return (
     <span className={style.badge}>
-      {badges(props.task).map((badge) => (
-        <BadgeFor key={badge} type={badge} />
+      {props.task.badges.map((badge) => (
+        <BadgeFor type={badge} key={badge} />
       ))}
     </span>
   );
 }
 
-function Title(props: {task: Task}) {
+function Title(props: {task: TaskList[number]}) {
   return (
     <span className={[style.task, props.task.done ? style.done : style.todo].join(" ")}>
       <span className={style.title}>{props.task.title}</span>
@@ -42,11 +42,11 @@ function Title(props: {task: Task}) {
   );
 }
 
-function TaskRow(props: {task: Task; send: EventHandler<CheckedEvent | SelectEditingTask>}) {
+function TaskRow(props: {task: TaskList[number]; send: EventHandler<CheckedEvent | SelectEditingTask>}) {
   return (
     <tr onClick={() => props.send({tag: "selectEditingTask", id: props.task.id})}>
       <td>
-        <CheckBox task={props.task} send={props.send} />
+        <CheckBox checked={props.task.done} id={props.task.id} send={props.send} />
       </td>
       <td>
         <Title task={props.task} />
@@ -58,11 +58,11 @@ function TaskRow(props: {task: Task; send: EventHandler<CheckedEvent | SelectEdi
   );
 }
 
-export function TaskList(props: {tasks: Task[]; send: EventHandler<CheckedEvent | SelectEditingTask>}) {
+export function TaskList(props: {taskList: TaskList; send: EventHandler<CheckedEvent | SelectEditingTask>}) {
   return (
     <table className={style.taskList}>
       <tbody>
-        {props.tasks.map((task) => (
+        {props.taskList.map((task) => (
           <TaskRow key={task.id} task={task} send={props.send} />
         ))}
       </tbody>

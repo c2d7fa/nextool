@@ -9,18 +9,20 @@ import {
 } from "./text-field";
 import {loadTasks, saveTasks} from "./storage";
 import {CheckedEvent, SelectEditingTask, TaskList} from "./task-list";
-import {add, merge, Task} from "./tasks";
+import {add, list, merge, Task} from "./tasks";
 import {Button} from "./ui";
 import {TaskEditor} from "./task-editor";
 
 const style = require("./main.module.scss");
 
 type AddEvent = {tag: "add"};
+type SelectFilterEvent = {tag: "selectFilter"; filter: "all" | "actions" | "done" | "stalled"};
 
 type TextFieldId = "addTitle";
-type Event = CheckedEvent | AddEvent | TextFieldEvent<TextFieldId> | SelectEditingTask;
+type Event = CheckedEvent | AddEvent | TextFieldEvent<TextFieldId> | SelectEditingTask | SelectFilterEvent;
 
 type App = {
+  filter: "all" | "actions" | "done" | "stalled";
   tasks: Task[];
   textFields: TextFieldStates<TextFieldId>;
   editingTask: {id: string} | null;
@@ -53,7 +55,12 @@ function updateApp(app: App, ev: Event): App {
     else return app.editingTask;
   })();
 
-  return {tasks, textFields, editingTask};
+  const filter = (() => {
+    if (ev.tag === "selectFilter") return ev.filter;
+    else return app.filter;
+  })();
+
+  return {tasks, textFields, filter, editingTask};
 }
 
 function AddTask(props: {send(ev: Event): void}) {
@@ -71,8 +78,47 @@ function AddTask(props: {send(ev: Event): void}) {
   );
 }
 
+function FilterSelector(props: {
+  filter: "all" | "actions" | "done" | "stalled";
+  send(ev: SelectFilterEvent): void;
+}) {
+  return (
+    <div className={style.filterSelector}>
+      <button
+        onClick={() => props.send({tag: "selectFilter", filter: "all"})}
+        className={props.filter === "all" ? style.selected : ""}
+      >
+        <span className={style.label}>All</span>
+      </button>
+      <button
+        onClick={() => props.send({tag: "selectFilter", filter: "stalled"})}
+        className={props.filter === "stalled" ? style.selected : ""}
+      >
+        <span className={style.label}>Stalled</span>
+      </button>
+      <button
+        onClick={() => props.send({tag: "selectFilter", filter: "actions"})}
+        className={props.filter === "actions" ? style.selected : ""}
+      >
+        <span className={style.label}>Actions</span>
+      </button>
+      <button
+        onClick={() => props.send({tag: "selectFilter", filter: "done"})}
+        className={props.filter === "done" ? style.selected : ""}
+      >
+        <span className={style.label}>Finished</span>
+      </button>
+    </div>
+  );
+}
+
 function Main() {
-  const [app, setApp] = React.useState<App>({tasks: [], textFields: {addTitle: ""}, editingTask: null});
+  const [app, setApp] = React.useState<App>({
+    tasks: [],
+    textFields: {addTitle: ""},
+    editingTask: null,
+    filter: "all",
+  });
 
   React.useEffect(() => {
     setApp((app) => ({...app, tasks: loadTasks()}));
@@ -90,11 +136,13 @@ function Main() {
     <AppContext.Provider value={app}>
       <div className={style.outerContainer}>
         <div className={style.topBar} />
-        <div className={style.sidebar} />
+        <div className={style.sidebar}>
+          <FilterSelector filter={app.filter} send={send} />
+        </div>
         <div className={style.innerContainer}>
           <div className={style.left}>
             <AddTask send={send} />
-            <TaskList tasks={app.tasks} send={send} />
+            <TaskList taskList={list(app.tasks, app.filter)} send={send} />
           </div>
           <div className={style.right}>
             <TaskEditor task={app.tasks.find((task) => task.id === app.editingTask?.id)} />
