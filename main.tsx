@@ -1,32 +1,14 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import {
-  TextField,
-  TextFieldEvent,
-  TextFieldStates,
-  update as updateTextFields,
-  value as textFieldValue,
-} from "./text-field";
+import {App, Event, SelectFilterEvent} from "./app";
+import {TextField, update as updateTextFields, value as textFieldValue} from "./text-field";
 import {loadTasks, saveTasks} from "./storage";
-import {CheckedEvent, SelectEditingTask, TaskList} from "./task-list";
-import {add, list, merge, Task} from "./tasks";
+import {TaskList} from "./task-list";
+import {add, list, merge} from "./tasks";
 import {Button} from "./ui";
 import {TaskEditor} from "./task-editor";
 
 const style = require("./main.module.scss");
-
-type AddEvent = {tag: "add"};
-type SelectFilterEvent = {tag: "selectFilter"; filter: "all" | "actions" | "done" | "stalled"};
-
-type TextFieldId = "addTitle";
-type Event = CheckedEvent | AddEvent | TextFieldEvent<TextFieldId> | SelectEditingTask | SelectFilterEvent;
-
-type App = {
-  filter: "all" | "actions" | "done" | "stalled";
-  tasks: Task[];
-  textFields: TextFieldStates<TextFieldId>;
-  editingTask: {id: string} | null;
-};
 
 const AppContext = React.createContext<App>(null);
 
