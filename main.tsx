@@ -4,9 +4,9 @@ import {App, Event, SelectFilterEvent} from "./app";
 import {TextField, update as updateTextFields, value as textFieldValue} from "./text-field";
 import {loadTasks, saveTasks} from "./storage";
 import {TaskList} from "./task-list";
-import {add, list, merge} from "./tasks";
+import {add, edit, list, merge} from "./tasks";
 import {Button} from "./ui";
-import {TaskEditor} from "./task-editor";
+import {reload, TaskEditor, updateEditor} from "./task-editor";
 
 const style = require("./main.module.scss");
 
@@ -19,9 +19,10 @@ function useApp(): App {
 function updateApp(app: App, ev: Event): App {
   const tasks = (() => {
     if (ev.tag === "checked") return merge(app.tasks, [{id: ev.id, done: ev.checked}]);
-    if (ev.tag === "add") return add(app.tasks, {title: textFieldValue(app.textFields, "addTitle")});
-    if (ev.tag === "textField" && ev.field === "addTitle" && ev.type === "submit")
+    else if (ev.tag === "add") return add(app.tasks, {title: textFieldValue(app.textFields, "addTitle")});
+    else if (ev.tag === "textField" && ev.field === "addTitle" && ev.type === "submit")
       return updateApp(app, {tag: "add"}).tasks;
+    else if (ev.tag === "edit") return edit(app.tasks, ev.id, ev.operation);
     else return app.tasks;
   })();
 
@@ -32,9 +33,10 @@ function updateApp(app: App, ev: Event): App {
     else return app.textFields;
   })();
 
-  const editingTask = (() => {
-    if (ev.tag === "selectEditingTask") return {id: ev.id};
-    else return app.editingTask;
+  const editor = (() => {
+    if (ev.tag === "selectEditingTask") return reload(app, ev.id);
+    else if (ev.tag === "edit") return updateEditor(app, ev);
+    else return app.editor;
   })();
 
   const filter = (() => {
@@ -42,7 +44,7 @@ function updateApp(app: App, ev: Event): App {
     else return app.filter;
   })();
 
-  return {tasks, textFields, filter, editingTask};
+  return {tasks, textFields, filter, editor};
 }
 
 function AddTask(props: {send(ev: Event): void}) {
@@ -98,7 +100,7 @@ function Main() {
   const [app, setApp] = React.useState<App>({
     tasks: [],
     textFields: {addTitle: ""},
-    editingTask: null,
+    editor: null,
     filter: "all",
   });
 
@@ -127,7 +129,7 @@ function Main() {
             <AddTask send={send} />
           </div>
           <div className={style.right}>
-            <TaskEditor task={app.tasks.find((task) => task.id === app.editingTask?.id)} />
+            <TaskEditor editor={app.editor} send={send} />
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import {TextFieldEvent, TextFieldStates} from "./text-field";
 import {CheckedEvent, SelectEditingTask} from "./task-list";
 import {Task} from "./tasks";
+import {TaskEditorEvent, TaskEditorState} from "./task-editor";
 
 type TextFieldId = "addTitle";
 
@@ -11,7 +12,13 @@ export type App = {
   filter: "all" | "actions" | "done" | "stalled";
   tasks: Task[];
   textFields: TextFieldStates<TextFieldId>;
-  editingTask: {id: string} | null;
+  editor: TaskEditorState;
 };
 
-export type Event = CheckedEvent | AddEvent | TextFieldEvent<TextFieldId> | SelectEditingTask | SelectFilterEvent;
+export type Event =
+  | CheckedEvent
+  | AddEvent
+  | TextFieldEvent<TextFieldId>
+  | SelectEditingTask
+  | SelectFilterEvent
+  | TaskEditorEvent;
