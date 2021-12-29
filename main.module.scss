@@ -74,11 +74,11 @@
 
     .label {
       display: inline-block;
-      transition: transform 50ms ease-out;
+      transition: transform 100ms ease-out;
     }
 
     &:active .label {
-      transform: translateY(1px);
+      transform: translateX(-6px);
     }
 
     &:hover, &:active {
@@ -90,6 +90,10 @@
       font-weight: 500;
       background-color: #f4f4f4;
       @include shared.input-shadow(3px, inset);
+
+      .label {
+        transform: translateX(1em);
+      }
     }
   }
 }
