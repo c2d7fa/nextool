@@ -20,11 +20,10 @@ export function value<Id extends string>(state: TextFieldStates<Id>, field: Id):
   return state[field] ?? "";
 }
 
-export function TextField<Id extends string>(props: {
-  field: Id;
+export function UnnamedTextField(props: {
   value: string;
   placeholder?: string;
-  send: (ev: TextFieldEvent<Id>) => void;
+  send(ev: {type: "edit"; value: string} | {type: "submit"}): void;
 }) {
   return (
     <input
@@ -32,11 +31,28 @@ export function TextField<Id extends string>(props: {
       placeholder={props.placeholder}
       type="text"
       value={props.value}
-      onChange={(e) => props.send({tag: "textField", type: "edit", field: props.field, value: e.target.value})}
+      onChange={(e) => props.send({type: "edit", value: e.target.value})}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
-          props.send({tag: "textField", type: "submit", field: props.field});
+          props.send({type: "submit"});
         }
+      }}
+    />
+  );
+}
+
+export function TextField<Id extends string>(props: {
+  field: Id;
+  value: string;
+  placeholder?: string;
+  send: (ev: TextFieldEvent<Id>) => void;
+}) {
+  return (
+    <UnnamedTextField
+      value={props.value}
+      placeholder={props.placeholder}
+      send={(ev) => {
+        props.send({...ev, tag: "textField", field: props.field});
       }}
     />
   );
