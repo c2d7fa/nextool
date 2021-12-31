@@ -44,28 +44,26 @@ function Title(props: {task: TaskList[number]}) {
 
 function TaskRow(props: {task: TaskList[number]; send: EventHandler<CheckedEvent | SelectEditingTask>}) {
   return (
-    <tr onClick={() => props.send({tag: "selectEditingTask", id: props.task.id})}>
-      <td>
+    <div className={style.taskRow} onClick={() => props.send({tag: "selectEditingTask", id: props.task.id})}>
+      <span>
         <CheckBox checked={props.task.done} id={props.task.id} send={props.send} />
-      </td>
-      <td>
+      </span>
+      <span>
         <Title task={props.task} />
-      </td>
-      <td>
+      </span>
+      <span>
         <span className={style.id}>{props.task.id}</span>
-      </td>
-    </tr>
+      </span>
+    </div>
   );
 }
 
 export function TaskList(props: {taskList: TaskList; send: EventHandler<CheckedEvent | SelectEditingTask>}) {
   return (
-    <table className={style.taskList}>
-      <tbody>
-        {props.taskList.map((task) => (
-          <TaskRow key={task.id} task={task} send={props.send} />
-        ))}
-      </tbody>
-    </table>
+    <div className={style.taskList}>
+      {props.taskList.map((task) => (
+        <TaskRow key={task.id} task={task} send={props.send} />
+      ))}
+    </div>
   );
 }
