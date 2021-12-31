@@ -1,6 +1,7 @@
 import * as React from "react";
 import {badges, TaskList} from "./tasks";
 import {Badge} from "./ui";
+import * as Drag from "./drag";
 
 const style = require("./task-list.module.scss");
 
@@ -42,30 +43,36 @@ function Title(props: {task: TaskList[number]}) {
   );
 }
 
-function TaskRow(props: {task: TaskList[number]; send: EventHandler<CheckedEvent | SelectEditingTask>}) {
+function TaskRow(props: {
+  task: TaskList[number];
+  send: EventHandler<CheckedEvent | SelectEditingTask | Drag.DragEvent<`task:${string}`, never>>;
+}) {
   return (
-    <tr onClick={() => props.send({tag: "selectEditingTask", id: props.task.id})}>
-      <td>
-        <CheckBox checked={props.task.done} id={props.task.id} send={props.send} />
-      </td>
-      <td>
-        <Title task={props.task} />
-      </td>
-      <td>
-        <span className={style.id}>{props.task.id}</span>
-      </td>
-    </tr>
+    <Drag.Draggable id={("task:" + props.task.id) as `task:${string}`} send={props.send}>
+      <div className={style.taskRow} onClick={() => props.send({tag: "selectEditingTask", id: props.task.id})}>
+        <span>
+          <CheckBox checked={props.task.done} id={props.task.id} send={props.send} />
+        </span>
+        <span>
+          <Title task={props.task} />
+        </span>
+        <span>
+          <span className={style.id}>{props.task.id}</span>
+        </span>
+      </div>
+    </Drag.Draggable>
   );
 }
 
-export function TaskList(props: {taskList: TaskList; send: EventHandler<CheckedEvent | SelectEditingTask>}) {
+export function TaskList(props: {
+  taskList: TaskList;
+  send: EventHandler<CheckedEvent | SelectEditingTask | Drag.DragEvent<`task:${string}`, never>>;
+}) {
   return (
-    <table className={style.taskList}>
-      <tbody>
-        {props.taskList.map((task) => (
-          <TaskRow key={task.id} task={task} send={props.send} />
-        ))}
-      </tbody>
-    </table>
+    <div className={style.taskList}>
+      {props.taskList.map((task) => (
+        <TaskRow key={task.id} task={task} send={props.send} />
+      ))}
+    </div>
   );
 }
