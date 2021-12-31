@@ -2,6 +2,7 @@ import {TextFieldEvent, TextFieldStates} from "./text-field";
 import {CheckedEvent, SelectEditingTask} from "./task-list";
 import {Task} from "./tasks";
 import {TaskEditorEvent, TaskEditorState} from "./task-editor";
+import * as Drag from "./drag";
 
 type TextFieldId = "addTitle";
 
@@ -13,6 +14,7 @@ export type App = {
   tasks: Task[];
   textFields: TextFieldStates<TextFieldId>;
   editor: TaskEditorState;
+  taskDrag: Drag.DragState<`task:${string}`, `filter:actions` | `filter:done` | `filter:stalled`>;
 };
 
 export type Event =
@@ -21,4 +23,5 @@ export type Event =
   | TextFieldEvent<TextFieldId>
   | SelectEditingTask
   | SelectFilterEvent
-  | TaskEditorEvent;
+  | TaskEditorEvent
+  | Drag.DragEvent<`task:${string}`, `filter:actions` | `filter:done` | `filter:stalled`>;

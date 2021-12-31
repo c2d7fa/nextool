@@ -1,6 +1,7 @@
 import * as React from "react";
 import {badges, TaskList} from "./tasks";
 import {Badge} from "./ui";
+import * as Drag from "./drag";
 
 const style = require("./task-list.module.scss");
 
@@ -42,23 +43,31 @@ function Title(props: {task: TaskList[number]}) {
   );
 }
 
-function TaskRow(props: {task: TaskList[number]; send: EventHandler<CheckedEvent | SelectEditingTask>}) {
+function TaskRow(props: {
+  task: TaskList[number];
+  send: EventHandler<CheckedEvent | SelectEditingTask | Drag.DragEvent<`task:${string}`, never>>;
+}) {
   return (
-    <div className={style.taskRow} onClick={() => props.send({tag: "selectEditingTask", id: props.task.id})}>
-      <span>
-        <CheckBox checked={props.task.done} id={props.task.id} send={props.send} />
-      </span>
-      <span>
-        <Title task={props.task} />
-      </span>
-      <span>
-        <span className={style.id}>{props.task.id}</span>
-      </span>
-    </div>
+    <Drag.Draggable id={("task:" + props.task.id) as `task:${string}`} send={props.send}>
+      <div className={style.taskRow} onClick={() => props.send({tag: "selectEditingTask", id: props.task.id})}>
+        <span>
+          <CheckBox checked={props.task.done} id={props.task.id} send={props.send} />
+        </span>
+        <span>
+          <Title task={props.task} />
+        </span>
+        <span>
+          <span className={style.id}>{props.task.id}</span>
+        </span>
+      </div>
+    </Drag.Draggable>
   );
 }
 
-export function TaskList(props: {taskList: TaskList; send: EventHandler<CheckedEvent | SelectEditingTask>}) {
+export function TaskList(props: {
+  taskList: TaskList;
+  send: EventHandler<CheckedEvent | SelectEditingTask | Drag.DragEvent<`task:${string}`, never>>;
+}) {
   return (
     <div className={style.taskList}>
       {props.taskList.map((task) => (

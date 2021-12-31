@@ -18,6 +18,27 @@ function useApp(): App {
 }
 
 function updateApp(app: App, ev: Event): App {
+  function handleDrop(
+    app: App,
+    [drag, drop]: [`task:${string}`, "filter:actions" | "filter:done" | "filter:stalled"],
+  ) {
+    const taskId = drag.substring("task:".length);
+    const filter = drop.substring("filter:".length);
+
+    const operation =
+      filter === "actions"
+        ? ({property: "action", value: true} as const)
+        : filter === "done"
+        ? ({property: "done", value: true} as const)
+        : filter === "stalled"
+        ? ({property: "action", value: false} as const)
+        : null;
+
+    if (!operation) return app;
+    const tasks = edit(app.tasks, taskId, {type: "set", ...operation});
+    return {...app, tasks};
+  }
+
   const tasks = (() => {
     if (ev.tag === "checked") return merge(app.tasks, [{id: ev.id, done: ev.checked}]);
     else if (ev.tag === "add") return add(app.tasks, {title: textFieldValue(app.textFields, "addTitle")});
@@ -45,7 +66,24 @@ function updateApp(app: App, ev: Event): App {
     else return app.filter;
   })();
 
-  return {tasks, textFields, filter, editor};
+  const taskDrag = (() => {
+    if (ev.tag === "drag")
+      return Drag.update(app.taskDrag, ev, {
+        isCompatible(drag, drop) {
+          return true;
+        },
+      });
+    else return app.taskDrag;
+  })();
+
+  if (ev.tag === "drag") {
+    const dropped_ = Drag.dropped(app.taskDrag, ev);
+    if (dropped_) {
+      return handleDrop({tasks, textFields, filter, editor, taskDrag}, dropped_);
+    }
+  }
+
+  return {tasks, textFields, filter, editor, taskDrag};
 }
 
 function AddTask(props: {send(ev: Event): void}) {
@@ -65,7 +103,7 @@ function AddTask(props: {send(ev: Event): void}) {
 
 function FilterSelector(props: {
   filter: "all" | "actions" | "done" | "stalled";
-  send(ev: SelectFilterEvent): void;
+  send(ev: SelectFilterEvent | Drag.DragEvent<never, `filter:actions` | `filter:done`>): void;
 }) {
   return (
     <div className={style.filterSelector}>
@@ -75,39 +113,41 @@ function FilterSelector(props: {
       >
         <span className={style.label}>All</span>
       </button>
-      <button
-        onClick={() => props.send({tag: "selectFilter", filter: "stalled"})}
-        className={props.filter === "stalled" ? style.selected : ""}
-      >
-        <span className={style.label}>Stalled</span>
-      </button>
-      <button
-        onClick={() => props.send({tag: "selectFilter", filter: "actions"})}
-        className={props.filter === "actions" ? style.selected : ""}
-      >
-        <span className={style.label}>Actions</span>
-      </button>
-      <button
-        onClick={() => props.send({tag: "selectFilter", filter: "done"})}
-        className={props.filter === "done" ? style.selected : ""}
-      >
-        <span className={style.label}>Finished</span>
-      </button>
+      <Drag.DropTarget id="filter:stalled" send={props.send}>
+        <button
+          onClick={() => props.send({tag: "selectFilter", filter: "stalled"})}
+          className={props.filter === "stalled" ? style.selected : ""}
+        >
+          <span className={style.label}>Stalled</span>
+        </button>
+      </Drag.DropTarget>
+      <Drag.DropTarget id="filter:actions" send={props.send}>
+        <button
+          onClick={() => props.send({tag: "selectFilter", filter: "actions"})}
+          className={props.filter === "actions" ? style.selected : ""}
+        >
+          <span className={style.label}>Actions</span>
+        </button>
+      </Drag.DropTarget>
+      <Drag.DropTarget id="filter:done" send={props.send}>
+        <button
+          onClick={() => props.send({tag: "selectFilter", filter: "done"})}
+          className={props.filter === "done" ? style.selected : ""}
+        >
+          <span className={style.label}>Finished</span>
+        </button>
+      </Drag.DropTarget>
     </div>
   );
 }
 
 function Main() {
-  const [dragState, setDragState] = React.useState<Drag.DragState<string, string>>({
-    dragging: null,
-    hovering: null,
-  });
-
   const [app, setApp] = React.useState<App>({
     tasks: [],
     textFields: {addTitle: ""},
     editor: null,
     filter: "all",
+    taskDrag: {dragging: null, hovering: null},
   });
 
   React.useEffect(() => {
@@ -122,35 +162,8 @@ function Main() {
     });
   }, []);
 
-  function sendDrag(ev: Drag.DragEvent<string, string>) {
-    if (Drag.dropped(dragState, ev)) console.log("dropped %o", Drag.dropped(dragState, ev));
-    setDragState((dragState) =>
-      Drag.update(dragState, ev, {
-        isCompatible(drag, drop) {
-          return drag !== drop;
-        },
-      }),
-    );
-  }
-
   return (
     <AppContext.Provider value={app}>
-      <Drag.Draggable id="a" send={sendDrag}>
-        a
-      </Drag.Draggable>
-      <Drag.Draggable id="b" send={sendDrag}>
-        b
-      </Drag.Draggable>
-      <Drag.Draggable id="c" send={sendDrag}>
-        c
-      </Drag.Draggable>
-      <Drag.DropTarget id="a" send={sendDrag}>
-        A
-      </Drag.DropTarget>
-      <Drag.DropTarget id="b" send={sendDrag}>
-        B
-      </Drag.DropTarget>
-      <pre>{JSON.stringify(dragState, null, 2)}</pre>
       <div className={style.outerContainer}>
         <div className={style.topBar} />
         <div className={style.sidebar}>

@@ -26,7 +26,7 @@ export function update<DragId extends string, DropId extends string>(
     hovering:
       ev.type === "hover" && state.dragging && isCompatible(state.dragging.id, ev.target)
         ? ev.target
-        : ev.type === "leave"
+        : ev.type === "leave" || ev.type === "drop"
         ? null
         : state.hovering,
   };
