@@ -7,6 +7,7 @@ import {TaskList} from "./task-list";
 import {add, edit, list, merge} from "./tasks";
 import {Button} from "./ui";
 import {reload, TaskEditor, updateEditor} from "./task-editor";
+import * as Drag from "./drag";
 
 const style = require("./main.module.scss");
 
@@ -97,6 +98,11 @@ function FilterSelector(props: {
 }
 
 function Main() {
+  const [dragState, setDragState] = React.useState<Drag.DragState<string, string>>({
+    dragging: null,
+    hovering: null,
+  });
+
   const [app, setApp] = React.useState<App>({
     tasks: [],
     textFields: {addTitle: ""},
@@ -116,8 +122,35 @@ function Main() {
     });
   }, []);
 
+  function sendDrag(ev: Drag.DragEvent<string, string>) {
+    if (Drag.dropped(dragState, ev)) console.log("dropped %o", Drag.dropped(dragState, ev));
+    setDragState((dragState) =>
+      Drag.update(dragState, ev, {
+        isCompatible(drag, drop) {
+          return drag !== drop;
+        },
+      }),
+    );
+  }
+
   return (
     <AppContext.Provider value={app}>
+      <Drag.Draggable id="a" send={sendDrag}>
+        a
+      </Drag.Draggable>
+      <Drag.Draggable id="b" send={sendDrag}>
+        b
+      </Drag.Draggable>
+      <Drag.Draggable id="c" send={sendDrag}>
+        c
+      </Drag.Draggable>
+      <Drag.DropTarget id="a" send={sendDrag}>
+        A
+      </Drag.DropTarget>
+      <Drag.DropTarget id="b" send={sendDrag}>
+        B
+      </Drag.DropTarget>
+      <pre>{JSON.stringify(dragState, null, 2)}</pre>
       <div className={style.outerContainer}>
         <div className={style.topBar} />
         <div className={style.sidebar}>
