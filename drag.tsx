@@ -1,5 +1,7 @@
 import * as React from "react";
 
+const styles = require("./drag.module.scss");
+
 export type DragEvent<DragId extends string, DropId extends string> =
   | {tag: "drag"; type: "drag"; id: DragId; x: number; y: number}
   | {tag: "drag"; type: "hover"; target: DropId}
@@ -65,6 +67,7 @@ export function DropTarget<DragId extends string, DropId extends string>(props: 
 }) {
   return (
     <div
+      className={styles.dropTarget}
       onDragOver={(ev) => {
         props.send({tag: "drag", type: "hover", target: props.id});
         ev.preventDefault();

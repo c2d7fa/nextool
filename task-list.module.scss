@@ -84,11 +84,14 @@
 
   box-shadow: 0 3px 6px -6px #aaa inset;
 
+  & > * {
+    @include shared.border-between(1px solid #c8c8c8);
+  }
+
   .taskRow {
     @include shared.input-padding;
     min-height: 22px;
 
-    @include shared.border-between(1px solid #c8c8c8);
     display: grid;
     grid-template-columns: max-content 1fr max-content;
 
