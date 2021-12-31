@@ -2,8 +2,8 @@ import * as React from "react";
 
 export type DragEvent<DragId extends string, DropId extends string> =
   | {tag: "drag"; type: "drag"; id: DragId; x: number; y: number}
-  | {tag: "drag"; type: "hover"; target: DropId | null}
-  | {tag: "drag"; type: "leave"; target: DropId | null}
+  | {tag: "drag"; type: "hover"; target: DropId}
+  | {tag: "drag"; type: "leave"; target: DropId}
   | {tag: "drag"; type: "drop"};
 
 export type DragState<DragId extends string, DropId extends string> = {
@@ -11,7 +11,7 @@ export type DragState<DragId extends string, DropId extends string> = {
     id: DragId;
     x: number;
     y: number;
-  };
+  } | null;
   hovering: DropId | null;
 };
 
@@ -24,7 +24,7 @@ export function update<DragId extends string, DropId extends string>(
     ...state,
     dragging: ev.type === "drag" ? {id: ev.id, x: ev.x, y: ev.y} : ev.type === "drop" ? null : state.dragging,
     hovering:
-      ev.type === "hover" && isCompatible(state.dragging.id, ev.target)
+      ev.type === "hover" && state.dragging && isCompatible(state.dragging.id, ev.target)
         ? ev.target
         : ev.type === "leave"
         ? null
@@ -36,7 +36,7 @@ export function dropped<DragId extends string, DropId extends string>(
   state: DragState<DragId, DropId>,
   ev: DragEvent<DragId, DropId>,
 ): [DragId, DropId] | null {
-  return ev.type === "drop" && state.hovering ? [state.dragging.id, state.hovering] : null;
+  return ev.type === "drop" && state.hovering && state.dragging ? [state.dragging.id, state.hovering] : null;
 }
 
 export function Draggable<DragId extends string, DropId extends string>(props: {

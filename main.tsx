@@ -11,7 +11,7 @@ import * as Drag from "./drag";
 
 const style = require("./main.module.scss");
 
-const AppContext = React.createContext<App>(null);
+const AppContext = React.createContext<App>(null as any);
 
 function useApp(): App {
   return React.useContext(AppContext);
