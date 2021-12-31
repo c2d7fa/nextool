@@ -103,7 +103,7 @@ function AddTask(props: {send(ev: Event): void}) {
 
 function FilterSelector(props: {
   filter: "all" | "actions" | "done" | "stalled";
-  send(ev: SelectFilterEvent | Drag.DragEvent<never, `filter:actions` | `filter:done`>): void;
+  send(ev: SelectFilterEvent | Drag.DragEvent<never, `filter:actions` | `filter:done` | `filter:stalled`>): void;
 }) {
   return (
     <div className={style.filterSelector}>

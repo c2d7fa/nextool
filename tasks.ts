@@ -60,6 +60,9 @@ export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks 
       }
       return task;
     });
+  } else {
+    const unreachable: never = operation;
+    return unreachable;
   }
 }
 
