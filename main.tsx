@@ -82,7 +82,7 @@ function updateApp(app: State, ev: Event): State {
 
   function handleEdit(app: State, ev: Event) {
     if (ev.tag !== "edit") return app;
-    return {...app, editor: updateEditor(app, ev), tasks: edit(app.tasks, ev.id, ev.operation)};
+    return {...app, editor: updateEditor(app.editor, ev), tasks: edit(app.tasks, ev.id, ev.operation)};
   }
 
   function handleChecked(app: State, ev: Event) {
