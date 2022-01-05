@@ -4,7 +4,7 @@ import {State, Event, SelectFilterEvent, View, view as viewApp} from "./app";
 import {TextField, update as updateTextFields, value as textFieldValue} from "./text-field";
 import {loadTasks, saveTasks} from "./storage";
 import {TaskList} from "./task-list";
-import {add, edit, list, merge} from "./tasks";
+import {add, edit, FilterId, list, merge} from "./tasks";
 import {Button} from "./ui";
 import {reload, TaskEditor, updateEditor} from "./task-editor";
 import * as Drag from "./drag";
@@ -124,7 +124,7 @@ function AddTask(props: {send(ev: Event): void}) {
 
 function Filter(props: {
   filter: View["filters"][number];
-  send(ev: SelectFilterEvent | Drag.DragEvent<never, `filter:actions` | `filter:done` | `filter:stalled`>): void;
+  send(ev: SelectFilterEvent | Drag.DragEvent<never, `filter:${FilterId}`>): void;
 }) {
   const inner = (
     <button
@@ -146,7 +146,7 @@ function Filter(props: {
 
 function FilterSelector(props: {
   filters: View["filters"];
-  send(ev: SelectFilterEvent | Drag.DragEvent<never, `filter:actions` | `filter:done` | `filter:stalled`>): void;
+  send(ev: SelectFilterEvent | Drag.DragEvent<never, `filter:${FilterId}`>): void;
 }) {
   return (
     <div className={style.filterSelector}>
@@ -162,7 +162,7 @@ function Main() {
     tasks: [],
     textFields: {addTitle: ""},
     editor: null,
-    filter: "all",
+    filter: "not-done",
     taskDrag: {dragging: null, hovering: null},
   });
 

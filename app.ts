@@ -6,8 +6,11 @@ import * as Drag from "./drag";
 
 type TextFieldId = "addTitle";
 
+import type {FilterId} from "./tasks";
+export type {FilterId};
+
 export type AddEvent = {tag: "add"};
-export type SelectFilterEvent = {tag: "selectFilter"; filter: "all" | "actions" | "done" | "stalled"};
+export type SelectFilterEvent = {tag: "selectFilter"; filter: FilterId};
 
 export type Event =
   | CheckedEvent
@@ -16,22 +19,22 @@ export type Event =
   | SelectEditingTask
   | SelectFilterEvent
   | TaskEditorEvent
-  | Drag.DragEvent<`task:${string}`, `filter:actions` | `filter:done` | `filter:stalled`>;
+  | Drag.DragEvent<`task:${string}`, `filter:${FilterId}`>;
 
 export type State = {
-  filter: "all" | "actions" | "done" | "stalled";
+  filter: FilterId;
   tasks: Task[];
   textFields: TextFieldStates<TextFieldId>;
   editor: TaskEditorState;
-  taskDrag: Drag.DragState<`task:${string}`, `filter:actions` | `filter:done` | `filter:stalled`>;
+  taskDrag: Drag.DragState<`task:${string}`, `filter:${FilterId}`>;
 };
 
 export type View = {
   filters: {
     label: string;
-    filter: "all" | "actions" | "done" | "stalled";
+    filter: FilterId;
     selected: boolean;
-    dropTarget: `filter:actions` | `filter:done` | `filter:stalled` | null;
+    dropTarget: `filter:${FilterId}` | null;
   }[];
   taskList: TaskList;
   editor: TaskEditorState;
@@ -40,10 +43,16 @@ export type View = {
 export function view(app: State): View {
   return {
     filters: [
-      {label: "All", filter: "all", selected: app.filter === "all", dropTarget: null},
+      {
+        label: "Unfinished",
+        filter: "not-done",
+        selected: app.filter === "not-done",
+        dropTarget: "filter:not-done",
+      },
       {label: "Actions", filter: "actions", selected: app.filter === "actions", dropTarget: `filter:actions`},
-      {label: "Done", filter: "done", selected: app.filter === "done", dropTarget: `filter:done`},
       {label: "Stalled", filter: "stalled", selected: app.filter === "stalled", dropTarget: `filter:stalled`},
+      {label: "Done", filter: "done", selected: app.filter === "done", dropTarget: `filter:done`},
+      {label: "All", filter: "all", selected: app.filter === "all", dropTarget: null},
     ],
     taskList: list(app.tasks, app.filter),
     editor: app.editor,

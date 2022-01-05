@@ -72,11 +72,14 @@ export function badges(task: Task): ("action" | "stalled")[] {
   else return [];
 }
 
-export function list(tasks: Tasks, filter: "all" | "actions" | "done" | "stalled"): TaskList {
+export type FilterId = "all" | "actions" | "done" | "stalled" | "not-done";
+
+export function list(tasks: Tasks, filter: FilterId): TaskList {
   const filtered = tasks.filter((task) => {
     if (filter === "actions") return badges(task).includes("action");
     else if (filter === "done") return task.done;
     else if (filter === "stalled") return badges(task).includes("stalled");
+    else if (filter === "not-done") return !task.done;
     else return true;
   });
 
