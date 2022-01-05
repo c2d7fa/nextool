@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import {App, Event, SelectFilterEvent} from "./app";
+import {App, Event, SelectFilterEvent, View, view as viewApp} from "./app";
 import {TextField, update as updateTextFields, value as textFieldValue} from "./text-field";
 import {loadTasks, saveTasks} from "./storage";
 import {TaskList} from "./task-list";
@@ -122,42 +122,37 @@ function AddTask(props: {send(ev: Event): void}) {
   );
 }
 
+function Filter(props: {
+  filter: View["filters"][number];
+  send(ev: SelectFilterEvent | Drag.DragEvent<never, `filter:actions` | `filter:done` | `filter:stalled`>): void;
+}) {
+  const inner = (
+    <button
+      onClick={() => props.send({tag: "selectFilter", filter: props.filter.filter})}
+      className={props.filter.selected ? style.selected : ""}
+    >
+      <span className={style.label}>{props.filter.label}</span>
+    </button>
+  );
+
+  return props.filter.dropTarget ? (
+    <Drag.DropTarget id={props.filter.dropTarget} send={props.send}>
+      {inner}
+    </Drag.DropTarget>
+  ) : (
+    inner
+  );
+}
+
 function FilterSelector(props: {
-  filter: "all" | "actions" | "done" | "stalled";
+  filters: View["filters"];
   send(ev: SelectFilterEvent | Drag.DragEvent<never, `filter:actions` | `filter:done` | `filter:stalled`>): void;
 }) {
   return (
     <div className={style.filterSelector}>
-      <button
-        onClick={() => props.send({tag: "selectFilter", filter: "all"})}
-        className={props.filter === "all" ? style.selected : ""}
-      >
-        <span className={style.label}>All</span>
-      </button>
-      <Drag.DropTarget id="filter:stalled" send={props.send}>
-        <button
-          onClick={() => props.send({tag: "selectFilter", filter: "stalled"})}
-          className={props.filter === "stalled" ? style.selected : ""}
-        >
-          <span className={style.label}>Stalled</span>
-        </button>
-      </Drag.DropTarget>
-      <Drag.DropTarget id="filter:actions" send={props.send}>
-        <button
-          onClick={() => props.send({tag: "selectFilter", filter: "actions"})}
-          className={props.filter === "actions" ? style.selected : ""}
-        >
-          <span className={style.label}>Actions</span>
-        </button>
-      </Drag.DropTarget>
-      <Drag.DropTarget id="filter:done" send={props.send}>
-        <button
-          onClick={() => props.send({tag: "selectFilter", filter: "done"})}
-          className={props.filter === "done" ? style.selected : ""}
-        >
-          <span className={style.label}>Finished</span>
-        </button>
-      </Drag.DropTarget>
+      {props.filters.map((filter, i) => (
+        <Filter key={i} filter={filter} send={props.send} />
+      ))}
     </div>
   );
 }
@@ -170,6 +165,8 @@ function Main() {
     filter: "all",
     taskDrag: {dragging: null, hovering: null},
   });
+
+  const view = viewApp(app);
 
   React.useEffect(() => {
     setApp((app) => ({...app, tasks: loadTasks()}));
@@ -188,11 +185,11 @@ function Main() {
       <div className={style.outerContainer}>
         <div className={style.topBar} />
         <div className={style.sidebar}>
-          <FilterSelector filter={app.filter} send={send} />
+          <FilterSelector filters={view.filters} send={send} />
         </div>
         <div className={style.innerContainer}>
           <div className={style.left}>
-            <TaskList taskList={list(app.tasks, app.filter)} send={send} />
+            <TaskList taskList={view.taskList} send={send} />
             <AddTask send={send} />
           </div>
           <div className={style.right}>
