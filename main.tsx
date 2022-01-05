@@ -17,11 +17,23 @@ function useApp(): App {
   return React.useContext(AppContext);
 }
 
+function compose<T>(fns: ((x: T) => T)[]): (x: T) => T {
+  return (x) => fns.reduce((x, f) => f(x), x);
+}
+
+function always<T>(x: T): (...args: unknown[]) => T {
+  return () => x;
+}
+
 function updateApp(app: App, ev: Event): App {
-  function handleDrop(
-    app: App,
-    [drag, drop]: [`task:${string}`, "filter:actions" | "filter:done" | "filter:stalled"],
-  ) {
+  function handleDrop(app: App, ev: Event) {
+    if (ev.tag !== "drag") return app;
+
+    const dropped_ = Drag.dropped(app.taskDrag, ev);
+    if (!dropped_) return app;
+
+    const [drag, drop] = dropped_;
+
     const taskId = drag.substring("task:".length);
     const filter = drop.substring("filter:".length);
 
@@ -39,51 +51,60 @@ function updateApp(app: App, ev: Event): App {
     return {...app, tasks};
   }
 
-  const tasks = (() => {
-    if (ev.tag === "checked") return merge(app.tasks, [{id: ev.id, done: ev.checked}]);
-    else if (ev.tag === "add") return add(app.tasks, {title: textFieldValue(app.textFields, "addTitle")});
-    else if (ev.tag === "textField" && ev.field === "addTitle" && ev.type === "submit")
-      return updateApp(app, {tag: "add"}).tasks;
-    else if (ev.tag === "edit") return edit(app.tasks, ev.id, ev.operation);
-    else return app.tasks;
-  })();
-
-  const textFields = (() => {
-    if (ev.tag === "textField") return updateTextFields(app.textFields, ev);
-    if (ev.tag === "add")
-      return updateApp(app, {tag: "textField", type: "edit", field: "addTitle", value: ""}).textFields;
-    else return app.textFields;
-  })();
-
-  const editor = (() => {
-    if (ev.tag === "selectEditingTask") return reload(app, ev.id);
-    else if (ev.tag === "edit") return updateEditor(app, ev);
-    else return app.editor;
-  })();
-
-  const filter = (() => {
-    if (ev.tag === "selectFilter") return ev.filter;
-    else return app.filter;
-  })();
-
-  const taskDrag = (() => {
-    if (ev.tag === "drag")
-      return Drag.update(app.taskDrag, ev, {
-        isCompatible(drag, drop) {
-          return true;
-        },
-      });
-    else return app.taskDrag;
-  })();
-
-  if (ev.tag === "drag") {
-    const dropped_ = Drag.dropped(app.taskDrag, ev);
-    if (dropped_) {
-      return handleDrop({tasks, textFields, filter, editor, taskDrag}, dropped_);
-    }
+  function handleDragState(app: App, ev: Event) {
+    if (ev.tag !== "drag") return app;
+    return {...app, taskDrag: Drag.update(app.taskDrag, ev, {isCompatible: always(true)})};
   }
 
-  return {tasks, textFields, filter, editor, taskDrag};
+  function handleSelectFilter(app: App, ev: Event) {
+    if (ev.tag !== "selectFilter") return app;
+    return {...app, filter: ev.filter};
+  }
+
+  function handleAdd(app: App, ev: Event) {
+    let result = app;
+    if ((ev.tag === "textField" && ev.field === "addTitle" && ev.type === "submit") || ev.tag === "add") {
+      result = {...app, tasks: add(app.tasks, {title: textFieldValue(app.textFields, "addTitle")})};
+    }
+    if (ev.tag === "add") {
+      result = {
+        ...app,
+        textFields: updateTextFields(app.textFields, {tag: "textField", field: "addTitle", type: "submit"}),
+      };
+    }
+    return result;
+  }
+
+  function handleTextField(app: App, ev: Event) {
+    if (ev.tag !== "textField") return app;
+    return {...app, textFields: updateTextFields(app.textFields, ev)};
+  }
+
+  function handleEdit(app: App, ev: Event) {
+    if (ev.tag !== "edit") return app;
+    return {...app, editor: updateEditor(app, ev), tasks: edit(app.tasks, ev.id, ev.operation)};
+  }
+
+  function handleChecked(app: App, ev: Event) {
+    if (ev.tag !== "checked") return app;
+    return {...app, tasks: merge(app.tasks, [{id: ev.id, done: ev.checked}])};
+  }
+
+  function handleSelectEditingTask(app: App, ev: Event) {
+    if (ev.tag !== "selectEditingTask") return app;
+    return {...app, editor: reload(app, ev.id)};
+  }
+
+  return compose<App>([
+    (app) => handleAdd(app, ev),
+    (app) => handleChecked(app, ev),
+    (app) => handleEdit(app, ev),
+    (app) => handleSelectFilter(app, ev),
+    (app) => handleSelectEditingTask(app, ev),
+    (app) => handleDrop(app, ev),
+    (app) => handleDragState(app, ev),
+    (app) => handleTextField(app, ev),
+  ])(app);
 }
 
 function AddTask(props: {send(ev: Event): void}) {
