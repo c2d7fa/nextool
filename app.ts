@@ -18,7 +18,7 @@ export type Event =
   | TaskEditorEvent
   | Drag.DragEvent<`task:${string}`, `filter:actions` | `filter:done` | `filter:stalled`>;
 
-export type App = {
+export type State = {
   filter: "all" | "actions" | "done" | "stalled";
   tasks: Task[];
   textFields: TextFieldStates<TextFieldId>;
@@ -37,7 +37,7 @@ export type View = {
   editor: TaskEditorState;
 };
 
-export function view(app: App): View {
+export function view(app: State): View {
   return {
     filters: [
       {label: "All", filter: "all", selected: app.filter === "all", dropTarget: null},

@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import {App, Event, SelectFilterEvent, View, view as viewApp} from "./app";
+import {State, Event, SelectFilterEvent, View, view as viewApp} from "./app";
 import {TextField, update as updateTextFields, value as textFieldValue} from "./text-field";
 import {loadTasks, saveTasks} from "./storage";
 import {TaskList} from "./task-list";
@@ -11,9 +11,9 @@ import * as Drag from "./drag";
 
 const style = require("./main.module.scss");
 
-const AppContext = React.createContext<App>(null as any);
+const AppContext = React.createContext<State>(null as any);
 
-function useApp(): App {
+function useApp(): State {
   return React.useContext(AppContext);
 }
 
@@ -25,8 +25,8 @@ function always<T>(x: T): (...args: unknown[]) => T {
   return () => x;
 }
 
-function updateApp(app: App, ev: Event): App {
-  function handleDrop(app: App, ev: Event) {
+function updateApp(app: State, ev: Event): State {
+  function handleDrop(app: State, ev: Event) {
     if (ev.tag !== "drag") return app;
 
     const dropped_ = Drag.dropped(app.taskDrag, ev);
@@ -51,17 +51,17 @@ function updateApp(app: App, ev: Event): App {
     return {...app, tasks};
   }
 
-  function handleDragState(app: App, ev: Event) {
+  function handleDragState(app: State, ev: Event) {
     if (ev.tag !== "drag") return app;
     return {...app, taskDrag: Drag.update(app.taskDrag, ev, {isCompatible: always(true)})};
   }
 
-  function handleSelectFilter(app: App, ev: Event) {
+  function handleSelectFilter(app: State, ev: Event) {
     if (ev.tag !== "selectFilter") return app;
     return {...app, filter: ev.filter};
   }
 
-  function handleAdd(app: App, ev: Event) {
+  function handleAdd(app: State, ev: Event) {
     let result = app;
     if ((ev.tag === "textField" && ev.field === "addTitle" && ev.type === "submit") || ev.tag === "add") {
       result = {...app, tasks: add(app.tasks, {title: textFieldValue(app.textFields, "addTitle")})};
@@ -75,27 +75,27 @@ function updateApp(app: App, ev: Event): App {
     return result;
   }
 
-  function handleTextField(app: App, ev: Event) {
+  function handleTextField(app: State, ev: Event) {
     if (ev.tag !== "textField") return app;
     return {...app, textFields: updateTextFields(app.textFields, ev)};
   }
 
-  function handleEdit(app: App, ev: Event) {
+  function handleEdit(app: State, ev: Event) {
     if (ev.tag !== "edit") return app;
     return {...app, editor: updateEditor(app, ev), tasks: edit(app.tasks, ev.id, ev.operation)};
   }
 
-  function handleChecked(app: App, ev: Event) {
+  function handleChecked(app: State, ev: Event) {
     if (ev.tag !== "checked") return app;
     return {...app, tasks: merge(app.tasks, [{id: ev.id, done: ev.checked}])};
   }
 
-  function handleSelectEditingTask(app: App, ev: Event) {
+  function handleSelectEditingTask(app: State, ev: Event) {
     if (ev.tag !== "selectEditingTask") return app;
     return {...app, editor: reload(app, ev.id)};
   }
 
-  return compose<App>([
+  return compose<State>([
     (app) => handleAdd(app, ev),
     (app) => handleChecked(app, ev),
     (app) => handleEdit(app, ev),
@@ -158,7 +158,7 @@ function FilterSelector(props: {
 }
 
 function Main() {
-  const [app, setApp] = React.useState<App>({
+  const [app, setApp] = React.useState<State>({
     tasks: [],
     textFields: {addTitle: ""},
     editor: null,
