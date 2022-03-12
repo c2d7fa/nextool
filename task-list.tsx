@@ -59,6 +59,8 @@ function TaskRow(props: {
         <span>
           <span className={style.id}>{props.task.id}</span>
         </span>
+        <div className={style.dropTop} />
+        <div className={style.dropBottom} />
       </div>
     </Drag.Draggable>
   );
