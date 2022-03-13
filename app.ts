@@ -1,5 +1,4 @@
 import {TextFieldEvent, TextFieldStates} from "./text-field";
-import {CheckedEvent, SelectEditingTask} from "./task-list";
 import {list, Task, TaskList} from "./tasks";
 import {TaskEditorEvent, TaskEditorState} from "./task-editor";
 import * as Drag from "./drag";
@@ -11,6 +10,8 @@ export type {FilterId};
 
 export type AddEvent = {tag: "add"};
 export type SelectFilterEvent = {tag: "selectFilter"; filter: FilterId};
+export type CheckedEvent = {tag: "checked"; id: string; checked: boolean};
+export type SelectEditingTask = {tag: "selectEditingTask"; id: string};
 
 export type DragId = {type: "task"; id: string};
 export type DropId = {type: "filter"; id: FilterId} | {type: "task"; side: "above" | "below"; id: string};
@@ -23,6 +24,8 @@ export type Event =
   | SelectFilterEvent
   | TaskEditorEvent
   | Drag.DragEvent<DragId, DropId>;
+
+export type Send = (event: Event) => void;
 
 export type State = {
   filter: FilterId;

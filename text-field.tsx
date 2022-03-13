@@ -13,7 +13,8 @@ export function update<Id extends string>(
   ev: TextFieldEvent<Id>,
 ): TextFieldStates<Id> {
   if (ev.type === "edit") return {...state, [ev.field]: ev.value};
-  if (ev.type === "submit") return {...state, [ev.field]: ""};
+  else if (ev.type === "submit") return {...state, [ev.field]: ""};
+  else return state;
 }
 
 export function value<Id extends string>(state: TextFieldStates<Id>, field: Id): string {

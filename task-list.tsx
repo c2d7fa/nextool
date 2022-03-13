@@ -1,16 +1,12 @@
 import * as React from "react";
-import {badges, TaskList} from "./tasks";
+import {TaskList} from "./tasks";
 import {Badge} from "./ui";
 import * as Drag from "./drag";
-import {DropId} from "./app";
+import {DropId, Send} from "./app";
 
 const style = require("./task-list.module.scss");
 
-export type CheckedEvent = {tag: "checked"; id: string; checked: boolean};
-export type SelectEditingTask = {tag: "selectEditingTask"; id: string};
-export type EventHandler<T> = (event: T) => void;
-
-function CheckBox(props: {checked: boolean; id: string; send: EventHandler<CheckedEvent>}) {
+function CheckBox(props: {checked: boolean; id: string; send: Send}) {
   return (
     <div
       className={[style.checkBox, props.checked ? style.checked : style.unchecked].join(" ")}
@@ -44,10 +40,7 @@ function Title(props: {task: TaskList[number]}) {
   );
 }
 
-function TaskRow(props: {
-  task: TaskList[number];
-  send: EventHandler<CheckedEvent | SelectEditingTask | Drag.DragEvent<{type: "task"; id: string}, DropId>>;
-}) {
+function TaskRow(props: {task: TaskList[number]; send: Send}) {
   return (
     <Drag.Draggable id={{type: "task" as const, id: props.task.id}} send={props.send}>
       <div className={style.taskRow} onClick={() => props.send({tag: "selectEditingTask", id: props.task.id})}>
@@ -71,10 +64,7 @@ function TaskRow(props: {
   );
 }
 
-export function TaskList(props: {
-  taskList: TaskList;
-  send: EventHandler<CheckedEvent | SelectEditingTask | Drag.DragEvent<{type: "task"; id: string}, never>>;
-}) {
+export function TaskList(props: {taskList: TaskList; send: Send}) {
   return (
     <div className={style.taskList}>
       {props.taskList.map((task) => (
