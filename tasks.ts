@@ -7,7 +7,13 @@ export type Task = {
 
 export type Tasks = Task[];
 
-export type TaskList = {id: string; title: string; done: boolean; badges: ("action" | "stalled")[]}[];
+export type TaskListView = {
+  id: string;
+  title: string;
+  done: boolean;
+  badges: ("action" | "stalled")[];
+  dropIndicator: {top: boolean; bottom: boolean};
+}[];
 
 export function merge(tasks: Tasks, updates: Partial<Task>[]): Tasks {
   return tasks.map((task) => {
@@ -112,7 +118,7 @@ export function badges(task: Task): ("action" | "stalled")[] {
 
 export type FilterId = "all" | "actions" | "done" | "stalled" | "not-done";
 
-export function list(tasks: Tasks, filter: FilterId): TaskList {
+export function list(tasks: Tasks, filter: FilterId): TaskListView {
   const filtered = tasks.filter((task) => {
     if (filter === "actions") return badges(task).includes("action");
     else if (filter === "done") return task.done;
@@ -121,10 +127,11 @@ export function list(tasks: Tasks, filter: FilterId): TaskList {
     else return true;
   });
 
-  return filtered.map((task) => ({
+  return filtered.map((task, index) => ({
     id: task.id,
     title: task.title,
     done: task.done ?? false,
     badges: badges(task),
+    dropIndicator: {top: false, bottom: index === 4},
   }));
 }

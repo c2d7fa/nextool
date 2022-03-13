@@ -1,5 +1,5 @@
 import {TextFieldEvent, TextFieldStates} from "./text-field";
-import {list, Task, TaskList} from "./tasks";
+import {list, Task, TaskListView} from "./tasks";
 import {TaskEditorEvent, TaskEditorState} from "./task-editor";
 import * as Drag from "./drag";
 
@@ -42,7 +42,7 @@ export type View = {
     selected: boolean;
     dropTarget: DropId | null;
   }[];
-  taskList: TaskList;
+  taskList: TaskListView;
   editor: TaskEditorState;
 };
 

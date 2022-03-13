@@ -3,11 +3,11 @@ import * as ReactDOM from "react-dom";
 import {State, Event, SelectFilterEvent, View, view as viewApp, DropId} from "./app";
 import {TextField, update as updateTextFields, value as textFieldValue} from "./text-field";
 import {loadTasks, saveTasks} from "./storage";
-import {TaskList} from "./task-list";
-import {add, edit, FilterId, merge, moveToFilterSupported} from "./tasks";
+import {add, edit, merge, moveToFilterSupported} from "./tasks";
 import {Button} from "./ui";
 import {reload, TaskEditor, updateEditor} from "./task-editor";
 import * as Drag from "./drag";
+import {TaskList} from "./task-list";
 
 const style = require("./main.module.scss");
 
@@ -183,7 +183,7 @@ function Main() {
         </div>
         <div className={style.innerContainer}>
           <div className={style.left}>
-            <TaskList taskList={view.taskList} send={send} />
+            <TaskList view={view.taskList} send={send} />
             <AddTask send={send} />
           </div>
           <div className={style.right}>

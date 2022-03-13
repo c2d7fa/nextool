@@ -121,7 +121,32 @@
       left: 0;
       right: 0;
       height: 10px;
-      background-color: #0000a030;
+    }
+
+    .dropIndicatorTop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      border-radius: 2px;
+
+      &.shown {
+        background-color: #00000038;
+      }
+    }
+
+    .dropIndicatorBottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      border-radius: 2px;
+
+      &.shown {
+        background-color: #00000038;
+      }
     }
 
     .dropBottom {
@@ -130,7 +155,6 @@
       left: 0;
       right: 0;
       height: 10px;
-      background-color: #00a00030;
     }
   }
 }
