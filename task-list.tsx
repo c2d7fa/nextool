@@ -2,6 +2,7 @@ import * as React from "react";
 import {badges, TaskList} from "./tasks";
 import {Badge} from "./ui";
 import * as Drag from "./drag";
+import {DropId} from "./app";
 
 const style = require("./task-list.module.scss");
 
@@ -45,7 +46,7 @@ function Title(props: {task: TaskList[number]}) {
 
 function TaskRow(props: {
   task: TaskList[number];
-  send: EventHandler<CheckedEvent | SelectEditingTask | Drag.DragEvent<{type: "task"; id: string}, never>>;
+  send: EventHandler<CheckedEvent | SelectEditingTask | Drag.DragEvent<{type: "task"; id: string}, DropId>>;
 }) {
   return (
     <Drag.Draggable id={{type: "task" as const, id: props.task.id}} send={props.send}>
@@ -59,8 +60,12 @@ function TaskRow(props: {
         <span>
           <span className={style.id}>{props.task.id}</span>
         </span>
-        <div className={style.dropTop} />
-        <div className={style.dropBottom} />
+        <Drag.DropTarget id={{type: "task" as const, id: props.task.id, side: "above"}} send={props.send}>
+          <div className={style.dropTop} />
+        </Drag.DropTarget>
+        <Drag.DropTarget id={{type: "task", id: props.task.id, side: "below"}} send={props.send}>
+          <div className={style.dropBottom} />
+        </Drag.DropTarget>
       </div>
     </Drag.Draggable>
   );

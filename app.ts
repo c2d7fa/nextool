@@ -13,7 +13,7 @@ export type AddEvent = {tag: "add"};
 export type SelectFilterEvent = {tag: "selectFilter"; filter: FilterId};
 
 export type DragId = {type: "task"; id: string};
-export type DropId = {type: "filter"; id: FilterId};
+export type DropId = {type: "filter"; id: FilterId} | {type: "task"; side: "above" | "below"; id: string};
 
 export type Event =
   | CheckedEvent

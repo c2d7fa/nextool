@@ -1,10 +1,10 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import {State, Event, SelectFilterEvent, View, view as viewApp} from "./app";
+import {State, Event, SelectFilterEvent, View, view as viewApp, DropId} from "./app";
 import {TextField, update as updateTextFields, value as textFieldValue} from "./text-field";
 import {loadTasks, saveTasks} from "./storage";
 import {TaskList} from "./task-list";
-import {add, edit, FilterId, merge} from "./tasks";
+import {add, edit, FilterId, merge, moveToFilterSupported} from "./tasks";
 import {Button} from "./ui";
 import {reload, TaskEditor, updateEditor} from "./task-editor";
 import * as Drag from "./drag";
@@ -34,21 +34,15 @@ function updateApp(app: State, ev: Event): State {
 
     const [drag, drop] = dropped_;
 
-    const taskId = drag.id;
-    const filter = drop.id;
-
-    const operation =
-      filter === "actions"
-        ? ({property: "action", value: true} as const)
-        : filter === "done"
-        ? ({property: "done", value: true} as const)
-        : filter === "stalled"
-        ? ({property: "action", value: false} as const)
-        : null;
-
-    if (!operation) return app;
-    const tasks = edit(app.tasks, taskId, {type: "set", ...operation});
-    return {...app, tasks};
+    if (drop.type === "filter") {
+      if (!moveToFilterSupported(drop.id)) return app;
+      return {...app, tasks: edit(app.tasks, drag.id, {type: "moveToFilter", filter: drop.id})};
+    } else if (drop.type === "task") {
+      return {...app, tasks: edit(app.tasks, drag.id, {type: "move", side: drop.side, target: drop.id})};
+    } else {
+      const unreachable: never = drop;
+      return unreachable;
+    }
   }
 
   function handleDragState(app: State, ev: Event) {
@@ -124,7 +118,7 @@ function AddTask(props: {send(ev: Event): void}) {
 
 function Filter(props: {
   filter: View["filters"][number];
-  send(ev: SelectFilterEvent | Drag.DragEvent<never, {type: "filter"; id: FilterId}>): void;
+  send(ev: SelectFilterEvent | Drag.DragEvent<never, DropId>): void;
 }) {
   const inner = (
     <button
@@ -146,7 +140,7 @@ function Filter(props: {
 
 function FilterSelector(props: {
   filters: View["filters"];
-  send(ev: SelectFilterEvent | Drag.DragEvent<never, {type: "filter"; id: FilterId}>): void;
+  send(ev: SelectFilterEvent | Drag.DragEvent<never, DropId>): void;
 }) {
   return (
     <div className={style.filterSelector}>

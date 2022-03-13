@@ -48,7 +48,13 @@ export type EditOperation =
   | {type: "delete"}
   | {type: "set"; property: "title"; value: string}
   | {type: "set"; property: "done"; value: boolean}
-  | {type: "set"; property: "action"; value: boolean};
+  | {type: "set"; property: "action"; value: boolean}
+  | {type: "move"; side: "above" | "below"; target: string}
+  | {type: "moveToFilter"; filter: "actions" | "done" | "stalled"};
+
+export function moveToFilterSupported(filter: string): filter is "actions" | "done" | "stalled" {
+  return filter === "actions" || filter === "done" || filter === "stalled";
+}
 
 export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks {
   if (operation.type === "delete") {
@@ -60,6 +66,38 @@ export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks 
       }
       return task;
     });
+  } else if (operation.type === "moveToFilter") {
+    const filter = operation.filter;
+
+    const update =
+      filter === "actions"
+        ? ({property: "action", value: true} as const)
+        : filter === "done"
+        ? ({property: "done", value: true} as const)
+        : filter === "stalled"
+        ? ({property: "action", value: false} as const)
+        : (null as never);
+
+    return edit(tasks, id, {type: "set", ...update});
+  } else if (operation.type === "move") {
+    const side = operation.side;
+    const target = operation.target;
+
+    const index = tasks.findIndex((task) => task.id === id);
+    if (index === -1) return tasks;
+
+    const newTasks = [...tasks];
+    newTasks.splice(index, 1);
+    const targetIndex = tasks.findIndex((task) => task.id === target);
+    if (targetIndex === -1) return tasks;
+
+    if (side === "above") {
+      newTasks.splice(targetIndex, 0, {...tasks[index], id: tasks[index].id});
+    } else {
+      newTasks.splice(targetIndex + 1, 0, {...tasks[index], id: tasks[index].id});
+    }
+
+    return newTasks;
   } else {
     const unreachable: never = operation;
     return unreachable;
