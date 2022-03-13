@@ -45,10 +45,10 @@ function Title(props: {task: TaskList[number]}) {
 
 function TaskRow(props: {
   task: TaskList[number];
-  send: EventHandler<CheckedEvent | SelectEditingTask | Drag.DragEvent<`task:${string}`, never>>;
+  send: EventHandler<CheckedEvent | SelectEditingTask | Drag.DragEvent<{type: "task"; id: string}, never>>;
 }) {
   return (
-    <Drag.Draggable id={("task:" + props.task.id) as `task:${string}`} send={props.send}>
+    <Drag.Draggable id={{type: "task" as const, id: props.task.id}} send={props.send}>
       <div className={style.taskRow} onClick={() => props.send({tag: "selectEditingTask", id: props.task.id})}>
         <span>
           <CheckBox checked={props.task.done} id={props.task.id} send={props.send} />
@@ -68,7 +68,7 @@ function TaskRow(props: {
 
 export function TaskList(props: {
   taskList: TaskList;
-  send: EventHandler<CheckedEvent | SelectEditingTask | Drag.DragEvent<`task:${string}`, never>>;
+  send: EventHandler<CheckedEvent | SelectEditingTask | Drag.DragEvent<{type: "task"; id: string}, never>>;
 }) {
   return (
     <div className={style.taskList}>

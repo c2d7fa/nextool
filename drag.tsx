@@ -2,13 +2,13 @@ import * as React from "react";
 
 const styles = require("./drag.module.scss");
 
-export type DragEvent<DragId extends string, DropId extends string> =
+export type DragEvent<DragId, DropId> =
   | {tag: "drag"; type: "drag"; id: DragId; x: number; y: number}
   | {tag: "drag"; type: "hover"; target: DropId}
   | {tag: "drag"; type: "leave"; target: DropId}
   | {tag: "drag"; type: "drop"};
 
-export type DragState<DragId extends string, DropId extends string> = {
+export type DragState<DragId, DropId> = {
   dragging: {
     id: DragId;
     x: number;
@@ -17,7 +17,7 @@ export type DragState<DragId extends string, DropId extends string> = {
   hovering: DropId | null;
 };
 
-export function update<DragId extends string, DropId extends string>(
+export function update<DragId, DropId>(
   state: DragState<DragId, DropId>,
   ev: DragEvent<DragId, DropId>,
   {isCompatible}: {isCompatible: (a: DragId, b: DropId) => boolean},
@@ -34,14 +34,14 @@ export function update<DragId extends string, DropId extends string>(
   };
 }
 
-export function dropped<DragId extends string, DropId extends string>(
+export function dropped<DragId, DropId>(
   state: DragState<DragId, DropId>,
   ev: DragEvent<DragId, DropId>,
 ): [DragId, DropId] | null {
   return ev.type === "drop" && state.hovering && state.dragging ? [state.dragging.id, state.hovering] : null;
 }
 
-export function Draggable<DragId extends string, DropId extends string>(props: {
+export function Draggable<DragId, DropId>(props: {
   id: DragId;
   children: React.ReactNode;
   send(ev: DragEvent<DragId, DropId>): void;
@@ -60,7 +60,7 @@ export function Draggable<DragId extends string, DropId extends string>(props: {
   );
 }
 
-export function DropTarget<DragId extends string, DropId extends string>(props: {
+export function DropTarget<DragId, DropId>(props: {
   id: DropId;
   children: React.ReactNode;
   send(ev: DragEvent<DragId, DropId>): void;
