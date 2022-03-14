@@ -71,7 +71,7 @@ export function view(app: State): View {
       {label: "Done", filter: "done", selected: app.filter === "done", dropTarget: {type: "filter", id: "done"}},
       {label: "All", filter: "all", selected: app.filter === "all", dropTarget: null},
     ],
-    taskList: Tasks.view(app.tasks, app.filter),
+    taskList: Tasks.view(app),
     editor: app.editor,
   };
 }

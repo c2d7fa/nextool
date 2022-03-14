@@ -1,3 +1,6 @@
+import {DragId, DropId} from "./app";
+import {DragState} from "./drag";
+
 export type Task = {
   id: string;
   title: string;
@@ -118,7 +121,9 @@ export function badges(task: Task): ("action" | "stalled")[] {
 
 export type FilterId = "all" | "actions" | "done" | "stalled" | "not-done";
 
-export function view(tasks: Tasks, filter: FilterId): TaskListView {
+export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<DragId, DropId>}): TaskListView {
+  const {tasks, filter, taskDrag} = args;
+
   const filtered = tasks.filter((task) => {
     if (filter === "actions") return badges(task).includes("action");
     else if (filter === "done") return task.done;
@@ -127,11 +132,18 @@ export function view(tasks: Tasks, filter: FilterId): TaskListView {
     else return true;
   });
 
-  return filtered.map((task, index) => ({
+  function isHovering(hovering: typeof taskDrag["hovering"], task: Task, side: "above" | "below") {
+    return hovering?.type === "task" && hovering?.id === task.id && hovering?.side === side;
+  }
+
+  return filtered.map((task) => ({
     id: task.id,
     title: task.title,
     done: task.done ?? false,
     badges: badges(task),
-    dropIndicator: {top: false, bottom: index === 4},
+    dropIndicator: {
+      top: isHovering(taskDrag.hovering, task, "above"),
+      bottom: isHovering(taskDrag.hovering, task, "below"),
+    },
   }));
 }
