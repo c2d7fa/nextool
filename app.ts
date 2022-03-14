@@ -1,5 +1,6 @@
 import {TextFieldEvent, TextFieldStates} from "./text-field";
-import {list, Task, TaskListView} from "./tasks";
+import * as Tasks from "./tasks";
+import {Task, TaskListView} from "./tasks";
 import {TaskEditorEvent, TaskEditorState} from "./task-editor";
 import * as Drag from "./drag";
 
@@ -70,7 +71,7 @@ export function view(app: State): View {
       {label: "Done", filter: "done", selected: app.filter === "done", dropTarget: {type: "filter", id: "done"}},
       {label: "All", filter: "all", selected: app.filter === "all", dropTarget: null},
     ],
-    taskList: list(app.tasks, app.filter),
+    taskList: Tasks.view(app.tasks, app.filter),
     editor: app.editor,
   };
 }

@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import {State, Event, SelectFilterEvent, View, view as viewApp, DropId} from "./app";
+import {State, Event, SelectFilterEvent, View, view, DropId} from "./app";
 import {TextField, update as updateTextFields, value as textFieldValue} from "./text-field";
 import {loadTasks, saveTasks} from "./storage";
 import {add, edit, merge, moveToFilterSupported} from "./tasks";
@@ -160,7 +160,7 @@ function Main() {
     taskDrag: {dragging: null, hovering: null},
   });
 
-  const view = viewApp(app);
+  const view_ = view(app);
 
   React.useEffect(() => {
     setApp((app) => ({...app, tasks: loadTasks()}));
@@ -179,11 +179,11 @@ function Main() {
       <div className={style.outerContainer}>
         <div className={style.topBar} />
         <div className={style.sidebar}>
-          <FilterSelector filters={view.filters} send={send} />
+          <FilterSelector filters={view_.filters} send={send} />
         </div>
         <div className={style.innerContainer}>
           <div className={style.left}>
-            <TaskList view={view.taskList} send={send} />
+            <TaskList view={view_.taskList} send={send} />
             <AddTask send={send} />
           </div>
           <div className={style.right}>

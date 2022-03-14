@@ -118,7 +118,7 @@ export function badges(task: Task): ("action" | "stalled")[] {
 
 export type FilterId = "all" | "actions" | "done" | "stalled" | "not-done";
 
-export function list(tasks: Tasks, filter: FilterId): TaskListView {
+export function view(tasks: Tasks, filter: FilterId): TaskListView {
   const filtered = tasks.filter((task) => {
     if (filter === "actions") return badges(task).includes("action");
     else if (filter === "done") return task.done;
