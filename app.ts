@@ -2,7 +2,7 @@ import {TextFieldEvent, TextFieldStates} from "./text-field";
 import * as Tasks from "./tasks";
 import {Task, TaskListView} from "./tasks";
 import {TaskEditorEvent, TaskEditorState} from "./task-editor";
-import {add, edit, merge, moveToFilterSupported} from "./tasks";
+import {add, edit, merge} from "./tasks";
 import {reload, updateEditor} from "./task-editor";
 import {update as updateTextFields, value as textFieldValue} from "./text-field";
 import * as Drag from "./drag";
@@ -105,7 +105,6 @@ export function updateApp(app: State, ev: Event): State {
     const [drag, drop] = dropped_;
 
     if (drop.type === "filter") {
-      if (!moveToFilterSupported(drop.id)) return app;
       return {...app, tasks: edit(app.tasks, drag.id, {type: "moveToFilter", filter: drop.id})};
     } else if (drop.type === "task") {
       return {...app, tasks: edit(app.tasks, drag.id, {type: "move", side: drop.side, target: drop.id})};

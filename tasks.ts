@@ -59,11 +59,7 @@ export type EditOperation =
   | {type: "set"; property: "done"; value: boolean}
   | {type: "set"; property: "action"; value: boolean}
   | {type: "move"; side: "above" | "below"; target: string}
-  | {type: "moveToFilter"; filter: "actions" | "done" | "stalled"};
-
-export function moveToFilterSupported(filter: string): filter is "actions" | "done" | "stalled" {
-  return filter === "actions" || filter === "done" || filter === "stalled";
-}
+  | {type: "moveToFilter"; filter: FilterId};
 
 export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks {
   if (operation.type === "delete") {
@@ -85,6 +81,8 @@ export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks 
         ? ({property: "done", value: true} as const)
         : filter === "stalled"
         ? ({property: "action", value: false} as const)
+        : filter === "not-done"
+        ? ({property: "done", value: false} as const)
         : (null as never);
 
     return edit(tasks, id, {type: "set", ...update});
