@@ -9,7 +9,7 @@ import {reload, TaskEditor, updateEditor} from "./task-editor";
 import * as Drag from "./drag";
 import {TaskList} from "./task-list";
 
-const style = require("./main.module.scss");
+import style from "./main.module.scss";
 
 const AppContext = React.createContext<State>(null as any);
 

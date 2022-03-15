@@ -1,6 +1,6 @@
 import * as React from "react";
 
-const styles = require("./drag.module.scss");
+import styles from "./drag.module.scss";
 
 export type DragEvent<DragId, DropId> =
   | {tag: "drag"; type: "drag"; id: DragId; x: number; y: number}

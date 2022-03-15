@@ -1,6 +1,6 @@
 import * as React from "react";
 
-const styles = require("./text-field.module.scss");
+import styles from "./text-field.module.scss";
 
 export type TextFieldEvent<Id extends string> =
   | {tag: "textField"; type: "edit"; field: Id; value: string}

@@ -3,7 +3,7 @@ import {EditOperation, Tasks, find} from "./tasks";
 import {UnnamedTextField} from "./text-field";
 import {Button} from "./ui";
 
-const style = require("./task-editor.module.scss");
+import style from "./task-editor.module.scss";
 
 export type TaskEditorState = null | {
   id: string;
