@@ -1,5 +1,6 @@
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
+import {reposition} from "./reposition";
 
 export type Task = {
   id: string;
@@ -87,24 +88,13 @@ export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks 
 
     return edit(tasks, id, {type: "set", ...update});
   } else if (operation.type === "move") {
-    const side = operation.side;
-    const target = operation.target;
+    const sourceIndex = tasks.findIndex((task) => task.id === id);
+    if (sourceIndex === -1) return tasks;
 
-    const index = tasks.findIndex((task) => task.id === id);
-    if (index === -1) return tasks;
-
-    const newTasks = [...tasks];
-    newTasks.splice(index, 1);
-    const targetIndex = tasks.findIndex((task) => task.id === target);
+    const targetIndex = tasks.findIndex((task) => task.id === operation.target);
     if (targetIndex === -1) return tasks;
 
-    if (side === "above") {
-      newTasks.splice(targetIndex, 0, {...tasks[index], id: tasks[index].id});
-    } else {
-      newTasks.splice(targetIndex + 1, 0, {...tasks[index], id: tasks[index].id});
-    }
-
-    return newTasks;
+    return reposition(tasks, sourceIndex, {index: targetIndex, side: operation.side});
   } else {
     const unreachable: never = operation;
     return unreachable;
