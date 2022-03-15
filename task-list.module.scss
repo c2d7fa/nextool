@@ -112,5 +112,49 @@
     span:nth-child(3) {
       justify-self: right;
     }
+
+    position: relative;
+
+    .dropTop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 10px;
+    }
+
+    .dropIndicatorTop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      border-radius: 2px;
+
+      &.shown {
+        background-color: #00000038;
+      }
+    }
+
+    .dropIndicatorBottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      border-radius: 2px;
+
+      &.shown {
+        background-color: #00000038;
+      }
+    }
+
+    .dropBottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 10px;
+    }
   }
 }

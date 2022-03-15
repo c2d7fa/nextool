@@ -1,3 +1,6 @@
+import {DragId, DropId} from "./app";
+import {DragState} from "./drag";
+
 export type Task = {
   id: string;
   title: string;
@@ -7,7 +10,13 @@ export type Task = {
 
 export type Tasks = Task[];
 
-export type TaskList = {id: string; title: string; done: boolean; badges: ("action" | "stalled")[]}[];
+export type TaskListView = {
+  id: string;
+  title: string;
+  done: boolean;
+  badges: ("action" | "stalled")[];
+  dropIndicator: {top: boolean; bottom: boolean};
+}[];
 
 export function merge(tasks: Tasks, updates: Partial<Task>[]): Tasks {
   return tasks.map((task) => {
@@ -48,7 +57,13 @@ export type EditOperation =
   | {type: "delete"}
   | {type: "set"; property: "title"; value: string}
   | {type: "set"; property: "done"; value: boolean}
-  | {type: "set"; property: "action"; value: boolean};
+  | {type: "set"; property: "action"; value: boolean}
+  | {type: "move"; side: "above" | "below"; target: string}
+  | {type: "moveToFilter"; filter: "actions" | "done" | "stalled"};
+
+export function moveToFilterSupported(filter: string): filter is "actions" | "done" | "stalled" {
+  return filter === "actions" || filter === "done" || filter === "stalled";
+}
 
 export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks {
   if (operation.type === "delete") {
@@ -60,6 +75,38 @@ export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks 
       }
       return task;
     });
+  } else if (operation.type === "moveToFilter") {
+    const filter = operation.filter;
+
+    const update =
+      filter === "actions"
+        ? ({property: "action", value: true} as const)
+        : filter === "done"
+        ? ({property: "done", value: true} as const)
+        : filter === "stalled"
+        ? ({property: "action", value: false} as const)
+        : (null as never);
+
+    return edit(tasks, id, {type: "set", ...update});
+  } else if (operation.type === "move") {
+    const side = operation.side;
+    const target = operation.target;
+
+    const index = tasks.findIndex((task) => task.id === id);
+    if (index === -1) return tasks;
+
+    const newTasks = [...tasks];
+    newTasks.splice(index, 1);
+    const targetIndex = tasks.findIndex((task) => task.id === target);
+    if (targetIndex === -1) return tasks;
+
+    if (side === "above") {
+      newTasks.splice(targetIndex, 0, {...tasks[index], id: tasks[index].id});
+    } else {
+      newTasks.splice(targetIndex + 1, 0, {...tasks[index], id: tasks[index].id});
+    }
+
+    return newTasks;
   } else {
     const unreachable: never = operation;
     return unreachable;
@@ -74,7 +121,9 @@ export function badges(task: Task): ("action" | "stalled")[] {
 
 export type FilterId = "all" | "actions" | "done" | "stalled" | "not-done";
 
-export function list(tasks: Tasks, filter: FilterId): TaskList {
+export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<DragId, DropId>}): TaskListView {
+  const {tasks, filter, taskDrag} = args;
+
   const filtered = tasks.filter((task) => {
     if (filter === "actions") return badges(task).includes("action");
     else if (filter === "done") return task.done;
@@ -83,10 +132,18 @@ export function list(tasks: Tasks, filter: FilterId): TaskList {
     else return true;
   });
 
+  function isHovering(hovering: typeof taskDrag["hovering"], task: Task, side: "above" | "below") {
+    return hovering?.type === "task" && hovering?.id === task.id && hovering?.side === side;
+  }
+
   return filtered.map((task) => ({
     id: task.id,
     title: task.title,
     done: task.done ?? false,
     badges: badges(task),
+    dropIndicator: {
+      top: isHovering(taskDrag.hovering, task, "above"),
+      bottom: isHovering(taskDrag.hovering, task, "below"),
+    },
   }));
 }
