@@ -90,3 +90,42 @@ describe("dragging tasks to filters", () => {
     });
   });
 });
+
+function reorderTask(source: string, target: string, side: "above" | "below"): Event[] {
+  return [
+    {tag: "drag", type: "drag", id: {type: "task", id: source}, x: 100, y: 100},
+    {tag: "drag", type: "hover", target: {type: "task", id: target, side}},
+    {tag: "drag", type: "drop"},
+  ];
+}
+
+describe("reordering tasks with drag and drop", () => {
+  describe("in an example with three tasks", () => {
+    const example = updateAll(empty, [...addTask("Task 1"), ...addTask("Task 2"), ...addTask("Task 3")]);
+
+    function testReorder(from: number, to: number, side: "above" | "below", result: number[]): void {
+      test(`dragging task ${from} to ${side} ${to}`, () => {
+        const moved = updateAll(example, [
+          ...reorderTask(view(example).taskList[from - 1].id, view(example).taskList[to - 1].id, side),
+        ]);
+        expect(view(moved).taskList.map((t) => t.title)).toEqual(result.map((x) => `Task ${x}`));
+      });
+    }
+
+    describe("dragging task down", () => {
+      testReorder(1, 2, "below", [2, 1, 3]);
+      testReorder(1, 3, "above", [2, 1, 3]);
+    });
+
+    describe("dragging task up", () => {
+      testReorder(2, 1, "above", [2, 1, 3]);
+      testReorder(3, 1, "below", [1, 3, 2]);
+    });
+
+    describe("examples where position isn't changed", () => {
+      testReorder(1, 2, "above", [1, 2, 3]);
+      testReorder(1, 1, "below", [1, 2, 3]);
+      testReorder(1, 1, "above", [1, 2, 3]);
+    });
+  });
+});
