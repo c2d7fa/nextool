@@ -22,4 +22,22 @@ describe("reposition", () => {
       });
     });
   });
+
+  describe("repositioning to above another item", () => {
+    describe("moving item down", () => {
+      const example = [0, 1, 2, 3, 4, 5];
+
+      test("moving 1 above 4", () => {
+        expect(reposition(example, 1, {index: 4, side: "above"})).toEqual([0, 2, 3, 1, 4, 5]);
+      });
+    });
+
+    describe("moving item up", () => {
+      const example = [0, 1, 2, 3, 4, 5];
+
+      test("moving 4 above 1", () => {
+        expect(reposition(example, 4, {index: 1, side: "above"})).toEqual([0, 4, 1, 2, 3, 5]);
+      });
+    });
+  });
 });
