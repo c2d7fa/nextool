@@ -40,4 +40,36 @@ describe("reposition", () => {
       });
     });
   });
+
+  describe("when repositioning doesn't change anything", () => {
+    describe("repositioning an item near itself", () => {
+      test("repositioning an item above itself", () => {
+        expect(reposition([0, 1, 2], 1, {index: 1, side: "above"})).toEqual([0, 1, 2]);
+      });
+
+      test("repositioning an item below itself", () => {
+        expect(reposition([0, 1, 2], 1, {index: 1, side: "below"})).toEqual([0, 1, 2]);
+      });
+
+      describe("edge cases", () => {
+        test("repositioning the first item above itself", () => {
+          expect(reposition([0, 1, 2], 0, {index: 0, side: "above"})).toEqual([0, 1, 2]);
+        });
+
+        test("repositioning the last item below itself", () => {
+          expect(reposition([0, 1, 2], 2, {index: 2, side: "below"})).toEqual([0, 1, 2]);
+        });
+      });
+    });
+
+    describe("repositioning an item near its neighbors", () => {
+      test("repositioning an item below the previous item", () => {
+        expect(reposition([0, 1, 2], 1, {index: 0, side: "below"})).toEqual([0, 1, 2]);
+      });
+
+      test("repositioning an item above the next item", () => {
+        expect(reposition([0, 1, 2], 1, {index: 2, side: "above"})).toEqual([0, 1, 2]);
+      });
+    });
+  });
 });
