@@ -94,7 +94,11 @@ describe("dragging tasks to filters", () => {
 function reorderTask(source: string, target: string, side: "above" | "below"): Event[] {
   return [
     {tag: "drag", type: "drag", id: {type: "task", id: source}, x: 100, y: 100},
-    {tag: "drag", type: "hover", target: {type: "task", id: target, side}},
+    {
+      tag: "drag",
+      type: "hover",
+      target: {type: "task", id: target, side, indentation: 0},
+    },
     {tag: "drag", type: "drop"},
   ];
 }

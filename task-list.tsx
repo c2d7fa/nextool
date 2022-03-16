@@ -40,6 +40,29 @@ function Title(props: {task: TaskListView[number]}) {
   );
 }
 
+function DropTarget(props: {
+  id: string;
+  side: "below" | "above";
+  indentation: number;
+  width: number | "full";
+  send: Send;
+}) {
+  return (
+    <Drag.DropTarget
+      id={{type: "task", id: props.id, side: props.side, indentation: props.indentation}}
+      send={props.send}
+    >
+      <div
+        className={`${style.dropTarget} ${style[props.side]}`}
+        style={{
+          left: `${props.indentation * 2}em`,
+          width: props.width === "full" ? undefined : `${props.width * 2}em`,
+        }}
+      />
+    </Drag.DropTarget>
+  );
+}
+
 function TaskRow(props: {task: TaskListView[number]; send: Send}) {
   return (
     <Drag.Draggable id={{type: "task" as const, id: props.task.id}} send={props.send}>
@@ -54,27 +77,29 @@ function TaskRow(props: {task: TaskListView[number]; send: Send}) {
         <span className={style.idColumn}>
           <span className={style.id}>{props.task.id}</span>
         </span>
-        <div
-          className={`${style.dropIndicatorTop} ${props.task.dropIndicator.top ? style.shown : ""}`}
-          style={{left: `${2 * props.task.indentation}em`}}
+        {props.task.dropIndicator && (
+          <div
+            className={`${style.dropIndicator} ${style[props.task.dropIndicator.side]}`}
+            style={{left: `${2 * props.task.dropIndicator.indentation}em`}}
+          />
+        )}
+        <DropTarget
+          id={props.task.id}
+          side="above"
+          indentation={props.task.indentation}
+          width="full"
+          send={props.send}
         />
-        <div
-          className={`${style.dropIndicatorBottom} ${props.task.dropIndicator.bottom ? style.shown : ""}`}
-          style={{left: `${2 * props.task.indentation}em`}}
+        {[...Array(props.task.indentation + 1)].map((_, i) => (
+          <DropTarget send={props.send} id={props.task.id} indentation={i} key={i} width={1} side="below" />
+        ))}
+        <DropTarget
+          send={props.send}
+          id={props.task.id}
+          indentation={props.task.indentation + 1}
+          width="full"
+          side="below"
         />
-        <div
-          className={`${style.dropIndicatorInside} ${props.task.dropIndicator.inside ? style.shown : ""}`}
-          style={{left: `${2 * (props.task.indentation + 1)}em`}}
-        />
-        <Drag.DropTarget id={{type: "task" as const, id: props.task.id, side: "above"}} send={props.send}>
-          <div className={style.dropTop} />
-        </Drag.DropTarget>
-        <Drag.DropTarget id={{type: "task", id: props.task.id, side: "below"}} send={props.send}>
-          <div className={style.dropBottom} />
-        </Drag.DropTarget>
-        <Drag.DropTarget id={{type: "task", id: props.task.id, side: "inside"}} send={props.send}>
-          <div className={style.dropInside} />
-        </Drag.DropTarget>
       </div>
     </Drag.Draggable>
   );

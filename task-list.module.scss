@@ -124,67 +124,46 @@
 
     position: relative;
 
-    .dropTop {
+    .dropTarget {
       position: absolute;
-      top: 0;
+
       left: 0;
       right: 0;
-      height: 10px;
-    }
 
-    .dropInside {
-      position: absolute;
-      top: 10px;
-      left: 0;
-      right: 0;
-      bottom: 10px;
-    }
+      &.below {
+        bottom: -1px;
+        height: 11px;
 
-    .dropBottom {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 10px;
-    }
+        border: 1px solid #00a00040;
+        background-color: #00a00020;
+      }
 
-    .dropIndicatorTop {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      border-radius: 2px;
+      &.above {
+        top: 0;
+        height: 10px;
 
-      &.shown {
-        background-color: #00000038;
+        border: 1px solid #f0000040;
+        background-color: #f0000020;
       }
     }
 
-    .dropIndicatorBottom {
+    .dropIndicator {
       position: absolute;
-      bottom: 0;
-      left: 0;
+
       right: 0;
+
       height: 2px;
       border-radius: 2px;
 
-      &.shown {
-        background-color: #00000038;
+      &.below {
+        bottom: 0;
       }
-    }
 
-    .dropIndicatorInside {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 2px;
-      border-radius: 2px;
-
-      &.shown {
-        background-color: #00000038;
+      &.above {
+        top: 0;
       }
+
+      background-color: #00000038;
     }
   }
 }

@@ -20,7 +20,7 @@ export type SelectEditingTask = {tag: "selectEditingTask"; id: string};
 export type DragId = {type: "task"; id: string};
 export type DropId =
   | {type: "filter"; id: FilterId}
-  | {type: "task"; side: "above" | "below" | "inside"; id: string};
+  | {type: "task"; id: string; side: "above" | "below"; indentation: number};
 
 export type Event =
   | CheckedEvent
@@ -109,10 +109,7 @@ export function updateApp(app: State, ev: Event): State {
     if (drop.type === "filter") {
       return {...app, tasks: edit(app.tasks, drag.id, {type: "moveToFilter", filter: drop.id})};
     } else if (drop.type === "task") {
-      if (drop.side === "inside") {
-        console.log("drop inside %o -> %o", drag, drop);
-        return app;
-      }
+      console.log(drop);
       return {...app, tasks: edit(app.tasks, drag.id, {type: "move", side: drop.side, target: drop.id})};
     } else {
       const unreachable: never = drop;
