@@ -9,10 +9,13 @@
   .title {
     color: #222;
     font-weight: 500;
+
+    white-space: nowrap;
+    overflow: auto;
   }
 
   .badge {
-    margin-left: 1em;
+    margin-left: 1ex;
     display: inline-flex;
     align-items: center;
   }
@@ -82,6 +85,8 @@
   display: flex;
   flex-direction: column;
 
+  box-sizing: border-box;
+
   box-shadow: 0 3px 6px -6px #aaa inset;
 
   & > * {
@@ -111,6 +116,10 @@
 
     .idColumn {
       justify-self: right;
+    }
+
+    .titleColumn {
+      overflow: hidden;
     }
 
     position: relative;

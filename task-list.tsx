@@ -48,7 +48,7 @@ function TaskRow(props: {task: TaskListView[number]; send: Send}) {
         <span className={style.checkboxColumn}>
           <CheckBox checked={props.task.done} id={props.task.id} send={props.send} />
         </span>
-        <span className={style.titleColumnn}>
+        <span className={style.titleColumn}>
           <Title task={props.task} />
         </span>
         <span className={style.idColumn}>
