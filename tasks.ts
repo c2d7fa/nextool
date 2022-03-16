@@ -17,7 +17,7 @@ export type TaskListView = {
   indentation: number;
   done: boolean;
   badges: ("action" | "stalled")[];
-  dropIndicator: {top: boolean; bottom: boolean};
+  dropIndicator: {top: boolean; bottom: boolean; inside: boolean};
 }[];
 
 export function merge(tasks: Tasks, updates: Partial<Task>[]): Tasks {
@@ -121,7 +121,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     else return true;
   });
 
-  function isHovering(hovering: typeof taskDrag["hovering"], task: Task, side: "above" | "below") {
+  function isHovering(hovering: typeof taskDrag["hovering"], task: Task, side: "above" | "below" | "inside") {
     return hovering?.type === "task" && hovering?.id === task.id && hovering?.side === side;
   }
 
@@ -134,6 +134,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     dropIndicator: {
       top: isHovering(taskDrag.hovering, task, "above"),
       bottom: isHovering(taskDrag.hovering, task, "below"),
+      inside: isHovering(taskDrag.hovering, task, "inside"),
     },
   }));
 }

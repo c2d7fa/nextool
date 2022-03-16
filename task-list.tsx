@@ -56,11 +56,18 @@ function TaskRow(props: {task: TaskListView[number]; send: Send}) {
         </span>
         <div className={`${style.dropIndicatorTop} ${props.task.dropIndicator.top ? style.shown : ""}`} />
         <div className={`${style.dropIndicatorBottom} ${props.task.dropIndicator.bottom ? style.shown : ""}`} />
+        <div
+          className={`${style.dropIndicatorInside} ${props.task.dropIndicator.inside ? style.shown : ""}`}
+          style={{left: `${2 * (props.task.indentation + 1)}em`}}
+        />
         <Drag.DropTarget id={{type: "task" as const, id: props.task.id, side: "above"}} send={props.send}>
           <div className={style.dropTop} />
         </Drag.DropTarget>
         <Drag.DropTarget id={{type: "task", id: props.task.id, side: "below"}} send={props.send}>
           <div className={style.dropBottom} />
+        </Drag.DropTarget>
+        <Drag.DropTarget id={{type: "task", id: props.task.id, side: "inside"}} send={props.send}>
+          <div className={style.dropInside} />
         </Drag.DropTarget>
       </div>
     </Drag.Draggable>

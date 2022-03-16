@@ -132,6 +132,22 @@
       height: 10px;
     }
 
+    .dropInside {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 0;
+      bottom: 10px;
+    }
+
+    .dropBottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 10px;
+    }
+
     .dropIndicatorTop {
       position: absolute;
       top: 0;
@@ -158,12 +174,17 @@
       }
     }
 
-    .dropBottom {
+    .dropIndicatorInside {
       position: absolute;
-      bottom: 0;
       left: 0;
       right: 0;
-      height: 10px;
+      bottom: 0;
+      height: 2px;
+      border-radius: 2px;
+
+      &.shown {
+        background-color: #00000038;
+      }
     }
   }
 }
