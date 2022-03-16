@@ -44,13 +44,14 @@ function TaskRow(props: {task: TaskListView[number]; send: Send}) {
   return (
     <Drag.Draggable id={{type: "task" as const, id: props.task.id}} send={props.send}>
       <div className={style.taskRow} onClick={() => props.send({tag: "selectEditingTask", id: props.task.id})}>
-        <span>
+        <span style={{width: `${2 * props.task.indentation}em`}} />
+        <span className={style.checkboxColumn}>
           <CheckBox checked={props.task.done} id={props.task.id} send={props.send} />
         </span>
-        <span>
+        <span className={style.titleColumnn}>
           <Title task={props.task} />
         </span>
-        <span>
+        <span className={style.idColumn}>
           <span className={style.id}>{props.task.id}</span>
         </span>
         <div className={`${style.dropIndicatorTop} ${props.task.dropIndicator.top ? style.shown : ""}`} />

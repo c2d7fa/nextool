@@ -14,6 +14,7 @@ export type Tasks = Task[];
 export type TaskListView = {
   id: string;
   title: string;
+  indentation: number;
   done: boolean;
   badges: ("action" | "stalled")[];
   dropIndicator: {top: boolean; bottom: boolean};
@@ -124,9 +125,10 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     return hovering?.type === "task" && hovering?.id === task.id && hovering?.side === side;
   }
 
-  return filtered.map((task) => ({
+  return filtered.map((task, index) => ({
     id: task.id,
     title: task.title,
+    indentation: index % 3,
     done: task.done ?? false,
     badges: badges(task),
     dropIndicator: {
