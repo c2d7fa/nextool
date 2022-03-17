@@ -134,11 +134,17 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     return {side: taskDrag.hovering.side, indentation: taskDrag.hovering.indentation};
   }
 
-  function dropTargetsBelow(task: Task | null): DropTarget[] {
-    return [
-      {indentation: 0, width: 1, side: "below"},
-      {indentation: 1, width: "full", side: "below"},
-    ];
+  function dropTargetsBelow(tasks: Task[], index: number): DropTarget[] {
+    const task = tasks[index];
+
+    const followingIndentation = tasks[index + 1]?.indentation ?? 0;
+
+    let result: DropTarget[] = [];
+    for (let i = followingIndentation; i <= task.indentation; i++) {
+      result.push({width: 1, indentation: i, side: "below"});
+    }
+    result.push({indentation: task.indentation + 1, width: "full", side: "below"});
+    return result;
   }
 
   return filtered.map((task, index) => ({
@@ -151,8 +157,11 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     dropTargets: [
       ...(index === 0
         ? [{indentation: 0, width: "full", side: "above"} as const]
-        : dropTargetsBelow(filtered[index - 1]).map((dropTarget) => ({...dropTarget, side: "above" as const}))),
-      ...dropTargetsBelow(task),
+        : dropTargetsBelow(filtered, index - 1).map((dropTarget) => ({
+            ...dropTarget,
+            side: "above" as const,
+          }))),
+      ...dropTargetsBelow(filtered, index),
     ],
   }));
 }

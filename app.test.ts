@@ -1,8 +1,12 @@
 import {updateApp, State, view, Event, empty, DragId, DropId, View} from "./app";
 import {FilterId} from "./tasks";
 
-function updateAll(state: State, events: Event[]): State {
-  return events.reduce(updateApp, state);
+function updateAll(state: State, events: (Event | ((view: View) => Event[]))[]): State {
+  return events.reduce(
+    (state, event) =>
+      typeof event === "function" ? updateAll(state, event(view(state))) : updateApp(state, event),
+    state,
+  );
 }
 
 function addTask(title: string): Event[] {
@@ -34,6 +38,20 @@ function viewed(state: State | View): View {
 
 function nthTask(view: View | State, n: number) {
   return viewed(view).taskList[n];
+}
+
+function dragAndDropNth(
+  m: number,
+  n: number,
+  {side, indentation}: {side: "above" | "below"; indentation: number},
+) {
+  return [
+    (view: View) =>
+      dragAndDrop(
+        {type: "task", id: nthTask(view, m).id},
+        {type: "task", id: nthTask(view, n).id, side, indentation},
+      ),
+  ];
 }
 
 function switchToFilter(filter: FilterId): Event[] {
@@ -140,7 +158,7 @@ describe("reordering tasks with drag and drop", () => {
 
 describe("nesting tasks with drag and drop", () => {
   describe("with a flat list of items", () => {
-    const example = updateAll(empty, [...addTask("Task 1"), ...addTask("Task 2"), ...addTask("Task 3")]);
+    const example = updateAll(empty, [...addTask("Task 1"), ...addTask("Task 2")]);
 
     test("the first item has one drop target above it and two drop below it", () => {
       expect(nthTask(example, 0).dropTargets).toEqual([
@@ -183,14 +201,14 @@ describe("nesting tasks with drag and drop", () => {
         expect(nthTask(afterDragging, 1).indentation).toBe(1);
       });
 
-      test.skip("the drop targets for the first task are updated", () => {
+      test("the drop targets for the first task are updated", () => {
         expect(nthTask(afterDragging, 0).dropTargets).toEqual([
           {width: "full", indentation: 0, side: "above"},
           {width: "full", indentation: 1, side: "below"},
         ]);
       });
 
-      test.skip("the drop targets for the second task are updated", () => {
+      test("the drop targets for the second task are updated", () => {
         expect(nthTask(afterDragging, 1).dropTargets).toEqual([
           {width: "full", indentation: 1, side: "above"},
           {width: 1, indentation: 0, side: "below"},
@@ -198,6 +216,38 @@ describe("nesting tasks with drag and drop", () => {
           {width: "full", indentation: 2, side: "below"},
         ]);
       });
+    });
+  });
+
+  describe("scenario where the following task is at a higher level of indentation", () => {
+    const example = updateAll(empty, [
+      ...addTask("Task 0"),
+      ...addTask("Task 1"),
+      ...addTask("Task 2"),
+      ...addTask("Task 3"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
+      ...dragAndDropNth(3, 2, {side: "below", indentation: 1}),
+    ]);
+
+    test("tasks are indented correctly", () => {
+      expect(view(example).taskList.map((t) => t.indentation)).toEqual([0, 1, 2, 1]);
+    });
+
+    test("below the task above the task at a higer level of indentation, there are drop targets only at that level of indentation", () => {
+      expect(nthTask(example, 2).dropTargets.filter((dropTarget) => dropTarget.side === "below")).toEqual([
+        {width: 1, indentation: 1, side: "below"},
+        {width: 1, indentation: 2, side: "below"},
+        {width: "full", indentation: 3, side: "below"},
+      ]);
+    });
+
+    test("above the task at a higer level of indentation, there are drop targets only at that level of indentation", () => {
+      expect(nthTask(example, 3).dropTargets.filter((dropTarget) => dropTarget.side === "above")).toEqual([
+        {width: 1, indentation: 1, side: "above"},
+        {width: 1, indentation: 2, side: "above"},
+        {width: "full", indentation: 3, side: "above"},
+      ]);
     });
   });
 });
