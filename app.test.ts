@@ -175,11 +175,11 @@ describe("nesting tasks with drag and drop", () => {
     ]);
 
     describe("after dragging the second task into the first", () => {
-      test.skip("the first task is not indented", () => {
+      test("the first task is not indented", () => {
         expect(nthTask(afterDragging, 0).indentation).toBe(0);
       });
 
-      test.skip("the second task is indented", () => {
+      test("the second task is indented", () => {
         expect(nthTask(afterDragging, 1).indentation).toBe(1);
       });
 
