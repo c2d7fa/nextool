@@ -261,6 +261,8 @@ describe("a task that has an unfinished child task isn't stalled", () => {
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
     ]);
 
+    const childFinished = updateAll(example, [{tag: "checked", id: nthTask(example, 1).id, checked: true}]);
+
     describe("when the child has not been marked as done", () => {
       test("the child is unfinished", () => {
         expect(nthTask(example, 1).done).toBe(false);
@@ -272,6 +274,20 @@ describe("a task that has an unfinished child task isn't stalled", () => {
 
       test("the parent is not stalled", () => {
         expect(nthTask(example, 0).badges).toEqual([]);
+      });
+    });
+
+    describe("when the child is marked as finished", () => {
+      test("the child is finished", () => {
+        expect(nthTask(childFinished, 1).done).toBe(true);
+      });
+
+      test("the child is not stalled", () => {
+        expect(nthTask(childFinished, 1).badges).toEqual([]);
+      });
+
+      test("the parent is stalled", () => {
+        expect(nthTask(childFinished, 0).badges).toEqual(["stalled"]);
       });
     });
   });

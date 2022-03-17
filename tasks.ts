@@ -128,7 +128,7 @@ function tree(tasks: Tasks): TaskTree[] {
 
 function badges(task: TaskTree): ("action" | "stalled")[] {
   if (task.action && !task.done) return ["action"];
-  else if (!task.done && task.children.length === 0) return ["stalled"];
+  else if (!task.done && !task.children.some((child) => !child.done)) return ["stalled"];
   else return [];
 }
 
