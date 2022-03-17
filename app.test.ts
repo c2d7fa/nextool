@@ -135,7 +135,7 @@ describe("reordering tasks with drag and drop", () => {
 });
 
 describe("nesting tasks with drag and drop", () => {
-  describe("in an example with three tasks", () => {
+  describe("with a flat list of items", () => {
     const example = updateAll(empty, [...addTask("Task 1"), ...addTask("Task 2"), ...addTask("Task 3")]);
 
     test("the first item has one drop target above it and two drop below it", () => {
@@ -153,6 +153,50 @@ describe("nesting tasks with drag and drop", () => {
         {width: 1, indentation: 0, side: "below"},
         {width: "full", indentation: 1, side: "below"},
       ]);
+    });
+  });
+
+  describe("when dragging one task into another", () => {
+    const example = updateAll(empty, [...addTask("Task 1"), ...addTask("Task 2")]);
+
+    test("before dragging anything, neither task is indented", () => {
+      expect(view(example).taskList.map((t) => t.indentation)).toEqual([0, 0]);
+    });
+
+    const afterDragging = updateAll(example, [
+      {tag: "drag", type: "drag", id: {type: "task", id: view(example).taskList[0].id}, x: 100, y: 100},
+      {
+        tag: "drag",
+        type: "hover",
+        target: {type: "task", id: view(example).taskList[1].id, side: "below", indentation: 1},
+      },
+      {tag: "drag", type: "drop"},
+    ]);
+
+    describe("after dragging the second task into the first", () => {
+      test.skip("the first task is not indented", () => {
+        expect(view(afterDragging).taskList[0].indentation).toBe(0);
+      });
+
+      test.skip("the second task is indented", () => {
+        expect(view(afterDragging).taskList[1].indentation).toBe(1);
+      });
+
+      test.skip("the drop targets for the first task are updated", () => {
+        expect(view(afterDragging).taskList[0].dropTargets).toEqual([
+          {width: "full", indentation: 0, side: "above"},
+          {width: "full", indentation: 1, side: "below"},
+        ]);
+      });
+
+      test.skip("the drop targets for the second task are updated", () => {
+        expect(view(afterDragging).taskList[1].dropTargets).toEqual([
+          {width: "full", indentation: 1, side: "above"},
+          {width: 1, indentation: 0, side: "below"},
+          {width: 1, indentation: 1, side: "below"},
+          {width: "full", indentation: 2, side: "below"},
+        ]);
+      });
     });
   });
 });

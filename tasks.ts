@@ -140,7 +140,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
   return filtered.map((task, index) => ({
     id: task.id,
     title: task.title,
-    indentation: index % 3,
+    indentation: 0,
     done: task.done ?? false,
     badges: badges(task),
     dropIndicator: dropIndicator(task),
