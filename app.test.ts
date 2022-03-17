@@ -1,4 +1,4 @@
-import {updateApp, State, view, Event, empty} from "./app";
+import {updateApp, State, view, Event, empty, DragId, DropId, View} from "./app";
 import {FilterId} from "./tasks";
 
 function updateAll(state: State, events: Event[]): State {
@@ -12,12 +12,28 @@ function addTask(title: string): Event[] {
   ];
 }
 
-function dragToFilter(id: string, filter: FilterId): Event[] {
+function dragAndDrop(drag: DragId, drop: DropId): Event[] {
   return [
-    {tag: "drag", type: "drag", id: {type: "task", id}, x: 100, y: 100},
-    {tag: "drag", type: "hover", target: {type: "filter", id: filter}},
+    {tag: "drag", type: "drag", id: drag, x: 100, y: 100},
+    {tag: "drag", type: "hover", target: drop},
     {tag: "drag", type: "drop"},
   ];
+}
+
+function dragToFilter(id: string, filter: FilterId): Event[] {
+  return dragAndDrop({type: "task", id}, {type: "filter", id: filter});
+}
+
+function reorderTask(source: string, target: string, side: "above" | "below"): Event[] {
+  return dragAndDrop({type: "task", id: source}, {type: "task", id: target, side, indentation: 0});
+}
+
+function viewed(state: State | View): View {
+  return "tasks" in state ? view(state) : state;
+}
+
+function nthTask(view: View | State, n: number) {
+  return viewed(view).taskList[n];
 }
 
 function switchToFilter(filter: FilterId): Event[] {
@@ -69,39 +85,27 @@ describe("dragging tasks to filters", () => {
       expect(view(example).taskList.every((t) => !t.done)).toBe(true);
     });
 
-    const action = updateAll(example, dragToFilter(view(example).taskList[0].id, "actions"));
+    const action = updateAll(example, dragToFilter(nthTask(example, 0).id, "actions"));
     test("dragging a task to the action filter gives it the action badge", () => {
       expect(view(action).taskList.map((t) => t.badges)).toEqual([["action"], ["stalled"], ["stalled"]]);
     });
 
-    const done = updateAll(example, dragToFilter(view(example).taskList[0].id, "done"));
+    const done = updateAll(example, dragToFilter(nthTask(example, 0).id, "done"));
     test("dragging a task to the done filter marks it as done", () => {
       expect(view(done).taskList.map((t) => t.done)).toEqual([true, false, false]);
     });
 
     test("dragging a task marked action to stalled gives it the stalled badge again", () => {
-      const stalled = updateAll(action, dragToFilter(view(action).taskList[0].id, "stalled"));
+      const stalled = updateAll(action, dragToFilter(nthTask(action, 0).id, "stalled"));
       expect(view(stalled).taskList.map((t) => t.badges)).toEqual([["stalled"], ["stalled"], ["stalled"]]);
     });
 
     test("dragging a task marked done to unfinished marks it as unfinished again", () => {
-      const unfinished = updateAll(done, dragToFilter(view(done).taskList[0].id, "not-done"));
+      const unfinished = updateAll(done, dragToFilter(nthTask(done, 0).id, "not-done"));
       expect(view(unfinished).taskList.every((t) => !t.done)).toBe(true);
     });
   });
 });
-
-function reorderTask(source: string, target: string, side: "above" | "below"): Event[] {
-  return [
-    {tag: "drag", type: "drag", id: {type: "task", id: source}, x: 100, y: 100},
-    {
-      tag: "drag",
-      type: "hover",
-      target: {type: "task", id: target, side, indentation: 0},
-    },
-    {tag: "drag", type: "drop"},
-  ];
-}
 
 describe("reordering tasks with drag and drop", () => {
   describe("in an example with three tasks", () => {
@@ -110,7 +114,7 @@ describe("reordering tasks with drag and drop", () => {
     function testReorder(from: number, to: number, side: "above" | "below", result: number[]): void {
       test(`dragging task ${from} to ${side} ${to}`, () => {
         const moved = updateAll(example, [
-          ...reorderTask(view(example).taskList[from - 1].id, view(example).taskList[to - 1].id, side),
+          ...reorderTask(nthTask(example, from - 1).id, nthTask(example, to - 1).id, side),
         ]);
         expect(view(moved).taskList.map((t) => t.title)).toEqual(result.map((x) => `Task ${x}`));
       });
@@ -139,7 +143,7 @@ describe("nesting tasks with drag and drop", () => {
     const example = updateAll(empty, [...addTask("Task 1"), ...addTask("Task 2"), ...addTask("Task 3")]);
 
     test("the first item has one drop target above it and two drop below it", () => {
-      expect(view(example).taskList[0].dropTargets).toEqual([
+      expect(nthTask(example, 0).dropTargets).toEqual([
         {width: "full", indentation: 0, side: "above"},
         {width: 1, indentation: 0, side: "below"},
         {width: "full", indentation: 1, side: "below"},
@@ -147,7 +151,7 @@ describe("nesting tasks with drag and drop", () => {
     });
 
     test("the second item has two drop targets both above and below it", () => {
-      expect(view(example).taskList[1].dropTargets).toEqual([
+      expect(nthTask(example, 1).dropTargets).toEqual([
         {width: 1, indentation: 0, side: "above"},
         {width: "full", indentation: 1, side: "above"},
         {width: 1, indentation: 0, side: "below"},
@@ -164,33 +168,30 @@ describe("nesting tasks with drag and drop", () => {
     });
 
     const afterDragging = updateAll(example, [
-      {tag: "drag", type: "drag", id: {type: "task", id: view(example).taskList[0].id}, x: 100, y: 100},
-      {
-        tag: "drag",
-        type: "hover",
-        target: {type: "task", id: view(example).taskList[1].id, side: "below", indentation: 1},
-      },
-      {tag: "drag", type: "drop"},
+      ...dragAndDrop(
+        {type: "task", id: nthTask(example, 0).id},
+        {type: "task", id: nthTask(example, 1).id, side: "below", indentation: 1},
+      ),
     ]);
 
     describe("after dragging the second task into the first", () => {
       test.skip("the first task is not indented", () => {
-        expect(view(afterDragging).taskList[0].indentation).toBe(0);
+        expect(nthTask(afterDragging, 0).indentation).toBe(0);
       });
 
       test.skip("the second task is indented", () => {
-        expect(view(afterDragging).taskList[1].indentation).toBe(1);
+        expect(nthTask(afterDragging, 1).indentation).toBe(1);
       });
 
       test.skip("the drop targets for the first task are updated", () => {
-        expect(view(afterDragging).taskList[0].dropTargets).toEqual([
+        expect(nthTask(afterDragging, 0).dropTargets).toEqual([
           {width: "full", indentation: 0, side: "above"},
           {width: "full", indentation: 1, side: "below"},
         ]);
       });
 
       test.skip("the drop targets for the second task are updated", () => {
-        expect(view(afterDragging).taskList[1].dropTargets).toEqual([
+        expect(nthTask(afterDragging, 1).dropTargets).toEqual([
           {width: "full", indentation: 1, side: "above"},
           {width: 1, indentation: 0, side: "below"},
           {width: 1, indentation: 1, side: "below"},
