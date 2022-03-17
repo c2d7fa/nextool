@@ -133,17 +133,11 @@
       &.below {
         bottom: -2px;
         height: 12px;
-
-        border: 1px solid #00a00040;
-        background-color: #00a00020;
       }
 
       &.above {
         top: 0;
         height: 10px;
-
-        border: 1px solid #f0000040;
-        background-color: #f0000020;
       }
     }
 
@@ -163,7 +157,7 @@
         top: -3px;
       }
 
-      background-color: #00000038;
+      background-color: #00000080;
     }
   }
 }
