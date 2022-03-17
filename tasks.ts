@@ -11,6 +11,8 @@ export type Task = {
 
 export type Tasks = Task[];
 
+type DropTarget = {width: number | "full"; indentation: number; side: "above" | "below"};
+
 export type TaskListView = {
   id: string;
   title: string;
@@ -18,7 +20,7 @@ export type TaskListView = {
   done: boolean;
   badges: ("action" | "stalled")[];
   dropIndicator: null | {side: "above" | "below"; indentation: number};
-  dropTargets: {width: number | "full"; indentation: number; side: "above" | "below"}[];
+  dropTargets: DropTarget[];
 }[];
 
 export function merge(tasks: Tasks, updates: Partial<Task>[]): Tasks {
@@ -128,6 +130,13 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     return {side: taskDrag.hovering.side, indentation: taskDrag.hovering.indentation};
   }
 
+  function dropTargetsBelow(task: Task | null): DropTarget[] {
+    return [
+      {indentation: 0, width: 1, side: "below"},
+      {indentation: 1, width: "full", side: "below"},
+    ];
+  }
+
   return filtered.map((task, index) => ({
     id: task.id,
     title: task.title,
@@ -136,8 +145,10 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     badges: badges(task),
     dropIndicator: dropIndicator(task),
     dropTargets: [
-      {indentation: 0, width: 1, side: "above"},
-      {indentation: 1, width: "full", side: "below"},
+      ...(index === 0
+        ? [{indentation: 0, width: "full", side: "above"} as const]
+        : dropTargetsBelow(filtered[index - 1]).map((dropTarget) => ({...dropTarget, side: "above" as const}))),
+      ...dropTargetsBelow(task),
     ],
   }));
 }

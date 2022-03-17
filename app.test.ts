@@ -133,3 +133,26 @@ describe("reordering tasks with drag and drop", () => {
     });
   });
 });
+
+describe("nesting tasks with drag and drop", () => {
+  describe("in an example with three tasks", () => {
+    const example = updateAll(empty, [...addTask("Task 1"), ...addTask("Task 2"), ...addTask("Task 3")]);
+
+    test("the first item has one drop target above it and two drop below it", () => {
+      expect(view(example).taskList[0].dropTargets).toEqual([
+        {width: "full", indentation: 0, side: "above"},
+        {width: 1, indentation: 0, side: "below"},
+        {width: "full", indentation: 1, side: "below"},
+      ]);
+    });
+
+    test("the second item has two drop targets both above and below it", () => {
+      expect(view(example).taskList[1].dropTargets).toEqual([
+        {width: 1, indentation: 0, side: "above"},
+        {width: "full", indentation: 1, side: "above"},
+        {width: 1, indentation: 0, side: "below"},
+        {width: "full", indentation: 1, side: "below"},
+      ]);
+    });
+  });
+});
