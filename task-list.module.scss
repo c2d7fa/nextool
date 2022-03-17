@@ -131,8 +131,8 @@
       right: 0;
 
       &.below {
-        bottom: -1px;
-        height: 11px;
+        bottom: -2px;
+        height: 12px;
 
         border: 1px solid #00a00040;
         background-color: #00a00020;
@@ -160,7 +160,7 @@
       }
 
       &.above {
-        top: 0;
+        top: -3px;
       }
 
       background-color: #00000038;
