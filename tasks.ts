@@ -18,6 +18,7 @@ export type TaskListView = {
   done: boolean;
   badges: ("action" | "stalled")[];
   dropIndicator: null | {side: "above" | "below"; indentation: number};
+  dropTargets: {width: number | "full"; indentation: number; side: "above" | "below"}[];
 }[];
 
 export function merge(tasks: Tasks, updates: Partial<Task>[]): Tasks {
@@ -134,5 +135,9 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     done: task.done ?? false,
     badges: badges(task),
     dropIndicator: dropIndicator(task),
+    dropTargets: [
+      {indentation: 0, width: 1, side: "above"},
+      {indentation: 1, width: "full", side: "below"},
+    ],
   }));
 }
