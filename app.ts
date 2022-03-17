@@ -109,7 +109,15 @@ export function updateApp(app: State, ev: Event): State {
     if (drop.type === "filter") {
       return {...app, tasks: edit(app.tasks, drag.id, {type: "moveToFilter", filter: drop.id})};
     } else if (drop.type === "task") {
-      return {...app, tasks: edit(app.tasks, drag.id, {type: "move", side: drop.side, target: drop.id})};
+      return {
+        ...app,
+        tasks: edit(app.tasks, drag.id, {
+          type: "move",
+          side: drop.side,
+          target: drop.id,
+          indentation: drop.indentation,
+        }),
+      };
     } else {
       const unreachable: never = drop;
       return unreachable;

@@ -5,11 +5,11 @@ export function loadTasks() {
   return tasks
     ? JSON.parse(tasks)
     : [
-        {id: "0", title: "Task 1", done: false, children: []},
-        {id: "1", title: "Task 2", done: true, action: true, children: []},
-        {id: "2", title: "Task 3", done: false, action: true, children: []},
-        {id: "3", title: "Task 4", done: false, children: []},
-        {id: "4", title: "Task 5", done: false, action: true, children: []},
+        {id: "0", title: "Task 1", done: false, indentation: 0},
+        {id: "1", title: "Task 2", done: true, action: true, indentation: 0},
+        {id: "2", title: "Task 3", done: false, action: true, indentation: 0},
+        {id: "3", title: "Task 4", done: false, indentation: 0},
+        {id: "4", title: "Task 5", done: false, action: true, indentation: 0},
       ];
 }
 

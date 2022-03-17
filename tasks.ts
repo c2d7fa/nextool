@@ -5,7 +5,7 @@ import {reposition} from "./reposition";
 export type Task = {
   id: string;
   title: string;
-  children: Task[];
+  indentation: number;
   done?: boolean;
   action?: boolean;
 };
@@ -41,7 +41,7 @@ export function add(tasks: Tasks, values: Partial<Task>): Tasks {
     {
       id: randomId(),
       title: values.title ?? "",
-      children: [],
+      indentation: 0,
     },
   ];
 }
@@ -65,7 +65,7 @@ export type EditOperation =
   | {type: "set"; property: "title"; value: string}
   | {type: "set"; property: "done"; value: boolean}
   | {type: "set"; property: "action"; value: boolean}
-  | {type: "move"; side: "above" | "below"; target: string}
+  | {type: "move"; side: "above" | "below"; target: string; indentation: number}
   | {type: "moveToFilter"; filter: FilterId};
 
 export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks {
@@ -100,7 +100,9 @@ export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks 
     const targetIndex = tasks.findIndex((task) => task.id === operation.target);
     if (targetIndex === -1) return tasks;
 
-    return reposition(tasks, sourceIndex, {index: targetIndex, side: operation.side});
+    return reposition(tasks, sourceIndex, {index: targetIndex, side: operation.side}).map((task) =>
+      task.id === id ? {...task, indentation: operation.indentation} : task,
+    );
   } else {
     const unreachable: never = operation;
     return unreachable;
@@ -115,21 +117,8 @@ export function badges(task: Task): ("action" | "stalled")[] {
 
 export type FilterId = "all" | "actions" | "done" | "stalled" | "not-done";
 
-function unnest<T extends {children: T[]}>(items: T[]): (T & {indentation: number})[] {
-  function unnest_(items: T[], indentation: number): (T & {indentation: number})[] {
-    let result: (T & {indentation: number})[] = [];
-    for (const item of items) {
-      result = [...result, {...item, indentation}, ...unnest_(item.children, indentation + 1)];
-    }
-    return result;
-  }
-
-  return unnest_(items, 0);
-}
-
 export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<DragId, DropId>}): TaskListView {
-  const {tasks: nestedTasks, filter, taskDrag} = args;
-  const tasks = unnest(nestedTasks);
+  const {tasks, filter, taskDrag} = args;
 
   const filtered = tasks.filter((task) => {
     if (filter === "actions") return badges(task).includes("action");
