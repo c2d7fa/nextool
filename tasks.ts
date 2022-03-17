@@ -109,9 +109,26 @@ export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks 
   }
 }
 
-export function badges(task: Task): ("action" | "stalled")[] {
+type TaskTree = Task & {children: TaskTree[]};
+
+function tree(tasks: Tasks): TaskTree[] {
+  function tree_(tasks: Tasks, index: number): TaskTree {
+    let children = [];
+    let i = index + 1;
+    while (i < tasks.length && tasks[i].indentation > tasks[index].indentation) {
+      if (tasks[i].indentation === tasks[index].indentation + 1) {
+        children.push(tree_(tasks, i));
+      }
+      i++;
+    }
+    return {...tasks[index], children};
+  }
+  return tasks.map((_, index) => tree_(tasks, index));
+}
+
+function badges(task: TaskTree): ("action" | "stalled")[] {
   if (task.action && !task.done) return ["action"];
-  else if (!task.done) return ["stalled"];
+  else if (!task.done && task.children.length === 0) return ["stalled"];
   else return [];
 }
 
@@ -120,7 +137,7 @@ export type FilterId = "all" | "actions" | "done" | "stalled" | "not-done";
 export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<DragId, DropId>}): TaskListView {
   const {tasks, filter, taskDrag} = args;
 
-  const filtered = tasks.filter((task) => {
+  const filtered = tree(tasks).filter((task) => {
     if (filter === "actions") return badges(task).includes("action");
     else if (filter === "done") return task.done;
     else if (filter === "stalled") return badges(task).includes("stalled");

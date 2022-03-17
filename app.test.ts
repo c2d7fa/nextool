@@ -251,3 +251,28 @@ describe("nesting tasks with drag and drop", () => {
     });
   });
 });
+
+describe("a task that has an unfinished child task isn't stalled", () => {
+  describe("when there is a parent with one child task", () => {
+    const example = updateAll(empty, [
+      {tag: "selectFilter", filter: "all"},
+      ...addTask("Parent"),
+      ...addTask("Child"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+    ]);
+
+    describe("when the child has not been marked as done", () => {
+      test("the child is unfinished", () => {
+        expect(nthTask(example, 1).done).toBe(false);
+      });
+
+      test("the child is stalled", () => {
+        expect(nthTask(example, 1).badges).toEqual(["stalled"]);
+      });
+
+      test("the parent is not stalled", () => {
+        expect(nthTask(example, 0).badges).toEqual([]);
+      });
+    });
+  });
+});
