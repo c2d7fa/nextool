@@ -1,16 +1,17 @@
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
 import {reposition} from "./reposition";
+import {IndentedList, Tree, TreeNode, toList, fromList, findNode} from "./indented-list";
 
-type Task = {
+type TaskData = {
   id: string;
   title: string;
-  children: Task[];
   done?: boolean;
   action?: boolean;
 };
 
-export type Tasks = Task[];
+type Task = TreeNode<TaskData>;
+export type Tasks = Tree<TaskData>;
 
 export const empty: Tasks = [
   {id: "0", title: "Task 1", done: false, children: []},
@@ -131,43 +132,6 @@ function badges(task: Task): ("action" | "stalled")[] {
 
 export type FilterId = "all" | "actions" | "done" | "stalled" | "not-done";
 
-type TaskTree = Task[];
-type TaskList = (Task & {indentation: number})[];
-
-function toList(tasks: TaskTree, indentation?: number): TaskList {
-  return tasks.reduce(
-    (result, task) => [
-      ...result,
-      {...task, indentation: indentation ?? 0},
-      ...toList(task.children, (indentation ?? 0) + 1),
-    ],
-    [] as TaskList,
-  );
-}
-
-function fromList(tasks: TaskList): TaskTree {
-  function takeWhile<T>(array: T[], predicate: (value: T, index: number) => boolean): T[] {
-    let i = 0;
-    while (i < array.length && predicate(array[i], i)) i++;
-    return array.slice(0, i);
-  }
-
-  function directChildren(tasks: TaskList, indentation: number): TaskList {
-    return takeWhile(tasks, (task) => indentation < task.indentation).filter(
-      (task) => task.indentation === indentation + 1,
-    );
-  }
-
-  function subtree(task: Task & {indentation: number}): Task {
-    return {
-      ...task,
-      children: directChildren(tasks.slice(tasks.indexOf(task) + 1), task.indentation).map(subtree),
-    };
-  }
-
-  return tasks.filter((task) => task.indentation === 0).map(subtree);
-}
-
 export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<DragId, DropId>}): TaskListView {
   const {tasks, filter, taskDrag} = args;
 
@@ -179,7 +143,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     else return true;
   });
 
-  function dropIndicator(task: Task) {
+  function dropIndicator(task: TaskData) {
     if (taskDrag.hovering?.type !== "task") return null;
     if (taskDrag.hovering.id !== task.id) return null;
     return {side: taskDrag.hovering.side, indentation: taskDrag.hovering.indentation};
@@ -204,7 +168,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     title: task.title,
     indentation: task.indentation,
     done: task.done ?? false,
-    badges: badges(task),
+    badges: badges(findNode(tasks, task)!),
     dropIndicator: dropIndicator(task),
     dropTargets: [
       ...(index === 0
