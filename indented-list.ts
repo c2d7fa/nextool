@@ -58,31 +58,50 @@ export function updateNode<T extends {id: string}>(
   });
 }
 
-export function listInsertLocationtoTreeLocation<T extends {id: string}>(
-  tree: Tree<T>,
-  location: IndentedListInsertLocation,
-): TreeLocation | null {
-  if (location.side === "below") {
-    const aboveResult = listInsertLocationtoTreeLocation(tree, {...location, side: "above"});
-    return aboveResult ? {...aboveResult, index: aboveResult.index + 1} : null;
-  }
-
-  if (location.indentation === 0) {
-    return {parent: null, index: tree.findIndex((node) => node.id === location.target)};
-  }
+function findNodeLocation<T extends {id: string}>(tree: Tree<T>, query: {id: string}): TreeLocation | null {
+  const index = tree.findIndex((node) => node.id === query.id);
+  if (index !== -1) return {parent: null, index};
 
   for (const parent of tree) {
-    const result = listInsertLocationtoTreeLocation(parent.children, {
-      ...location,
-      indentation: location.indentation - 1,
-    });
-    if (result) return {...result, parent: result.parent ?? parent.id};
+    const location = findNodeLocation(parent.children, query);
+    if (location) return {parent: location.parent ?? parent.id, index: location.index};
   }
 
   return null;
 }
 
-function findNodeLocation<T extends {id: string}>(tree: Tree<T>, query: {id: string}): TreeLocation | null {
+export function listInsertLocationtoTreeLocation<T extends {id: string}>(
+  tree: Tree<T>,
+  location: IndentedListInsertLocation,
+): TreeLocation | null {
+  const list = toList(tree);
+  const targetItemIndex = list.findIndex((x) => x.id === location.target);
+  const targetItem = list[targetItemIndex];
+  const previousItem = list[targetItemIndex - 1];
+
+  if (location.side === "above") {
+    if (!previousItem) return {parent: null, index: 0};
+    return listInsertLocationtoTreeLocation(tree, {
+      target: previousItem.id,
+      side: "below",
+      indentation: location.indentation,
+    });
+  }
+
+  if (location.indentation === targetItem.indentation) {
+    const targetLocation = findNodeLocation(tree, {id: location.target});
+    if (!targetLocation) return null;
+    return {parent: targetLocation.parent, index: targetLocation.index + 1};
+  }
+
+  if (location.indentation === targetItem.indentation + 1) {
+    return {parent: targetItem.id, index: 0};
+  }
+
+  if (location.indentation < targetItem.indentation) {
+    return null; // [TODO]
+  }
+
   return null;
 }
 

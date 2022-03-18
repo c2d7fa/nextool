@@ -176,7 +176,7 @@ describe("converting indented list insertion location to tree coordinates", () =
     });
   });
 
-  describe("inserting a child of a leaf node", () => {
+  describe("inserting a new child of a leaf node", () => {
     test("by inserting below parent node", () => {
       const example = [{id: "0", children: []}];
       expect(listInsertLocationtoTreeLocation(example, {target: "0", side: "below", indentation: 1})).toEqual({
@@ -215,6 +215,14 @@ describe("converting indented list insertion location to tree coordinates", () =
     ];
     expect(listInsertLocationtoTreeLocation(example, {target: "2", side: "above", indentation: 1})).toEqual({
       parent: "0",
+      index: 1,
+    });
+  });
+
+  test("inserting below an item but at a lower level of indentation at the end of list", () => {
+    const example = [{id: "0", children: [{id: "1", children: []}]}];
+    expect(listInsertLocationtoTreeLocation(example, {target: "1", side: "below", indentation: 0})).toEqual({
+      parent: null,
       index: 1,
     });
   });
