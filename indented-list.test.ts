@@ -1,26 +1,26 @@
 import {moveItemInTree, Tree} from "./indented-list";
 
 describe("moving item in tree", () => {
-  function flatTree(elements: number): Tree<{id: string}> {
-    return [...Array(elements)].map((_, index) => ({id: `${index}`, children: []}));
-  }
-
-  function expectFlatMove(
-    tree: Tree<{id: string}>,
-    source: number,
-    location: {target: number; side: "above" | "below"},
-    expected: number[],
-  ) {
-    expect(
-      moveItemInTree(
-        tree,
-        {id: `${source}`},
-        {target: `${location.target}`, side: location.side, indentation: 0},
-      ).map((x) => +x.id),
-    ).toEqual(expected);
-  }
-
   describe("in flat list", () => {
+    function flatTree(elements: number): Tree<{id: string}> {
+      return [...Array(elements)].map((_, index) => ({id: `${index}`, children: []}));
+    }
+
+    function expectFlatMove(
+      tree: Tree<{id: string}>,
+      source: number,
+      location: {target: number; side: "above" | "below"},
+      expected: number[],
+    ) {
+      expect(
+        moveItemInTree(
+          tree,
+          {id: `${source}`},
+          {target: `${location.target}`, side: location.side, indentation: 0},
+        ).map((x) => +x.id),
+      ).toEqual(expected);
+    }
+
     test("in an empty list, repositioning doesn't change anything", () => {
       expect(moveItemInTree([], {id: "0"}, {target: "0", side: "above", indentation: 0})).toEqual([]);
     });
@@ -90,6 +90,33 @@ describe("moving item in tree", () => {
         test("repositioning an item above the next item", () => {
           expectFlatMove(flatTree(3), 1, {target: 2, side: "above"}, [0, 1, 2]);
         });
+      });
+    });
+  });
+
+  describe("moving subtrees", () => {
+    describe("after indenting a subtree below the previous top-level item", () => {
+      const before = [
+        {id: "0", children: []},
+        {id: "1", children: [{id: "2", children: []}]},
+      ];
+
+      const after = moveItemInTree(before, {id: "1"}, {target: "0", side: "below", indentation: 1});
+
+      test("there is only one top-level item", () => {
+        expect(after.length).toBe(1);
+      });
+
+      test("the top-level item remains the same", () => {
+        expect(before[0].id).toEqual("0");
+      });
+
+      test("the root of the subtree is added as a child of the top-level item", () => {
+        expect(after[0].children[0].id).toEqual("1");
+      });
+
+      test.skip("the root of the subtree still has its children", () => {
+        expect(after[0].children[0].children).toEqual(before[1].children);
       });
     });
   });
