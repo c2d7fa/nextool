@@ -175,4 +175,47 @@ describe("converting indented list insertion location to tree coordinates", () =
       });
     });
   });
+
+  describe("inserting a child of a leaf node", () => {
+    test("by inserting below parent node", () => {
+      const example = [{id: "0", children: []}];
+      expect(listInsertLocationtoTreeLocation(example, {target: "0", side: "below", indentation: 1})).toEqual({
+        parent: "0",
+        index: 0,
+      });
+    });
+
+    test("by inserting above following node at same indentation", () => {
+      const example = [
+        {id: "0", children: []},
+        {id: "1", children: []},
+      ];
+      expect(listInsertLocationtoTreeLocation(example, {target: "1", side: "above", indentation: 1})).toEqual({
+        parent: "0",
+        index: 0,
+      });
+    });
+
+    test("by inserting above following node at higher indentation", () => {
+      const example = [
+        {id: "0", children: [{id: "1", children: []}]},
+        {id: "2", children: []},
+      ];
+      expect(listInsertLocationtoTreeLocation(example, {target: "2", side: "above", indentation: 2})).toEqual({
+        parent: "1",
+        index: 0,
+      });
+    });
+  });
+
+  test("inserting at the end of an existing subtree by inserting above the following item", () => {
+    const example = [
+      {id: "0", children: [{id: "1", children: []}]},
+      {id: "2", children: []},
+    ];
+    expect(listInsertLocationtoTreeLocation(example, {target: "2", side: "above", indentation: 1})).toEqual({
+      parent: "0",
+      index: 1,
+    });
+  });
 });
