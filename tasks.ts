@@ -2,7 +2,7 @@ import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
 import {reposition} from "./reposition";
 
-export type Task = {
+type Task = {
   id: string;
   title: string;
   indentation: number;
@@ -11,6 +11,14 @@ export type Task = {
 };
 
 export type Tasks = Task[];
+
+export const empty: Tasks = [
+  {id: "0", title: "Task 1", done: false, indentation: 0},
+  {id: "1", title: "Task 2", done: true, action: true, indentation: 0},
+  {id: "2", title: "Task 3", done: false, action: true, indentation: 0},
+  {id: "3", title: "Task 4", done: false, indentation: 0},
+  {id: "4", title: "Task 5", done: false, action: true, indentation: 0},
+];
 
 type DropTarget = {width: number | "full"; indentation: number; side: "above" | "below"};
 

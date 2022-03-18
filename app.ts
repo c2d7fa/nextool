@@ -1,6 +1,6 @@
 import {TextFieldEvent, TextFieldStates} from "./text-field";
 import * as Tasks from "./tasks";
-import {Task, TaskListView} from "./tasks";
+import {TaskListView} from "./tasks";
 import {TaskEditorEvent, TaskEditorState} from "./task-editor";
 import {add, edit, merge} from "./tasks";
 import {reload, updateEditor} from "./task-editor";
@@ -35,7 +35,7 @@ export type Send = (event: Event) => void;
 
 export type State = {
   filter: FilterId;
-  tasks: Task[];
+  tasks: Tasks.Tasks;
   textFields: TextFieldStates<TextFieldId>;
   editor: TaskEditorState;
   taskDrag: Drag.DragState<DragId, DropId>;
