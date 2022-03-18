@@ -63,9 +63,8 @@ export function listInsertLocationtoTreeLocation<T extends {id: string}>(
   location: IndentedListInsertLocation,
 ): TreeLocation | null {
   if (location.side === "below") {
-    const nextItem = toList(tree)[toList(tree).findIndex((x) => x.id === location.target) + 1];
-    if (!nextItem) return {parent: null, index: tree.length};
-    return listInsertLocationtoTreeLocation(tree, {...location, side: "above", target: nextItem.id});
+    const aboveResult = listInsertLocationtoTreeLocation(tree, {...location, side: "above"});
+    return aboveResult ? {...aboveResult, index: aboveResult.index + 1} : null;
   }
 
   if (location.indentation === 0) {

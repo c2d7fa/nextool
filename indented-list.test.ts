@@ -157,4 +157,22 @@ describe("converting indented list insertion location to tree coordinates", () =
       });
     });
   });
+
+  describe("inserting into an existing subtree", () => {
+    const example = [{id: "0", children: [{id: "1", children: []}]}];
+
+    test("above the item inside the subtree", () => {
+      expect(listInsertLocationtoTreeLocation(example, {target: "1", side: "above", indentation: 1})).toEqual({
+        parent: "0",
+        index: 0,
+      });
+    });
+
+    test("below the item inside the subtree", () => {
+      expect(listInsertLocationtoTreeLocation(example, {target: "1", side: "below", indentation: 1})).toEqual({
+        parent: "0",
+        index: 1,
+      });
+    });
+  });
 });
