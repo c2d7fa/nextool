@@ -1,6 +1,5 @@
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
-import {reposition} from "./reposition";
 import {Tree, TreeNode, toList, fromList, findNode, merge as mergeNodes, moveItemInTree} from "./indented-list";
 
 type TaskData = {
