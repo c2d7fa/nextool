@@ -4,6 +4,7 @@ export type Tree<T> = TreeNode<T>[];
 export type IndentedListItem<T> = T & {indentation: number};
 export type IndentedList<T> = IndentedListItem<T>[];
 
+type TreeLocation = {parent: string | null; index: number};
 export type IndentedListInsertLocation = {side: "above" | "below"; target: string; indentation: number};
 
 function range(start: number, end: number): number[] {
@@ -57,22 +58,51 @@ export function updateNode<T extends {id: string}>(
   });
 }
 
+export function listInsertLocationtoTreeLocation<T extends {id: string}>(
+  tree: Tree<T>,
+  location: IndentedListInsertLocation,
+): TreeLocation | null {
+  if (location.side === "below") {
+    const nextItem = toList(tree)[toList(tree).findIndex((x) => x.id === location.target) + 1];
+    if (!nextItem) return {parent: null, index: tree.length};
+    return listInsertLocationtoTreeLocation(tree, {...location, side: "above", target: nextItem.id});
+  }
+
+  if (location.indentation === 0) {
+    return {parent: null, index: tree.findIndex((node) => node.id === location.target)};
+  }
+
+  for (const parent of tree) {
+    const result = listInsertLocationtoTreeLocation(parent.children, {
+      ...location,
+      indentation: location.indentation - 1,
+    });
+    if (result) return {...result, parent: result.parent ?? parent.id};
+  }
+
+  return null;
+}
+
+function findNodeLocation<T extends {id: string}>(tree: Tree<T>, query: {id: string}): TreeLocation | null {
+  return null;
+}
+
+function moveNodeInTree<T extends {id: string}>(tree: Tree<T>, from: TreeLocation, to: TreeLocation): Tree<T> {
+  return tree;
+}
+
 export function moveItemInTree<T extends {id: string}>(
   tree: Tree<T>,
   source: {id: string},
   location: IndentedListInsertLocation,
 ): Tree<T> {
-  const sourceIndex = toList(tree).findIndex((item) => item.id === source.id);
-  if (sourceIndex === -1) return tree;
+  const from = findNodeLocation(tree, source);
+  if (!from) return tree;
 
-  const targetIndex = toList(tree).findIndex((item) => item.id === location.target);
-  if (targetIndex === -1) return tree;
+  const to = listInsertLocationtoTreeLocation(tree, location);
+  if (!to) return tree;
 
-  return fromList(
-    reposition(toList(tree), sourceIndex, {index: targetIndex, side: location.side}).map((item) =>
-      item.id === source.id ? {...item, indentation: location.indentation} : item,
-    ),
-  );
+  return moveNodeInTree(tree, from, to);
 }
 
 export function merge<T extends {id: string}>(tree: Tree<T>, patches: ({id: string} & Partial<T>)[]): Tree<T> {
