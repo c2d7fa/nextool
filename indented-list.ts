@@ -4,7 +4,7 @@ export type Tree<T> = TreeNode<T>[];
 export type IndentedListItem<T> = T & {indentation: number};
 export type IndentedList<T> = IndentedListItem<T>[];
 
-export function findNode<T extends {id: string}>(tree: Tree<T>, query: T): TreeNode<T> | null {
+export function findNode<T extends {id: string}>(tree: Tree<T>, query: {id: string}): TreeNode<T> | null {
   const topLevel = tree.find((node) => node.id === query.id);
   if (topLevel) return topLevel;
   for (const node of tree) {
@@ -12,6 +12,23 @@ export function findNode<T extends {id: string}>(tree: Tree<T>, query: T): TreeN
     if (child) return child;
   }
   return null;
+}
+
+export function updateNode<T extends {id: string}>(
+  tree: Tree<T>,
+  query: {id: string},
+  update: (x: T) => T,
+): Tree<T> {
+  return tree.map((node) => {
+    if (node.id === query.id) {
+      return {...node, ...update(node)};
+    }
+    return {...node, children: updateNode(node.children, query, update)};
+  });
+}
+
+export function merge<T extends {id: string}>(tree: Tree<T>, patches: ({id: string} & Partial<T>)[]): Tree<T> {
+  return patches.reduce((result, patch) => updateNode(result, patch, (node) => ({...node, ...patch})), tree);
 }
 
 export function toList<T>(roots: Tree<T>, indentation?: number): IndentedList<T> {

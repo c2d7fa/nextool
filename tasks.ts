@@ -1,23 +1,23 @@
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
 import {reposition} from "./reposition";
-import {IndentedList, Tree, TreeNode, toList, fromList, findNode} from "./indented-list";
+import {Tree, TreeNode, toList, fromList, findNode, merge as mergeNodes} from "./indented-list";
 
 type TaskData = {
   id: string;
   title: string;
-  done?: boolean;
-  action?: boolean;
+  done: boolean;
+  action: boolean;
 };
 
 type Task = TreeNode<TaskData>;
 export type Tasks = Tree<TaskData>;
 
 export const empty: Tasks = [
-  {id: "0", title: "Task 1", done: false, children: []},
+  {id: "0", title: "Task 1", done: false, action: false, children: []},
   {id: "1", title: "Task 2", done: true, action: true, children: []},
   {id: "2", title: "Task 3", done: false, action: true, children: []},
-  {id: "3", title: "Task 4", done: false, children: []},
+  {id: "3", title: "Task 4", done: false, action: false, children: []},
   {id: "4", title: "Task 5", done: false, action: true, children: []},
 ];
 
@@ -33,42 +33,29 @@ export type TaskListView = {
   dropTargets: DropTarget[];
 }[];
 
-export function merge(tasks: Tasks, updates: Partial<Task>[]): Tasks {
-  return fromList(
-    toList(tasks).map((task) => {
-      const update = updates.find((u) => u.id === task.id);
-      return update ? {...task, ...update} : task;
-    }),
-  );
-}
-
-function randomId() {
-  return Math.floor(Math.random() * 36 ** 8).toString(36);
+export function merge(tasks: Tasks, updates: ({id: string} & Partial<Task>)[]): Tasks {
+  return mergeNodes(tasks, updates);
 }
 
 export function add(tasks: Tasks, values: Partial<Task>): Tasks {
+  function randomId() {
+    return Math.floor(Math.random() * 36 ** 8).toString(36);
+  }
+
   return [
     ...tasks,
     {
       id: randomId(),
       title: values.title ?? "",
+      action: false,
+      done: false,
       children: [],
     },
   ];
 }
 
-export function find(
-  tasks: Tasks,
-  id: string,
-): {id: string; title: string; done: boolean; action: boolean} | null {
-  const task = toList(tasks).find((task) => task.id === id) ?? null;
-  if (task === null) return null;
-  return {
-    id: task.id,
-    title: task.title,
-    done: task.done ?? false,
-    action: task.action ?? false,
-  };
+export function find(tasks: Tasks, id: string): TaskData | null {
+  return findNode(tasks, {id});
 }
 
 export type EditOperation =
