@@ -1,3 +1,11 @@
+export type TreeNode<T> = T & {children: TreeNode<T>[]};
+export type Tree<T> = TreeNode<T>[];
+
+export type IndentedListItem<T> = T & {indentation: number};
+export type IndentedList<T> = IndentedListItem<T>[];
+
+export type IndentedListInsertLocation = {side: "above" | "below"; target: string; indentation: number};
+
 function range(start: number, end: number): number[] {
   return Array.from(Array(end - start + 1), (_, i) => i + start);
 }
@@ -26,12 +34,6 @@ function reposition<T>(list: T[], sourceIndex: number, target: {index: number; s
     : repositionBelow(list, sourceIndex, target.index - 1);
 }
 
-export type TreeNode<T> = T & {children: TreeNode<T>[]};
-export type Tree<T> = TreeNode<T>[];
-
-export type IndentedListItem<T> = T & {indentation: number};
-export type IndentedList<T> = IndentedListItem<T>[];
-
 export function findNode<T extends {id: string}>(tree: Tree<T>, query: {id: string}): TreeNode<T> | null {
   const topLevel = tree.find((node) => node.id === query.id);
   if (topLevel) return topLevel;
@@ -58,7 +60,7 @@ export function updateNode<T extends {id: string}>(
 export function moveItemInTree<T extends {id: string}>(
   tree: Tree<T>,
   source: {id: string},
-  location: {side: "above" | "below"; target: string; indentation: number},
+  location: IndentedListInsertLocation,
 ): Tree<T> {
   const sourceIndex = toList(tree).findIndex((item) => item.id === source.id);
   if (sourceIndex === -1) return tree;
