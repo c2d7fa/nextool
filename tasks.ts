@@ -1,7 +1,7 @@
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
 import {reposition} from "./reposition";
-import {Tree, TreeNode, toList, fromList, findNode, merge as mergeNodes} from "./indented-list";
+import {Tree, TreeNode, toList, fromList, findNode, merge as mergeNodes, moveItemInTree} from "./indented-list";
 
 type TaskData = {
   id: string;
@@ -94,17 +94,7 @@ export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks 
 
     return edit(tasks, id, {type: "set", ...update});
   } else if (operation.type === "move") {
-    const sourceIndex = toList(tasks).findIndex((task) => task.id === id);
-    if (sourceIndex === -1) return tasks;
-
-    const targetIndex = toList(tasks).findIndex((task) => task.id === operation.target);
-    if (targetIndex === -1) return tasks;
-
-    return fromList(
-      reposition(toList(tasks), sourceIndex, {index: targetIndex, side: operation.side}).map((task) =>
-        task.id === id ? {...task, indentation: operation.indentation} : task,
-      ),
-    );
+    return moveItemInTree(tasks, {id}, operation);
   } else {
     const unreachable: never = operation;
     return unreachable;

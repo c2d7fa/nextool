@@ -1,3 +1,5 @@
+import {reposition} from "./reposition";
+
 export type TreeNode<T> = T & {children: TreeNode<T>[]};
 export type Tree<T> = TreeNode<T>[];
 
@@ -25,6 +27,24 @@ export function updateNode<T extends {id: string}>(
     }
     return {...node, children: updateNode(node.children, query, update)};
   });
+}
+
+export function moveItemInTree<T extends {id: string}>(
+  tree: Tree<T>,
+  source: {id: string},
+  location: {side: "above" | "below"; target: string; indentation: number},
+): Tree<T> {
+  const sourceIndex = toList(tree).findIndex((item) => item.id === source.id);
+  if (sourceIndex === -1) return tree;
+
+  const targetIndex = toList(tree).findIndex((item) => item.id === location.target);
+  if (targetIndex === -1) return tree;
+
+  return fromList(
+    reposition(toList(tree), sourceIndex, {index: targetIndex, side: location.side}).map((item) =>
+      item.id === source.id ? {...item, indentation: location.indentation} : item,
+    ),
+  );
 }
 
 export function merge<T extends {id: string}>(tree: Tree<T>, patches: ({id: string} & Partial<T>)[]): Tree<T> {
