@@ -292,3 +292,42 @@ describe("a task that has an unfinished child task isn't stalled", () => {
     });
   });
 });
+
+describe("dragging a subtree of tasks", () => {
+  const example = updateAll(empty, [
+    ...addTask("Task 0"),
+    ...addTask("Task 1"),
+    ...addTask("Task 2"),
+    ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+  ]);
+
+  describe("initially", () => {
+    test("the example has three tasks", () => {
+      expect(view(example).taskList.length).toBe(3);
+    });
+
+    test("the example has tasks in the correct order", () => {
+      expect(view(example).taskList.map((t) => t.title)).toEqual(["Task 0", "Task 1", "Task 2"]);
+    });
+
+    test("the example is indented correctly", () => {
+      expect(view(example).taskList.map((t) => t.indentation)).toEqual([0, 1, 0]);
+    });
+  });
+
+  const afterDragging = updateAll(example, [...dragAndDropNth(0, 2, {side: "below", indentation: 1})]);
+
+  describe("after dragging the subtree into another task", () => {
+    test.skip("there are still three tasks", () => {
+      expect(view(afterDragging).taskList.length).toBe(3);
+    });
+
+    test.skip("the tasks have changed order", () => {
+      expect(view(afterDragging).taskList.map((t) => t.title)).toEqual(["Task 2", "Task 0", "Task 1"]);
+    });
+
+    test.skip("the tasks have changed indentation", () => {
+      expect(view(afterDragging).taskList.map((t) => t.indentation)).toEqual([0, 1, 2]);
+    });
+  });
+});
