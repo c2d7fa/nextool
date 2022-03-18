@@ -5,7 +5,7 @@ import {reposition} from "./reposition";
 type Task = {
   id: string;
   title: string;
-  indentation: number;
+  children: Task[];
   done?: boolean;
   action?: boolean;
 };
@@ -13,11 +13,11 @@ type Task = {
 export type Tasks = Task[];
 
 export const empty: Tasks = [
-  {id: "0", title: "Task 1", done: false, indentation: 0},
-  {id: "1", title: "Task 2", done: true, action: true, indentation: 0},
-  {id: "2", title: "Task 3", done: false, action: true, indentation: 0},
-  {id: "3", title: "Task 4", done: false, indentation: 0},
-  {id: "4", title: "Task 5", done: false, action: true, indentation: 0},
+  {id: "0", title: "Task 1", done: false, children: []},
+  {id: "1", title: "Task 2", done: true, action: true, children: []},
+  {id: "2", title: "Task 3", done: false, action: true, children: []},
+  {id: "3", title: "Task 4", done: false, children: []},
+  {id: "4", title: "Task 5", done: false, action: true, children: []},
 ];
 
 type DropTarget = {width: number | "full"; indentation: number; side: "above" | "below"};
@@ -49,7 +49,7 @@ export function add(tasks: Tasks, values: Partial<Task>): Tasks {
     {
       id: randomId(),
       title: values.title ?? "",
-      indentation: 0,
+      children: [],
     },
   ];
 }
@@ -102,14 +102,16 @@ export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks 
 
     return edit(tasks, id, {type: "set", ...update});
   } else if (operation.type === "move") {
-    const sourceIndex = tasks.findIndex((task) => task.id === id);
+    const sourceIndex = toList(tasks).findIndex((task) => task.id === id);
     if (sourceIndex === -1) return tasks;
 
-    const targetIndex = tasks.findIndex((task) => task.id === operation.target);
+    const targetIndex = toList(tasks).findIndex((task) => task.id === operation.target);
     if (targetIndex === -1) return tasks;
 
-    return reposition(tasks, sourceIndex, {index: targetIndex, side: operation.side}).map((task) =>
-      task.id === id ? {...task, indentation: operation.indentation} : task,
+    return fromList(
+      reposition(toList(tasks), sourceIndex, {index: targetIndex, side: operation.side}).map((task) =>
+        task.id === id ? {...task, indentation: operation.indentation} : task,
+      ),
     );
   } else {
     const unreachable: never = operation;
@@ -117,24 +119,7 @@ export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks 
   }
 }
 
-type TaskTree = Task & {children: TaskTree[]};
-
-function tree(tasks: Tasks): TaskTree[] {
-  function tree_(tasks: Tasks, index: number): TaskTree {
-    let children = [];
-    let i = index + 1;
-    while (i < tasks.length && tasks[i].indentation > tasks[index].indentation) {
-      if (tasks[i].indentation === tasks[index].indentation + 1) {
-        children.push(tree_(tasks, i));
-      }
-      i++;
-    }
-    return {...tasks[index], children};
-  }
-  return tasks.map((_, index) => tree_(tasks, index));
-}
-
-function badges(task: TaskTree): ("action" | "stalled")[] {
+function badges(task: Task): ("action" | "stalled")[] {
   if (task.action && !task.done) return ["action"];
   else if (!task.done && !task.children.some((child) => !child.done)) return ["stalled"];
   else return [];
@@ -142,10 +127,47 @@ function badges(task: TaskTree): ("action" | "stalled")[] {
 
 export type FilterId = "all" | "actions" | "done" | "stalled" | "not-done";
 
+function toList(tasks: Task[], indentation?: number): (Task & {indentation: number})[] {
+  return tasks.reduce(
+    (result, task) => [
+      ...result,
+      {...task, indentation: indentation ?? 0},
+      ...toList(task.children, (indentation ?? 0) + 1),
+    ],
+    [] as (Task & {indentation: number})[],
+  );
+}
+
+function fromList(tasks: (Task & {indentation: number})[]): Task[] {
+  function takeWhile<T>(array: T[], predicate: (value: T, index: number) => boolean): T[] {
+    let i = 0;
+    while (i < array.length && predicate(array[i], i)) i++;
+    return array.slice(0, i);
+  }
+
+  function directChildren(
+    tasks: (Task & {indentation: number})[],
+    indentation: number,
+  ): (Task & {indentation: number})[] {
+    return takeWhile(tasks, (task) => indentation < task.indentation).filter(
+      (task) => task.indentation === indentation + 1,
+    );
+  }
+
+  function subtree(task: Task & {indentation: number}): Task {
+    return {
+      ...task,
+      children: directChildren(tasks.slice(tasks.indexOf(task) + 1), task.indentation).map(subtree),
+    };
+  }
+
+  return tasks.filter((task) => task.indentation === 0).map(subtree);
+}
+
 export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<DragId, DropId>}): TaskListView {
   const {tasks, filter, taskDrag} = args;
 
-  const filtered = tree(tasks).filter((task) => {
+  const filtered = tasks.filter((task) => {
     if (filter === "actions") return badges(task).includes("action");
     else if (filter === "done") return task.done;
     else if (filter === "stalled") return badges(task).includes("stalled");
@@ -159,7 +181,8 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     return {side: taskDrag.hovering.side, indentation: taskDrag.hovering.indentation};
   }
 
-  function dropTargetsBelow(tasks: Task[], index: number): DropTarget[] {
+  function dropTargetsBelow(tasks_: Task[], index: number): DropTarget[] {
+    const tasks = toList(tasks_);
     const task = tasks[index];
 
     const followingIndentation = tasks[index + 1]?.indentation ?? 0;
@@ -172,7 +195,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     return result;
   }
 
-  return filtered.map((task, index) => ({
+  return toList(filtered).map((task, index) => ({
     id: task.id,
     title: task.title,
     indentation: task.indentation,
