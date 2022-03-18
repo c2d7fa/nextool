@@ -33,10 +33,12 @@ export type TaskListView = {
 }[];
 
 export function merge(tasks: Tasks, updates: Partial<Task>[]): Tasks {
-  return tasks.map((task) => {
-    const update = updates.find((u) => u.id === task.id);
-    return update ? {...task, ...update} : task;
-  });
+  return fromList(
+    toList(tasks).map((task) => {
+      const update = updates.find((u) => u.id === task.id);
+      return update ? {...task, ...update} : task;
+    }),
+  );
 }
 
 function randomId() {
@@ -58,7 +60,7 @@ export function find(
   tasks: Tasks,
   id: string,
 ): {id: string; title: string; done: boolean; action: boolean} | null {
-  const task = tasks.find((task) => task.id === id) ?? null;
+  const task = toList(tasks).find((task) => task.id === id) ?? null;
   if (task === null) return null;
   return {
     id: task.id,
@@ -78,14 +80,16 @@ export type EditOperation =
 
 export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks {
   if (operation.type === "delete") {
-    return tasks.filter((task) => task.id !== id);
+    return fromList(toList(tasks.filter((task) => task.id !== id)));
   } else if (operation.type === "set") {
-    return tasks.map((task) => {
-      if (task.id === id) {
-        return {...task, [operation.property]: operation.value};
-      }
-      return task;
-    });
+    return fromList(
+      toList(tasks).map((task) => {
+        if (task.id === id) {
+          return {...task, [operation.property]: operation.value};
+        }
+        return task;
+      }),
+    );
   } else if (operation.type === "moveToFilter") {
     const filter = operation.filter;
 
