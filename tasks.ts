@@ -131,28 +131,28 @@ function badges(task: Task): ("action" | "stalled")[] {
 
 export type FilterId = "all" | "actions" | "done" | "stalled" | "not-done";
 
-function toList(tasks: Task[], indentation?: number): (Task & {indentation: number})[] {
+type TaskTree = Task[];
+type TaskList = (Task & {indentation: number})[];
+
+function toList(tasks: TaskTree, indentation?: number): TaskList {
   return tasks.reduce(
     (result, task) => [
       ...result,
       {...task, indentation: indentation ?? 0},
       ...toList(task.children, (indentation ?? 0) + 1),
     ],
-    [] as (Task & {indentation: number})[],
+    [] as TaskList,
   );
 }
 
-function fromList(tasks: (Task & {indentation: number})[]): Task[] {
+function fromList(tasks: TaskList): TaskTree {
   function takeWhile<T>(array: T[], predicate: (value: T, index: number) => boolean): T[] {
     let i = 0;
     while (i < array.length && predicate(array[i], i)) i++;
     return array.slice(0, i);
   }
 
-  function directChildren(
-    tasks: (Task & {indentation: number})[],
-    indentation: number,
-  ): (Task & {indentation: number})[] {
+  function directChildren(tasks: TaskList, indentation: number): TaskList {
     return takeWhile(tasks, (task) => indentation < task.indentation).filter(
       (task) => task.indentation === indentation + 1,
     );
