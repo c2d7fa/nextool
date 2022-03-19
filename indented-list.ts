@@ -70,7 +70,7 @@ function findNodeLocation<T extends {id: string}>(tree: Tree<T>, query: {id: str
   return null;
 }
 
-export function listInsertLocationtoTreeLocation<T extends {id: string}>(
+export function listInsertLocationToTreeLocation<T extends {id: string}>(
   tree: Tree<T>,
   location: IndentedListInsertLocation,
 ): TreeLocation | null {
@@ -80,7 +80,7 @@ export function listInsertLocationtoTreeLocation<T extends {id: string}>(
     const targetItemIndex = list.findIndex((x) => x.id === location.target);
     const previousItem = list[targetItemIndex - 1];
     if (!previousItem) return {parent: null, index: 0};
-    return listInsertLocationtoTreeLocation(tree, {
+    return listInsertLocationToTreeLocation(tree, {
       target: previousItem.id,
       side: "below",
       indentation: location.indentation,
@@ -122,7 +122,7 @@ export function moveItemInTree<T extends {id: string}>(
   const from = findNodeLocation(tree, source);
   if (!from) return tree;
 
-  const to = listInsertLocationtoTreeLocation(tree, location);
+  const to = listInsertLocationToTreeLocation(tree, location);
   if (!to) return tree;
 
   return moveNodeInTree(tree, from, to);

@@ -1,4 +1,4 @@
-import {listInsertLocationtoTreeLocation, moveItemInTree, Tree} from "./indented-list";
+import {listInsertLocationToTreeLocation, moveItemInTree, Tree} from "./indented-list";
 
 describe.skip("moving item in tree", () => {
   describe("in flat list", () => {
@@ -130,28 +130,28 @@ describe("converting indented list insertion location to tree coordinates", () =
     ];
 
     test("above the first item", () => {
-      expect(listInsertLocationtoTreeLocation(example, {target: "0", side: "above", indentation: 0})).toEqual({
+      expect(listInsertLocationToTreeLocation(example, {target: "0", side: "above", indentation: 0})).toEqual({
         parent: null,
         index: 0,
       });
     });
 
     test("below the first item", () => {
-      expect(listInsertLocationtoTreeLocation(example, {target: "0", side: "below", indentation: 0})).toEqual({
+      expect(listInsertLocationToTreeLocation(example, {target: "0", side: "below", indentation: 0})).toEqual({
         parent: null,
         index: 1,
       });
     });
 
     test("above the second item", () => {
-      expect(listInsertLocationtoTreeLocation(example, {target: "1", side: "above", indentation: 0})).toEqual({
+      expect(listInsertLocationToTreeLocation(example, {target: "1", side: "above", indentation: 0})).toEqual({
         parent: null,
         index: 1,
       });
     });
 
     test("below the second item", () => {
-      expect(listInsertLocationtoTreeLocation(example, {target: "1", side: "below", indentation: 0})).toEqual({
+      expect(listInsertLocationToTreeLocation(example, {target: "1", side: "below", indentation: 0})).toEqual({
         parent: null,
         index: 2,
       });
@@ -162,14 +162,14 @@ describe("converting indented list insertion location to tree coordinates", () =
     const example = [{id: "0", children: [{id: "1", children: []}]}];
 
     test("above the item inside the subtree", () => {
-      expect(listInsertLocationtoTreeLocation(example, {target: "1", side: "above", indentation: 1})).toEqual({
+      expect(listInsertLocationToTreeLocation(example, {target: "1", side: "above", indentation: 1})).toEqual({
         parent: "0",
         index: 0,
       });
     });
 
     test("below the item inside the subtree", () => {
-      expect(listInsertLocationtoTreeLocation(example, {target: "1", side: "below", indentation: 1})).toEqual({
+      expect(listInsertLocationToTreeLocation(example, {target: "1", side: "below", indentation: 1})).toEqual({
         parent: "0",
         index: 1,
       });
@@ -179,7 +179,7 @@ describe("converting indented list insertion location to tree coordinates", () =
   describe("inserting a new child of a leaf node", () => {
     test("by inserting below parent node", () => {
       const example = [{id: "0", children: []}];
-      expect(listInsertLocationtoTreeLocation(example, {target: "0", side: "below", indentation: 1})).toEqual({
+      expect(listInsertLocationToTreeLocation(example, {target: "0", side: "below", indentation: 1})).toEqual({
         parent: "0",
         index: 0,
       });
@@ -190,7 +190,7 @@ describe("converting indented list insertion location to tree coordinates", () =
         {id: "0", children: []},
         {id: "1", children: []},
       ];
-      expect(listInsertLocationtoTreeLocation(example, {target: "1", side: "above", indentation: 1})).toEqual({
+      expect(listInsertLocationToTreeLocation(example, {target: "1", side: "above", indentation: 1})).toEqual({
         parent: "0",
         index: 0,
       });
@@ -201,7 +201,7 @@ describe("converting indented list insertion location to tree coordinates", () =
         {id: "0", children: [{id: "1", children: []}]},
         {id: "2", children: []},
       ];
-      expect(listInsertLocationtoTreeLocation(example, {target: "2", side: "above", indentation: 2})).toEqual({
+      expect(listInsertLocationToTreeLocation(example, {target: "2", side: "above", indentation: 2})).toEqual({
         parent: "1",
         index: 0,
       });
@@ -213,7 +213,7 @@ describe("converting indented list insertion location to tree coordinates", () =
       {id: "0", children: [{id: "1", children: []}]},
       {id: "2", children: []},
     ];
-    expect(listInsertLocationtoTreeLocation(example, {target: "2", side: "above", indentation: 1})).toEqual({
+    expect(listInsertLocationToTreeLocation(example, {target: "2", side: "above", indentation: 1})).toEqual({
       parent: "0",
       index: 1,
     });
@@ -222,7 +222,7 @@ describe("converting indented list insertion location to tree coordinates", () =
   describe("inserting an item below another item but at a lower level of indentation", () => {
     test("at the end of the list at the top level", () => {
       const example = [{id: "0", children: [{id: "1", children: []}]}];
-      expect(listInsertLocationtoTreeLocation(example, {target: "1", side: "below", indentation: 0})).toEqual({
+      expect(listInsertLocationToTreeLocation(example, {target: "1", side: "below", indentation: 0})).toEqual({
         parent: null,
         index: 1,
       });
@@ -236,7 +236,7 @@ describe("converting indented list insertion location to tree coordinates", () =
         },
         {id: "3", children: []},
       ];
-      expect(listInsertLocationtoTreeLocation(example, {target: "1", side: "below", indentation: 0})).toEqual({
+      expect(listInsertLocationToTreeLocation(example, {target: "1", side: "below", indentation: 0})).toEqual({
         parent: null,
         index: 1,
       });
@@ -252,7 +252,7 @@ describe("converting indented list insertion location to tree coordinates", () =
           ],
         },
       ];
-      expect(listInsertLocationtoTreeLocation(example, {target: "2", side: "below", indentation: 1})).toEqual({
+      expect(listInsertLocationToTreeLocation(example, {target: "2", side: "below", indentation: 1})).toEqual({
         parent: "0",
         index: 1,
       });
