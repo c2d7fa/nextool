@@ -25,11 +25,11 @@
 
 .badge {
   font-family: "Roboto", sans-serif;
-  font-size: 0.8em;
+  font-size: 0.75em;
   border-radius: 3px;
   box-sizing: border-box;
 
-  padding: (shared.$padding-y * 0.5) (shared.$padding-x * 0.5);
+  padding: 0 (shared.$padding-x * 0.5);
 
   &.green {
     border: 1px solid #00000040;

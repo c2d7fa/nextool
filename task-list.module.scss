@@ -9,10 +9,13 @@
   .title {
     color: #222;
     font-weight: 500;
+
+    white-space: nowrap;
+    overflow: auto;
   }
 
   .badge {
-    margin-left: 1em;
+    margin-left: 1ex;
     display: inline-flex;
     align-items: center;
   }
@@ -82,6 +85,8 @@
   display: flex;
   flex-direction: column;
 
+  box-sizing: border-box;
+
   box-shadow: 0 3px 6px -6px #aaa inset;
 
   & > * {
@@ -93,7 +98,7 @@
     min-height: 22px;
 
     display: grid;
-    grid-template-columns: max-content 1fr max-content;
+    grid-template-columns: auto max-content 1fr max-content;
 
     &:hover {
       background-color: #f8f8f8;
@@ -104,57 +109,55 @@
       align-items: center;
     }
 
-    span:nth-child(1) {
+    .checkboxColumn {
       justify-self: center;
       padding-right: 0.6em;
     }
 
-    span:nth-child(3) {
+    .idColumn {
       justify-self: right;
+    }
+
+    .titleColumn {
+      overflow: hidden;
     }
 
     position: relative;
 
-    .dropTop {
+    .dropTarget {
       position: absolute;
-      top: 0;
+
       left: 0;
       right: 0;
-      height: 10px;
-    }
 
-    .dropIndicatorTop {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      border-radius: 2px;
+      &.below {
+        bottom: -2px;
+        height: 12px;
+      }
 
-      &.shown {
-        background-color: #00000038;
+      &.above {
+        top: 0;
+        height: 10px;
       }
     }
 
-    .dropIndicatorBottom {
+    .dropIndicator {
       position: absolute;
-      bottom: 0;
-      left: 0;
+
       right: 0;
+
       height: 2px;
       border-radius: 2px;
 
-      &.shown {
-        background-color: #00000038;
+      &.below {
+        bottom: 0;
       }
-    }
 
-    .dropBottom {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 10px;
+      &.above {
+        top: -3px;
+      }
+
+      background-color: #00000080;
     }
   }
 }

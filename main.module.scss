@@ -36,18 +36,21 @@
     grid-area: main;
 
     display: grid;
-    grid: "left right" 1fr / 1fr 1fr;
+    grid: "left right" 1fr / 5fr 2fr;
     column-gap: 1em;
 
     .left {
+      box-sizing: border-box;
       grid-area: left;
       display: flex;
       flex-direction: column;
       row-gap: 1em;
       align-items: flex-start;
+      overflow: auto;
     }
 
     .right {
+      box-sizing: border-box;
       grid-area: right;
       display: grid;
     }

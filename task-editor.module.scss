@@ -5,11 +5,14 @@
   flex-direction: column;
   row-gap: 1em;
 
+  overflow: auto;
+
   pre {
     margin: 0;
     background-color: #ececec;
     padding: 1em;
     border-radius: 3px;
+    white-space: pre-wrap;
   }
 
   background-color: #f8f8f8;

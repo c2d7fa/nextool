@@ -1,6 +1,6 @@
 import {TextFieldEvent, TextFieldStates} from "./text-field";
 import * as Tasks from "./tasks";
-import {Task, TaskListView} from "./tasks";
+import {TaskListView} from "./tasks";
 import {TaskEditorEvent, TaskEditorState} from "./task-editor";
 import {add, edit, merge} from "./tasks";
 import {reload, updateEditor} from "./task-editor";
@@ -18,7 +18,9 @@ export type CheckedEvent = {tag: "checked"; id: string; checked: boolean};
 export type SelectEditingTask = {tag: "selectEditingTask"; id: string};
 
 export type DragId = {type: "task"; id: string};
-export type DropId = {type: "filter"; id: FilterId} | {type: "task"; side: "above" | "below"; id: string};
+export type DropId =
+  | {type: "filter"; id: FilterId}
+  | {type: "task"; id: string; side: "above" | "below"; indentation: number};
 
 export type Event =
   | CheckedEvent
@@ -33,7 +35,7 @@ export type Send = (event: Event) => void;
 
 export type State = {
   filter: FilterId;
-  tasks: Task[];
+  tasks: Tasks.Tasks;
   textFields: TextFieldStates<TextFieldId>;
   editor: TaskEditorState;
   taskDrag: Drag.DragState<DragId, DropId>;
@@ -107,7 +109,15 @@ export function updateApp(app: State, ev: Event): State {
     if (drop.type === "filter") {
       return {...app, tasks: edit(app.tasks, drag.id, {type: "moveToFilter", filter: drop.id})};
     } else if (drop.type === "task") {
-      return {...app, tasks: edit(app.tasks, drag.id, {type: "move", side: drop.side, target: drop.id})};
+      return {
+        ...app,
+        tasks: edit(app.tasks, drag.id, {
+          type: "move",
+          side: drop.side,
+          target: drop.id,
+          indentation: drop.indentation,
+        }),
+      };
     } else {
       const unreachable: never = drop;
       return unreachable;
