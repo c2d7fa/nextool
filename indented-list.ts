@@ -99,7 +99,54 @@ export function listInsertLocationtoTreeLocation<T extends {id: string}>(
   }
 
   if (location.indentation < targetItem.indentation) {
-    return null; // [TODO]
+    function previousSiblingForLocation(
+      list: IndentedListItem<T>[],
+      location: IndentedListInsertLocation,
+    ): {id: string} | null {
+      const reversedList = list.reverse();
+      const targetIndex = reversedList.findIndex((x) => x.id === location.target);
+      const listAbove = reversedList.slice(targetIndex);
+      return listAbove.find((item) => item.indentation === location.indentation) ?? null;
+    }
+
+    function parentForLocation(
+      list: IndentedListItem<T>[],
+      location: IndentedListInsertLocation,
+    ): {id: string} | "top" | null {
+      if (location.indentation === 0) return "top";
+      const reversedList = list.reverse();
+      const targetIndex = reversedList.findIndex((x) => x.id === location.target);
+      const listAbove = reversedList.slice(targetIndex);
+      return listAbove.find((item) => item.indentation === location.indentation - 1) ?? null;
+    }
+
+    function parentForNode(tree: TreeNode<T>[], node: {id: string}): {id: string} | null {
+      for (const item of toList(tree)) {
+        if (findNode(tree, item)?.children.find((child) => child.id === node.id)) return item;
+      }
+      return null;
+    }
+
+    function indexInParent(tree: TreeNode<T>[], parent: {id: string} | null, node: {id: string}): number {
+      if (parent === null) return tree.findIndex((child) => child.id === node.id);
+      return findNode(tree, parent)?.children.findIndex((child) => child.id === node.id) ?? -1;
+    }
+
+    const previous = previousSiblingForLocation(list, location);
+    if (previous) {
+      const parent = parentForNode(tree, previous);
+      return {
+        parent: parent?.id ?? null,
+        index: indexInParent(tree, parent, previous) + 1,
+      };
+    }
+
+    const parent = parentForLocation(list, location);
+    if (parent === null) return null;
+    return {
+      parent: parent === "top" ? null : parent.id,
+      index: 0,
+    };
   }
 
   return null;

@@ -219,11 +219,43 @@ describe("converting indented list insertion location to tree coordinates", () =
     });
   });
 
-  test("inserting below an item but at a lower level of indentation at the end of list", () => {
-    const example = [{id: "0", children: [{id: "1", children: []}]}];
-    expect(listInsertLocationtoTreeLocation(example, {target: "1", side: "below", indentation: 0})).toEqual({
-      parent: null,
-      index: 1,
+  describe("inserting an item below another item but at a lower level of indentation", () => {
+    test("at the end of the list at the top level", () => {
+      const example = [{id: "0", children: [{id: "1", children: []}]}];
+      expect(listInsertLocationtoTreeLocation(example, {target: "1", side: "below", indentation: 0})).toEqual({
+        parent: null,
+        index: 1,
+      });
+    });
+
+    test("in the middle of the list at the top level", () => {
+      const example = [
+        {
+          id: "0",
+          children: [{id: "1", children: []}],
+        },
+        {id: "3", children: []},
+      ];
+      expect(listInsertLocationtoTreeLocation(example, {target: "1", side: "below", indentation: 0})).toEqual({
+        parent: null,
+        index: 1,
+      });
+    });
+
+    test("in the middle of a subtree", () => {
+      const example = [
+        {
+          id: "0",
+          children: [
+            {id: "1", children: [{id: "2", children: []}]},
+            {id: "3", children: []},
+          ],
+        },
+      ];
+      expect(listInsertLocationtoTreeLocation(example, {target: "2", side: "below", indentation: 1})).toEqual({
+        parent: "0",
+        index: 1,
+      });
     });
   });
 });
