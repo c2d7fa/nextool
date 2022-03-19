@@ -99,7 +99,10 @@ export function listInsertLocationToTreeLocation<T extends {id: string}>(
   const reversedList = list.reverse();
   const listAbove = reversedList.slice(reversedList.findIndex((x) => x.id === location.target));
 
-  const previousSibling = listAbove.find((item) => item.indentation === location.indentation) ?? null;
+  const previousSibling =
+    takeWhile(listAbove, (item) => item.indentation >= location.indentation).find(
+      (item) => item.indentation === location.indentation,
+    ) ?? null;
 
   if (previousSibling) {
     const previousSiblingParent = list.find((item) =>
@@ -172,13 +175,13 @@ export function toList<T>(roots: Tree<T>, indentation?: number): IndentedList<T>
   );
 }
 
-export function fromList<T>(list: IndentedList<T>): Tree<T> {
-  function takeWhile<T>(array: T[], predicate: (value: T, index: number) => boolean): T[] {
-    let i = 0;
-    while (i < array.length && predicate(array[i], i)) i++;
-    return array.slice(0, i);
-  }
+function takeWhile<T>(array: T[], predicate: (value: T, index: number) => boolean): T[] {
+  let i = 0;
+  while (i < array.length && predicate(array[i], i)) i++;
+  return array.slice(0, i);
+}
 
+export function fromList<T>(list: IndentedList<T>): Tree<T> {
   function directChildren(list: IndentedList<T>, indentation: number): IndentedList<T> {
     return takeWhile(list, (item) => indentation < item.indentation).filter(
       (item) => item.indentation === indentation + 1,
