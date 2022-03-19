@@ -318,15 +318,15 @@ describe("dragging a subtree of tasks", () => {
   const afterDragging = updateAll(example, [...dragAndDropNth(0, 2, {side: "below", indentation: 1})]);
 
   describe("after dragging the subtree into another task", () => {
-    test.skip("there are still three tasks", () => {
+    test("there are still three tasks", () => {
       expect(view(afterDragging).taskList.length).toBe(3);
     });
 
-    test.skip("the tasks have changed order", () => {
+    test("the tasks have changed order", () => {
       expect(view(afterDragging).taskList.map((t) => t.title)).toEqual(["Task 2", "Task 0", "Task 1"]);
     });
 
-    test.skip("the tasks have changed indentation", () => {
+    test("the tasks have changed indentation", () => {
       expect(view(afterDragging).taskList.map((t) => t.indentation)).toEqual([0, 1, 2]);
     });
   });
