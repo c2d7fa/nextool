@@ -48,7 +48,7 @@ export function findNode<T extends {id: string}>(tree: Tree<T>, query: {id: stri
 export function updateNode<T extends {id: string}>(
   tree: Tree<T>,
   query: {id: string},
-  update: (x: T) => T,
+  update: (x: TreeNode<T>) => TreeNode<T>,
 ): Tree<T> {
   return tree.map((node) => {
     if (node.id === query.id) {
@@ -56,6 +56,15 @@ export function updateNode<T extends {id: string}>(
     }
     return {...node, children: updateNode(node.children, query, update)};
   });
+}
+
+function updateChildren<T extends {id: string}>(
+  tree: Tree<T>,
+  parent: {id: string} | null,
+  update: (x: TreeNode<T>[]) => TreeNode<T>[],
+): Tree<T> {
+  if (parent === null) return update(tree);
+  return updateNode(tree, parent, (node) => ({...node, children: updateChildren(node.children, null, update)}));
 }
 
 function findNodeLocation<T extends {id: string}>(tree: Tree<T>, query: {id: string}): TreeLocation | null {
@@ -111,7 +120,20 @@ export function listInsertLocationToTreeLocation<T extends {id: string}>(
 }
 
 function moveNodeInTree<T extends {id: string}>(tree: Tree<T>, from: TreeLocation, to: TreeLocation): Tree<T> {
-  return tree;
+  const fromNode =
+    from.parent === null ? tree[from.index] : findNode(tree, {id: from.parent})!.children[from.index];
+
+  const removed = updateChildren(tree, from.parent ? {id: from.parent} : null, (children) =>
+    children.filter((_, index) => index !== from.index),
+  );
+
+  const inserted = updateChildren(removed, to.parent ? {id: to.parent} : null, (children) => [
+    ...children.slice(0, to.index),
+    fromNode,
+    ...children.slice(to.index),
+  ]);
+
+  return inserted;
 }
 
 export function moveItemInTree<T extends {id: string}>(

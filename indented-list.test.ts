@@ -1,6 +1,6 @@
 import {listInsertLocationToTreeLocation, moveItemInTree, Tree} from "./indented-list";
 
-describe.skip("moving item in tree", () => {
+describe("moving item in tree", () => {
   describe("in flat list", () => {
     function flatTree(elements: number): Tree<{id: string}> {
       return [...Array(elements)].map((_, index) => ({id: `${index}`, children: []}));
@@ -94,7 +94,7 @@ describe.skip("moving item in tree", () => {
     });
   });
 
-  describe.skip("moving subtrees", () => {
+  describe("moving subtrees", () => {
     describe("after indenting a subtree below the previous top-level item", () => {
       const before = [
         {id: "0", children: []},
@@ -115,7 +115,7 @@ describe.skip("moving item in tree", () => {
         expect(after[0].children[0].id).toEqual("1");
       });
 
-      test.skip("the root of the subtree still has its children", () => {
+      test("the root of the subtree still has its children", () => {
         expect(after[0].children[0].children).toEqual(before[1].children);
       });
     });
