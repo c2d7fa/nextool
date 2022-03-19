@@ -120,6 +120,13 @@ export function listInsertLocationToTreeLocation<T extends {id: string}>(
 }
 
 function moveNodeInTree<T extends {id: string}>(tree: Tree<T>, from: TreeLocation, to: TreeLocation): Tree<T> {
+  if (from.parent === to.parent) {
+    return updateChildren(tree, from.parent ? {id: from.parent} : null, (children) => {
+      const updatedChildren = reposition(children, from.index, {index: to.index, side: "above"});
+      return updatedChildren;
+    });
+  }
+
   const fromNode =
     from.parent === null ? tree[from.index] : findNode(tree, {id: from.parent})!.children[from.index];
 
