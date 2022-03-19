@@ -27,7 +27,7 @@ export type TaskListView = {
   title: string;
   indentation: number;
   done: boolean;
-  badges: ("action" | "stalled")[];
+  badges: ("ready" | "stalled")[];
   dropIndicator: null | {side: "above" | "below"; indentation: number};
   dropTargets: DropTarget[];
 }[];
@@ -81,7 +81,7 @@ export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks 
     const filter = operation.filter;
 
     const update =
-      filter === "actions"
+      filter === "ready"
         ? ({property: "action", value: true} as const)
         : filter === "done"
         ? ({property: "done", value: true} as const)
@@ -100,19 +100,19 @@ export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks 
   }
 }
 
-function badges(task: Task): ("action" | "stalled")[] {
-  if (task.action && !task.done) return ["action"];
+function badges(task: Task): ("ready" | "stalled")[] {
+  if (task.action && !task.done) return ["ready"];
   else if (!task.done && !task.children.some((child) => !child.done)) return ["stalled"];
   else return [];
 }
 
-export type FilterId = "all" | "actions" | "done" | "stalled" | "not-done";
+export type FilterId = "all" | "ready" | "done" | "stalled" | "not-done";
 
 export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<DragId, DropId>}): TaskListView {
   const {tasks, filter, taskDrag} = args;
 
   const filtered = tasks.filter((task) => {
-    if (filter === "actions") return badges(task).includes("action");
+    if (filter === "ready") return badges(task).includes("ready");
     else if (filter === "done") return task.done;
     else if (filter === "stalled") return badges(task).includes("stalled");
     else if (filter === "not-done") return !task.done;

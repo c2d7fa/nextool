@@ -70,10 +70,10 @@ export function view(app: State): View {
         dropTarget: {type: "filter", id: "not-done"},
       },
       {
-        label: "Actions",
-        filter: "actions",
-        selected: app.filter === "actions",
-        dropTarget: {type: "filter", id: "actions"},
+        label: "Ready",
+        filter: "ready",
+        selected: app.filter === "ready",
+        dropTarget: {type: "filter", id: "ready"},
       },
       {
         label: "Stalled",

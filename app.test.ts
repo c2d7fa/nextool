@@ -103,9 +103,9 @@ describe("dragging tasks to filters", () => {
       expect(view(example).taskList.every((t) => !t.done)).toBe(true);
     });
 
-    const action = updateAll(example, dragToFilter(nthTask(example, 0).id, "actions"));
-    test("dragging a task to the action filter gives it the action badge", () => {
-      expect(view(action).taskList.map((t) => t.badges)).toEqual([["action"], ["stalled"], ["stalled"]]);
+    const action = updateAll(example, dragToFilter(nthTask(example, 0).id, "ready"));
+    test("dragging a task to the action filter gives it the ready badge", () => {
+      expect(view(action).taskList.map((t) => t.badges)).toEqual([["ready"], ["stalled"], ["stalled"]]);
     });
 
     const done = updateAll(example, dragToFilter(nthTask(example, 0).id, "done"));

@@ -15,8 +15,8 @@ function CheckBox(props: {checked: boolean; id: string; send: Send}) {
   );
 }
 
-function BadgeFor(props: {type: "action" | "stalled"}) {
-  if (props.type === "action") return <Badge color="green">Action</Badge>;
+function BadgeFor(props: {type: "ready" | "stalled"}) {
+  if (props.type === "ready") return <Badge color="green">Ready</Badge>;
   else if (props.type === "stalled") return <Badge color="orange">Stalled</Badge>;
   else return null;
 }
