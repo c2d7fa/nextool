@@ -156,14 +156,16 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     done: task.done ?? false,
     badges: badges(findNode(tasks, task)!),
     dropIndicator: dropIndicator(task),
-    dropTargets: [
-      ...(index === 0
-        ? [{indentation: 0, width: "full", side: "above"} as const]
-        : dropTargetsBelow(filtered, index - 1).map((dropTarget) => ({
-            ...dropTarget,
-            side: "above" as const,
-          }))),
-      ...dropTargetsBelow(filtered, index),
-    ],
+    dropTargets: taskDrag.dragging
+      ? [
+          ...(index === 0
+            ? [{indentation: 0, width: "full", side: "above"} as const]
+            : dropTargetsBelow(filtered, index - 1).map((dropTarget) => ({
+                ...dropTarget,
+                side: "above" as const,
+              }))),
+          ...dropTargetsBelow(filtered, index),
+        ]
+      : [],
   }));
 }
