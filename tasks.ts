@@ -108,16 +108,26 @@ function badges(task: Task): ("ready" | "stalled")[] {
 
 export type FilterId = "all" | "ready" | "done" | "stalled" | "not-done";
 
+function doesTaskMatch(task: Task, filter: FilterId): boolean {
+  if (filter === "ready") return badges(task).includes("ready");
+  else if (filter === "done") return task.done;
+  else if (filter === "stalled") return badges(task).includes("stalled");
+  else if (filter === "not-done") return !task.done;
+  else return true;
+}
+
+function filterTasks(tasks: Tasks, filter: FilterId): Tasks {
+  return tasks.flatMap((task) => {
+    const matches = doesTaskMatch(task, filter);
+    if (matches) return [task];
+    return filterTasks(task.children, filter);
+  });
+}
+
 export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<DragId, DropId>}): TaskListView {
   const {tasks, filter, taskDrag} = args;
 
-  const filtered = tasks.filter((task) => {
-    if (filter === "ready") return badges(task).includes("ready");
-    else if (filter === "done") return task.done;
-    else if (filter === "stalled") return badges(task).includes("stalled");
-    else if (filter === "not-done") return !task.done;
-    else return true;
-  });
+  const filtered = filterTasks(tasks, filter);
 
   function dropIndicator(task: TaskData) {
     if (taskDrag.hovering?.type !== "task") return null;

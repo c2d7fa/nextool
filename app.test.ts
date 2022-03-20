@@ -374,3 +374,79 @@ describe("dragging a subtree of tasks", () => {
     });
   });
 });
+
+describe("filtered views of tasks", () => {
+  describe("in an example where a child task is finished but the parent is not", () => {
+    const exampleBeforeAll = updateAll(empty, [
+      {tag: "selectFilter", filter: "all"},
+      ...addTask("Task 0"),
+      ...addTask("Task 1"),
+      ...addTask("Task 2"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
+    ]);
+
+    const exampleAfterAll = updateAll(exampleBeforeAll, [
+      {tag: "checked", id: nthTask(exampleBeforeAll, 1).id, checked: true},
+    ]);
+
+    const exampleBeforeDone = updateAll(exampleBeforeAll, [{tag: "selectFilter", filter: "done"}]);
+
+    const exampleAfterDone = updateAll(exampleAfterAll, [{tag: "selectFilter", filter: "done"}]);
+
+    describe("before marking the task as done", () => {
+      test("the correct tasks are shown in the 'all' view", () => {
+        expect(view(exampleBeforeAll).taskList.map((t) => t.title)).toEqual(["Task 0", "Task 1", "Task 2"]);
+      });
+
+      test("the tasks have the correct indentation", () => {
+        expect(view(exampleBeforeAll).taskList.map((t) => t.indentation)).toEqual([0, 1, 2]);
+      });
+
+      test("the filtered view is empty", () => {
+        expect(view(exampleBeforeDone).taskList.length).toBe(0);
+      });
+    });
+
+    describe("after marking the task as done", () => {
+      test("the same tasks are shown in the 'all' view", () => {
+        expect(view(exampleAfterAll).taskList.map((t) => t.title)).toEqual(["Task 0", "Task 1", "Task 2"]);
+      });
+
+      test("the tasks have the same indentation in the 'all' view", () => {
+        expect(view(exampleAfterAll).taskList.map((t) => t.indentation)).toEqual([0, 1, 2]);
+      });
+
+      test("the filtered view now contains the task", () => {
+        expect(view(exampleAfterDone).taskList.map((t) => t.title)).toContainEqual("Task 1");
+      });
+
+      test("the filtered view also contains the subtask, even though it doesn't match filter itself", () => {
+        expect(view(exampleAfterDone).taskList.map((t) => t.title)).toContainEqual("Task 2");
+      });
+
+      test("the filtered view contains no other tasks", () => {
+        expect(view(exampleAfterDone).taskList).toHaveLength(2);
+      });
+
+      test("the tasks in the filtered view have the correct indentation", () => {
+        expect(view(exampleAfterDone).taskList.map((t) => t.indentation)).toEqual([0, 1]);
+      });
+    });
+
+    describe("after marking the leaf task as done", () => {
+      const example2 = updateAll(exampleAfterAll, [
+        {tag: "checked", id: nthTask(exampleAfterAll, 2).id, checked: true},
+        {tag: "selectFilter", filter: "done"},
+      ]);
+
+      test("the same tasks are shown in the 'done' view (since it was already included)", () => {
+        expect(view(example2).taskList.map((t) => t.title)).toEqual(["Task 1", "Task 2"]);
+      });
+
+      test("the task is now marked as done", () => {
+        expect(nthTask(example2, 1).done).toBe(true);
+      });
+    });
+  });
+});
