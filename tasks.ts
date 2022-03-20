@@ -101,7 +101,7 @@ export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks 
 }
 
 function badges(task: Task): ("ready" | "stalled")[] {
-  if (task.action && !task.done) return ["ready"];
+  if (task.action && !task.done && !task.children.some((child) => !child.done)) return ["ready"];
   else if (!task.done && !task.children.some((child) => !child.done)) return ["stalled"];
   else return [];
 }

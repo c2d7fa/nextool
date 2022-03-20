@@ -293,6 +293,49 @@ describe("a task that has an unfinished child task isn't stalled", () => {
   });
 });
 
+describe("an action that has unfinished children isn't ready", () => {
+  describe("when there is a parent action with one child action", () => {
+    const example = updateAll(empty, [
+      {tag: "selectFilter", filter: "all"},
+      ...addTask("Parent"),
+      ...addTask("Child"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      (view) => dragToFilter(nthTask(view, 0).id, "ready"),
+      (view) => dragToFilter(nthTask(view, 1).id, "ready"),
+    ]);
+
+    const childFinished = updateAll(example, [{tag: "checked", id: nthTask(example, 1).id, checked: true}]);
+
+    describe("when the child has not been marked as done", () => {
+      test("the child is unfinished", () => {
+        expect(nthTask(example, 1).done).toBe(false);
+      });
+
+      test("the child is ready", () => {
+        expect(nthTask(example, 1).badges).toEqual(["ready"]);
+      });
+
+      test("the parent is not ready", () => {
+        expect(nthTask(example, 0).badges).toEqual([]);
+      });
+    });
+
+    describe("when the child is marked as finished", () => {
+      test("the child is finished", () => {
+        expect(nthTask(childFinished, 1).done).toBe(true);
+      });
+
+      test("the child has no badges", () => {
+        expect(nthTask(childFinished, 1).badges).toEqual([]);
+      });
+
+      test("the parent becomes ready", () => {
+        expect(nthTask(childFinished, 0).badges).toEqual(["ready"]);
+      });
+    });
+  });
+});
+
 describe("dragging a subtree of tasks", () => {
   const example = updateAll(empty, [
     ...addTask("Task 0"),
