@@ -152,10 +152,18 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
 
     const dragging = taskDrag.dragging!.id;
 
-    const followingIndentation = tasks[index + 1]?.indentation ?? 0;
+    const followingTask = tasks[index + 1];
+    const followingIndentation = followingTask?.indentation ?? 0;
+
+    if (followingTask?.id === dragging.id) return dropTargetsBelow(tasks_, index + 1);
 
     if (task.id === dragging.id) {
-      return [{width: "full", indentation: task.indentation, side: "below"}];
+      let result: DropTarget[] = [];
+      for (let i = 0; i <= task.indentation - 1; i++) {
+        result.push({width: 1, indentation: i, side: "below"});
+      }
+      result.push({indentation: task.indentation, width: "full", side: "below"});
+      return result;
     }
 
     if (isDescendant(tasks_, task, dragging)) {
