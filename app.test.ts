@@ -164,13 +164,12 @@ describe("reordering tasks with drag and drop", () => {
 
 describe("nesting tasks with drag and drop", () => {
   describe("with a flat list of items", () => {
-    const example = updateAll(empty, [...addTask("Task 1"), ...addTask("Task 2")]);
+    const example = updateAll(empty, [...addTask("Task 1"), ...addTask("Task 2"), ...addTask("Task 3")]);
 
-    const draggingFirst = updateAll(example, [startDragNthTask(0)]);
-    const draggingSecond = updateAll(example, [startDragNthTask(1)]);
+    const draggingThird = updateAll(example, [startDragNthTask(2)]);
 
     test("the first item has one drop target above it and two drop below it", () => {
-      expect(nthTask(draggingSecond, 0).dropTargets).toEqual([
+      expect(nthTask(draggingThird, 0).dropTargets).toEqual([
         {width: "full", indentation: 0, side: "above"},
         {width: 1, indentation: 0, side: "below"},
         {width: "full", indentation: 1, side: "below"},
@@ -178,7 +177,7 @@ describe("nesting tasks with drag and drop", () => {
     });
 
     test("the second item has two drop targets both above and below it", () => {
-      expect(nthTask(draggingFirst, 1).dropTargets).toEqual([
+      expect(nthTask(draggingThird, 1).dropTargets).toEqual([
         {width: 1, indentation: 0, side: "above"},
         {width: "full", indentation: 1, side: "above"},
         {width: 1, indentation: 0, side: "below"},
@@ -188,10 +187,10 @@ describe("nesting tasks with drag and drop", () => {
   });
 
   describe("when dragging one task into another", () => {
-    const example = updateAll(empty, [...addTask("Task 1"), ...addTask("Task 2")]);
+    const example = updateAll(empty, [...addTask("Task 1"), ...addTask("Task 2"), ...addTask("Task 3")]);
 
     test("before dragging anything, neither task is indented", () => {
-      expect(view(example).taskList.map((t) => t.indentation)).toEqual([0, 0]);
+      expect(view(example).taskList.map((t) => t.indentation)).toEqual([0, 0, 0]);
     });
 
     const afterDragging = updateAll(example, [
@@ -201,8 +200,7 @@ describe("nesting tasks with drag and drop", () => {
       ),
     ]);
 
-    const draggingFirstAfter = updateAll(afterDragging, [startDragNthTask(0)]);
-    const draggingSecondAfter = updateAll(afterDragging, [startDragNthTask(1)]);
+    const draggingThirdAfter = updateAll(afterDragging, [startDragNthTask(2)]);
 
     describe("after dragging the second task into the first", () => {
       test("the first task is not indented", () => {
@@ -214,14 +212,14 @@ describe("nesting tasks with drag and drop", () => {
       });
 
       test("the drop targets for the first task are updated", () => {
-        expect(nthTask(draggingSecondAfter, 0).dropTargets).toEqual([
+        expect(nthTask(draggingThirdAfter, 0).dropTargets).toEqual([
           {width: "full", indentation: 0, side: "above"},
           {width: "full", indentation: 1, side: "below"},
         ]);
       });
 
       test("the drop targets for the second task are updated", () => {
-        expect(nthTask(draggingFirstAfter, 1).dropTargets).toEqual([
+        expect(nthTask(draggingThirdAfter, 1).dropTargets).toEqual([
           {width: "full", indentation: 1, side: "above"},
           {width: 1, indentation: 0, side: "below"},
           {width: 1, indentation: 1, side: "below"},
@@ -263,6 +261,21 @@ describe("nesting tasks with drag and drop", () => {
         {width: 1, indentation: 2, side: "above"},
         {width: "full", indentation: 3, side: "above"},
       ]);
+    });
+  });
+
+  describe("making a task a descendant of itself is not allowed", () => {
+    describe("in a list of just one task", () => {
+      const example = updateAll(empty, [...addTask("Task 1"), startDragNthTask(0)]);
+
+      test("there are drop targets above and below the task itself at the same level of indentation", () => {
+        expect(nthTask(example, 0).dropTargets).toContainEqual({width: "full", indentation: 0, side: "above"});
+        expect(nthTask(example, 0).dropTargets).toContainEqual({width: "full", indentation: 0, side: "below"});
+      });
+
+      test("there are no other drop targets", () => {
+        expect(nthTask(example, 0).dropTargets).toHaveLength(2);
+      });
     });
   });
 });

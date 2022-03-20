@@ -136,10 +136,18 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
   }
 
   function dropTargetsBelow(tasks_: Task[], index: number): DropTarget[] {
+    if (index === -1) return [{width: "full", indentation: 0, side: "below"}];
+
     const tasks = toList(tasks_);
     const task = tasks[index];
 
+    const dragging = taskDrag.dragging!.id;
+
     const followingIndentation = tasks[index + 1]?.indentation ?? 0;
+
+    if (task.id === dragging.id) {
+      return [{width: "full", indentation: task.indentation, side: "below"}];
+    }
 
     let result: DropTarget[] = [];
     for (let i = followingIndentation; i <= task.indentation; i++) {
@@ -158,12 +166,10 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     dropIndicator: dropIndicator(task),
     dropTargets: taskDrag.dragging
       ? [
-          ...(index === 0
-            ? [{indentation: 0, width: "full", side: "above"} as const]
-            : dropTargetsBelow(filtered, index - 1).map((dropTarget) => ({
-                ...dropTarget,
-                side: "above" as const,
-              }))),
+          ...dropTargetsBelow(filtered, index - 1).map((dropTarget) => ({
+            ...dropTarget,
+            side: "above" as const,
+          })),
           ...dropTargetsBelow(filtered, index),
         ]
       : [],
