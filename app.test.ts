@@ -277,6 +277,38 @@ describe("nesting tasks with drag and drop", () => {
         expect(nthTask(example, 0).dropTargets).toHaveLength(2);
       });
     });
+
+    describe("when dragging a subtree of tasks", () => {
+      const example = updateAll(empty, [
+        ...addTask("Task 0"),
+        ...addTask("Task 1"),
+        ...addTask("Task 2"),
+        ...addTask("Task 3"),
+        ...addTask("Task 4"),
+        ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+        ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
+        ...dragAndDropNth(3, 2, {side: "below", indentation: 3}),
+        ...dragAndDropNth(4, 3, {side: "below", indentation: 1}),
+        startDragNthTask(1),
+      ]);
+
+      test("the tasks are indented correctly", () => {
+        expect(view(example).taskList.map((t) => t.indentation)).toEqual([0, 1, 2, 3, 1]);
+      });
+
+      function dropTargetsOfNthTaskAtOrAbove(state: State, n: number, indentation: number) {
+        return nthTask(state, n).dropTargets.filter((dropTarget) => dropTarget.indentation >= indentation);
+      }
+
+      test("the task being dragged has no drop targets above its own level of indentation", () => {
+        expect(dropTargetsOfNthTaskAtOrAbove(example, 1, 2)).toHaveLength(0);
+      });
+
+      test("no child has drop targets above the level of indentation of the task being dragged", () => {
+        expect(dropTargetsOfNthTaskAtOrAbove(example, 2, 2)).toHaveLength(0);
+        expect(dropTargetsOfNthTaskAtOrAbove(example, 3, 2)).toHaveLength(0);
+      });
+    });
   });
 });
 

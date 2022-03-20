@@ -1,6 +1,15 @@
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
-import {Tree, TreeNode, toList, fromList, findNode, merge as mergeNodes, moveItemInTree} from "./indented-list";
+import {
+  Tree,
+  TreeNode,
+  toList,
+  fromList,
+  findNode,
+  merge as mergeNodes,
+  moveItemInTree,
+  isDescendant,
+} from "./indented-list";
 
 type TaskData = {
   id: string;
@@ -147,6 +156,10 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
 
     if (task.id === dragging.id) {
       return [{width: "full", indentation: task.indentation, side: "below"}];
+    }
+
+    if (isDescendant(tasks_, task, dragging)) {
+      return [];
     }
 
     let result: DropTarget[] = [];

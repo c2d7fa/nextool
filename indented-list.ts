@@ -197,3 +197,14 @@ export function fromList<T>(list: IndentedList<T>): Tree<T> {
 
   return list.filter((item) => item.indentation === 0).map(subtree);
 }
+
+export function isDescendant<T extends {id: string}>(
+  tree: Tree<T>,
+  query: {id: string},
+  ancestor: {id: string},
+): boolean {
+  const ancestorNode = findNode(tree, ancestor);
+  if (!ancestorNode) return false;
+  if (ancestorNode.children.find((child) => child.id === query.id)) return true;
+  return ancestorNode.children.some((child) => isDescendant(tree, query, child));
+}
