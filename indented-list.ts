@@ -146,11 +146,24 @@ function moveNodeInTree<T extends {id: string}>(tree: Tree<T>, from: TreeLocatio
   return inserted;
 }
 
+function indexInList<T extends {id: string}>(tree: Tree<T>, query: {id: string}): number {
+  const list = toList(tree);
+  return list.findIndex((x) => x.id === query.id);
+}
+
 export function moveItemInTree<T extends {id: string}>(
   tree: Tree<T>,
   source: {id: string},
   location: IndentedListInsertLocation,
 ): Tree<T> {
+  if (location.side === "above" && indexInList(tree, {id: location.target}) === indexInList(tree, source) + 1) {
+    return moveItemInTree(tree, source, {...location, target: source.id, side: "below"});
+  }
+
+  if (source.id === location.target && location.side === "below") {
+    return moveItemInTree(tree, source, {...location, side: "above"});
+  }
+
   const from = findNodeLocation(tree, source);
   if (!from) return tree;
 

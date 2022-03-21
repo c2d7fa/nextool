@@ -353,6 +353,33 @@ describe("nesting tasks with drag and drop", () => {
           {width: "full", indentation: 1},
         ]);
       });
+
+      [
+        {description: "after dropping the task below itself with indentation", drop: 1, side: "below"} as const,
+        {
+          description: "after dropping the task above the next task with indentation",
+          drop: 2,
+          side: "above",
+        } as const,
+      ].forEach((testCase) => {
+        describe(testCase.description, () => {
+          const afterDrop = updateAll(example, [
+            ...dragAndDropNth(1, testCase.drop, {side: testCase.side, indentation: 1}),
+          ]);
+
+          test("there are still three tasks in the example", () => {
+            expect(view(afterDrop).taskList).toHaveLength(3);
+          });
+
+          test("they are still in the same order", () => {
+            expect(view(afterDrop).taskList.map((t) => t.title)).toEqual(["Task 0", "Task 1", "Task 2"]);
+          });
+
+          test("the indentation has changed", () => {
+            expect(view(afterDrop).taskList.map((t) => t.indentation)).toEqual([0, 1, 0]);
+          });
+        });
+      });
     });
 
     describe("unindenting the last item in the subtree of a top-level item", () => {
