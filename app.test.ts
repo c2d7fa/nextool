@@ -321,7 +321,7 @@ describe("nesting tasks with drag and drop", () => {
     });
   });
 
-  describe("unindenting a task in-place", () => {
+  describe("dragging a task onto itself (or direct neighbors)", () => {
     function expectNthTaskNearbyDropTargetsToHave(
       state: State,
       n: number,
@@ -339,6 +339,22 @@ describe("nesting tasks with drag and drop", () => {
       ]);
     }
 
+    describe("in a flat list", () => {
+      const example = updateAll(empty, [
+        ...addTask("Task 0"),
+        ...addTask("Task 1"),
+        ...addTask("Task 2"),
+        startDragNthTask(1),
+      ]);
+
+      test("the task can be dropped in the same place or indented one spot", () => {
+        expectNthTaskNearbyDropTargetsToHave(example, 1, [
+          {width: 1, indentation: 0},
+          {width: "full", indentation: 1},
+        ]);
+      });
+    });
+
     describe("unindenting the last item in the subtree of a top-level item", () => {
       const example = updateAll(empty, [
         ...addTask("Task 0"),
@@ -350,7 +366,7 @@ describe("nesting tasks with drag and drop", () => {
         startDragNthTask(2),
       ]);
 
-      test("the drop targets are at all indentation levels at or below the level of indentation of the task being dragged", () => {
+      test("the drop targets can be used to unindent the task", () => {
         expectNthTaskNearbyDropTargetsToHave(example, 2, [
           {width: 1, indentation: 0},
           {width: 1, indentation: 1},

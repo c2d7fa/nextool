@@ -152,6 +152,9 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
 
     const dragging = taskDrag.dragging!.id;
 
+    const preceedingTask = tasks[index - 1];
+    const preceedingTaskIndentation = preceedingTask?.indentation ?? -1;
+
     const followingTask = tasks[index + 1];
     const followingIndentation = followingTask?.indentation ?? 0;
 
@@ -159,10 +162,14 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
 
     if (task.id === dragging.id) {
       let result: DropTarget[] = [];
-      for (let i = 0; i <= task.indentation - 1; i++) {
+      for (let i = 0; i <= Math.max(preceedingTaskIndentation + 1, task.indentation) - 1; i++) {
         result.push({width: 1, indentation: i, side: "below"});
       }
-      result.push({indentation: task.indentation, width: "full", side: "below"});
+      result.push({
+        indentation: Math.max(preceedingTaskIndentation + 1, task.indentation),
+        width: "full",
+        side: "below",
+      });
       return result;
     }
 
