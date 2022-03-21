@@ -145,6 +145,22 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
   }
 
   function dropTargetsBelow(tasks_: Task[], index: number): DropTarget[] {
+    function dropTargetsAt(indentationLevels: number[]): DropTarget[] {
+      return indentationLevels.map((indentation, index) => ({
+        indentation,
+        width: index === indentationLevels.length - 1 ? "full" : 1,
+        side: "below",
+      }));
+    }
+
+    function range(start: number, end: number): number[] {
+      return [...Array(end - start + 1)].map((_, index) => start + index);
+    }
+
+    function dropTargetsBetween(lower: number, upper: number): DropTarget[] {
+      return dropTargetsAt([...range(lower, upper - 1), upper]);
+    }
+
     if (index === -1) return [{width: "full", indentation: 0, side: "below"}];
 
     const tasks = toList(tasks_);
@@ -171,36 +187,10 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
         }
       }
 
-      let result: DropTarget[] = [];
-      for (
-        let i = indentationOfNextTaskThatIsNotDescendant;
-        i <= Math.max(preceedingTaskIndentation + 1, task.indentation) - 1;
-        i++
-      ) {
-        result.push({width: 1, indentation: i, side: "below"});
-      }
-      result.push({
-        indentation: Math.max(preceedingTaskIndentation + 1, task.indentation),
-        width: "full",
-        side: "below",
-      });
-      return result;
-    }
-
-    function dropTargetsAt(indentationLevels: number[]): DropTarget[] {
-      return indentationLevels.map((indentation, index) => ({
-        indentation,
-        width: index === indentationLevels.length - 1 ? "full" : 1,
-        side: "below",
-      }));
-    }
-
-    function range(start: number, end: number): number[] {
-      return Array.from({length: end - start}, (_, i) => start + i);
-    }
-
-    function dropTargetsBetween(lower: number, upper: number): DropTarget[] {
-      return dropTargetsAt([...range(lower, upper - 1), upper]);
+      return dropTargetsBetween(
+        indentationOfNextTaskThatIsNotDescendant,
+        Math.max(preceedingTaskIndentation + 1, task.indentation),
+      );
     }
 
     if (isDescendant(tasks_, task, dragging)) {
@@ -214,12 +204,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
       return [];
     }
 
-    let result: DropTarget[] = [];
-    for (let i = followingIndentation; i <= task.indentation; i++) {
-      result.push({width: 1, indentation: i, side: "below"});
-    }
-    result.push({indentation: task.indentation + 1, width: "full", side: "below"});
-    return result;
+    return dropTargetsBetween(followingIndentation, task.indentation + 1);
   }
 
   return toList(filtered).map((task, index) => ({
