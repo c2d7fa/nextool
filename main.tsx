@@ -1,6 +1,18 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import {updateApp, State, Event, SelectFilterEvent, View, view, DropId, empty} from "./app";
+import {
+  updateApp,
+  State,
+  Event,
+  SelectFilterEvent,
+  View,
+  view,
+  DropId,
+  empty,
+  FilterView,
+  SideBarSectionView,
+  Send,
+} from "./app";
 import {loadTasks, saveTasks} from "./storage";
 import {Button} from "./ui";
 import {TaskEditor} from "./task-editor";
@@ -31,10 +43,7 @@ function AddTask(props: {send(ev: Event): void}) {
   );
 }
 
-function Filter(props: {
-  filter: View["filters"][number];
-  send(ev: SelectFilterEvent | Drag.DragEvent<never, DropId>): void;
-}) {
+function Filter(props: {filter: FilterView; send(ev: SelectFilterEvent | Drag.DragEvent<never, DropId>): void}) {
   const inner = (
     <button
       onClick={() => props.send({tag: "selectFilter", filter: props.filter.filter})}
@@ -53,19 +62,32 @@ function Filter(props: {
   );
 }
 
-function FilterSelector(props: {
-  filters: View["filters"];
-  send(ev: SelectFilterEvent | Drag.DragEvent<never, DropId>): void;
-}) {
+function FilterSelector(props: {filters: FilterView[]; send: Send}) {
+  return (
+    <div className={style.filterSelector}>
+      {props.filters.map((filter, i) => (
+        <Filter key={i} filter={filter} send={props.send} />
+      ))}
+    </div>
+  );
+}
+
+function SideBarSection(props: {section: SideBarSectionView; send: Send}) {
   return (
     <>
-      <h1>Tasks</h1>
-      <div className={style.filterSelector}>
-        {props.filters.map((filter, i) => (
-          <Filter key={i} filter={filter} send={props.send} />
-        ))}
-      </div>
+      <h1>{props.section.title}</h1>
+      <FilterSelector filters={props.section.filters} send={props.send} />
     </>
+  );
+}
+
+function SideBar(props: {sections: SideBarSectionView[]; send: Send}) {
+  return (
+    <div className={style.sidebar}>
+      {props.sections.map((section) => (
+        <SideBarSection section={section} send={props.send} />
+      ))}
+    </div>
   );
 }
 
@@ -90,9 +112,7 @@ function Main() {
     <AppContext.Provider value={app}>
       <div className={style.outerContainer}>
         <div className={style.topBar} />
-        <div className={style.sidebar}>
-          <FilterSelector filters={view_.filters} send={send} />
-        </div>
+        <SideBar sections={view_.sideBar} send={send} />
         <div className={style.innerContainer}>
           <div className={style.left}>
             <TaskList view={view_.taskList} send={send} />

@@ -45,44 +45,58 @@ export const empty: State = {
   tasks: [],
   textFields: {addTitle: ""},
   editor: null,
-  filter: "not-done",
+  filter: "ready",
   taskDrag: {dragging: null, hovering: null},
 };
 
+export type FilterView = {label: string; filter: FilterId; selected: boolean; dropTarget: DropId | null};
+export type SideBarSectionView = {title: string; filters: FilterView[]};
+
 export type View = {
-  filters: {
-    label: string;
-    filter: FilterId;
-    selected: boolean;
-    dropTarget: DropId | null;
-  }[];
+  sideBar: SideBarSectionView[];
   taskList: TaskListView;
   editor: TaskEditorState;
 };
 
 export function view(app: State): View {
   return {
-    filters: [
+    sideBar: [
       {
-        label: "Unfinished",
-        filter: "not-done",
-        selected: app.filter === "not-done",
-        dropTarget: {type: "filter", id: "not-done"},
+        title: "Actions",
+        filters: [
+          {
+            label: "Ready",
+            filter: "ready",
+            selected: app.filter === "ready",
+            dropTarget: {type: "filter", id: "ready"},
+          },
+          {
+            label: "Stalled",
+            filter: "stalled",
+            selected: app.filter === "stalled",
+            dropTarget: {type: "filter", id: "stalled"},
+          },
+        ],
       },
       {
-        label: "Ready",
-        filter: "ready",
-        selected: app.filter === "ready",
-        dropTarget: {type: "filter", id: "ready"},
+        title: "Tasks",
+        filters: [
+          {label: "All", filter: "all", selected: app.filter === "all", dropTarget: null},
+          {
+            label: "Unfinished",
+            filter: "not-done",
+            selected: app.filter === "not-done",
+            dropTarget: {type: "filter", id: "not-done"},
+          },
+
+          {
+            label: "Finished",
+            filter: "done",
+            selected: app.filter === "done",
+            dropTarget: {type: "filter", id: "done"},
+          },
+        ],
       },
-      {
-        label: "Stalled",
-        filter: "stalled",
-        selected: app.filter === "stalled",
-        dropTarget: {type: "filter", id: "stalled"},
-      },
-      {label: "Done", filter: "done", selected: app.filter === "done", dropTarget: {type: "filter", id: "done"}},
-      {label: "All", filter: "all", selected: app.filter === "all", dropTarget: null},
     ],
     taskList: Tasks.view(app),
     editor: app.editor,

@@ -2,7 +2,7 @@ import * as React from "react";
 import {TaskListView} from "./tasks";
 import {Badge} from "./ui";
 import * as Drag from "./drag";
-import {DropId, Send} from "./app";
+import {Send} from "./app";
 
 import style from "./task-list.module.scss";
 
@@ -94,9 +94,11 @@ function TaskRow(props: {task: TaskListView[number]; send: Send}) {
 export function TaskList(props: {view: TaskListView; send: Send}) {
   return (
     <div className={style.taskList}>
-      {props.view.map((task) => (
-        <TaskRow key={task.id} task={task} send={props.send} />
-      ))}
+      {props.view.length === 0 ? (
+        <div className={style.empty}>There are no tasks in this view.</div>
+      ) : (
+        props.view.map((task) => <TaskRow key={task.id} task={task} send={props.send} />)
+      )}
     </div>
   );
 }

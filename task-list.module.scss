@@ -89,6 +89,14 @@
 
   box-shadow: 0 3px 6px -6px #aaa inset;
 
+  .empty {
+    text-align: center;
+    padding: 1em;
+    color: #aaa;
+    font-style: italic;
+    user-select: none;
+  }
+
   & > * {
     @include shared.border-between(1px solid #c8c8c8);
   }
