@@ -151,6 +151,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     const task = tasks[index];
 
     const dragging = taskDrag.dragging!.id;
+    const draggingIndex = tasks.findIndex((task) => task.id === dragging.id);
 
     const preceedingTask = tasks[index - 1];
     const preceedingTaskIndentation = preceedingTask?.indentation ?? -1;
@@ -186,7 +187,30 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
       return result;
     }
 
+    function dropTargetsAt(indentationLevels: number[]): DropTarget[] {
+      return indentationLevels.map((indentation, index) => ({
+        indentation,
+        width: index === indentationLevels.length - 1 ? "full" : 1,
+        side: "below",
+      }));
+    }
+
+    function range(start: number, end: number): number[] {
+      return Array.from({length: end - start}, (_, i) => start + i);
+    }
+
+    function dropTargetsBetween(lower: number, upper: number): DropTarget[] {
+      return dropTargetsAt([...range(lower, upper - 1), upper]);
+    }
+
     if (isDescendant(tasks_, task, dragging)) {
+      if (!followingTask || !isDescendant(tasks_, task, followingTask)) {
+        return dropTargetsAt(
+          dropTargetsBelow(tasks_, draggingIndex)
+            .map((dropTarget) => dropTarget.indentation)
+            .filter((indentation) => indentation <= tasks[draggingIndex].indentation),
+        );
+      }
       return [];
     }
 

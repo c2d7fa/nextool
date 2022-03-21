@@ -457,6 +457,25 @@ describe("nesting tasks with drag and drop", () => {
         ]);
       });
     });
+
+    test("dragging a task below its last descendant is like dragging the item to itself except it can't be indented further", () => {
+      const example = updateAll(empty, [
+        ...addTask("Task 0"),
+        ...addTask("Task 1"),
+        ...addTask("Task 2"),
+        ...addTask("Task 3"),
+        ...addTask("Task 4"),
+        ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+        ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
+        ...dragAndDropNth(3, 2, {side: "below", indentation: 2}),
+        startDragNthTask(2),
+      ]);
+
+      expect(nthTask(example, 3).dropTargets.filter((dropTarget) => dropTarget.side === "below")).toEqual([
+        {width: 1, indentation: 0, side: "below"},
+        {width: "full", indentation: 1, side: "below"},
+      ]);
+    });
   });
 });
 
