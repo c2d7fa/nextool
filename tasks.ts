@@ -145,20 +145,10 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
   }
 
   function dropTargetsBelow(tasks_: Task[], index: number): DropTarget[] {
-    function dropTargetsAt(indentationLevels: number[]): DropTarget[] {
-      return indentationLevels.map((indentation, index) => ({
-        indentation,
-        width: index === indentationLevels.length - 1 ? "full" : 1,
-        side: "below",
-      }));
-    }
-
-    function range(start: number, end: number): number[] {
-      return [...Array(end - start + 1)].map((_, index) => start + index);
-    }
-
     function dropTargetsBetween(lower: number, upper: number): DropTarget[] {
-      return dropTargetsAt([...range(lower, upper - 1), upper]);
+      const result: DropTarget[] = [];
+      for (let i = lower; i < upper; ++i) result.push({width: 1, indentation: i, side: "below"});
+      return [...result, {width: "full", indentation: upper, side: "below"}];
     }
 
     if (index === -1) return [{width: "full", indentation: 0, side: "below"}];
@@ -172,39 +162,27 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     const preceedingTask = tasks[index - 1];
     const preceedingTaskIndentation = preceedingTask?.indentation ?? -1;
 
+    const followingTasks = tasks.slice(index + 1);
+    const followingNonDescendentsOfDragging = followingTasks.filter(
+      (task) => !isDescendant(tasks_, task, dragging),
+    );
+
     const followingTask = tasks[index + 1];
-    const followingIndentation = followingTask?.indentation ?? 0;
+    const followingIndentation = followingNonDescendentsOfDragging[0]?.indentation ?? 0;
 
     if (followingTask?.id === dragging.id) return dropTargetsBelow(tasks_, index + 1);
 
-    if (task.id === dragging.id) {
-      let indentationOfNextTaskThatIsNotDescendant = 0;
-      for (let i = index + 1; i < tasks.length; i++) {
-        const followingTask = tasks[i];
-        if (followingTask.indentation <= task.indentation) {
-          indentationOfNextTaskThatIsNotDescendant = followingTask.indentation;
-          break;
-        }
-      }
+    const isDragging = task.id === dragging.id;
 
-      return dropTargetsBetween(
-        indentationOfNextTaskThatIsNotDescendant,
-        Math.max(preceedingTaskIndentation + 1, task.indentation),
-      );
-    }
-
-    if (isDescendant(tasks_, task, dragging)) {
-      if (!followingTask || !isDescendant(tasks_, task, followingTask)) {
-        return dropTargetsAt(
-          dropTargetsBelow(tasks_, draggingIndex)
-            .map((dropTarget) => dropTarget.indentation)
-            .filter((indentation) => indentation <= tasks[draggingIndex].indentation),
-        );
-      }
-      return [];
-    }
-
-    return dropTargetsBetween(followingIndentation, task.indentation + 1);
+    return dropTargetsBetween(
+      followingIndentation,
+      isDescendant(tasks_, task, dragging)
+        ? tasks[draggingIndex].indentation
+        : Math.max(
+            isDragging ? preceedingTaskIndentation : 0,
+            isDragging ? task.indentation - 1 : task.indentation,
+          ) + 1,
+    );
   }
 
   return toList(filtered).map((task, index) => ({

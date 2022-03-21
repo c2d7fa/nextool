@@ -476,6 +476,24 @@ describe("nesting tasks with drag and drop", () => {
         {width: "full", indentation: 1, side: "below"},
       ]);
     });
+
+    describe("bugs", () => {
+      test("the indentation of the preceeding item would be taken into account when it shouldn't", () => {
+        const example = updateAll(empty, [
+          ...addTask("Task 0"),
+          ...addTask("Task 1"),
+          ...addTask("Task 2"),
+          ...addTask("Task 3"),
+          ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+          ...dragAndDropNth(3, 2, {side: "below", indentation: 1}),
+          startDragNthTask(0),
+        ]);
+
+        expect(nthTask(example, 2).dropTargets.filter((dropTarget) => dropTarget.side === "below")).toEqual([
+          {width: "full", indentation: 1, side: "below"},
+        ]);
+      });
+    });
   });
 });
 
