@@ -58,11 +58,14 @@ function FilterSelector(props: {
   send(ev: SelectFilterEvent | Drag.DragEvent<never, DropId>): void;
 }) {
   return (
-    <div className={style.filterSelector}>
-      {props.filters.map((filter, i) => (
-        <Filter key={i} filter={filter} send={props.send} />
-      ))}
-    </div>
+    <>
+      <h1>Tasks</h1>
+      <div className={style.filterSelector}>
+        {props.filters.map((filter, i) => (
+          <Filter key={i} filter={filter} send={props.send} />
+        ))}
+      </div>
+    </>
   );
 }
 
