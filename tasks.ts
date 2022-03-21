@@ -1,6 +1,15 @@
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
-import {Tree, TreeNode, toList, fromList, findNode, merge as mergeNodes, moveItemInTree} from "./indented-list";
+import {
+  Tree,
+  TreeNode,
+  toList,
+  fromList,
+  findNode,
+  merge as mergeNodes,
+  moveItemInTree,
+  isDescendant,
+} from "./indented-list";
 
 type TaskData = {
   id: string;
@@ -136,17 +145,44 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
   }
 
   function dropTargetsBelow(tasks_: Task[], index: number): DropTarget[] {
+    function dropTargetsBetween(lower: number, upper: number): DropTarget[] {
+      const result: DropTarget[] = [];
+      for (let i = lower; i < upper; ++i) result.push({width: 1, indentation: i, side: "below"});
+      return [...result, {width: "full", indentation: upper, side: "below"}];
+    }
+
+    if (index === -1) return [{width: "full", indentation: 0, side: "below"}];
+
     const tasks = toList(tasks_);
     const task = tasks[index];
 
-    const followingIndentation = tasks[index + 1]?.indentation ?? 0;
+    const dragging = taskDrag.dragging!.id;
+    const draggingIndex = tasks.findIndex((task) => task.id === dragging.id);
 
-    let result: DropTarget[] = [];
-    for (let i = followingIndentation; i <= task.indentation; i++) {
-      result.push({width: 1, indentation: i, side: "below"});
-    }
-    result.push({indentation: task.indentation + 1, width: "full", side: "below"});
-    return result;
+    const preceedingTask = tasks[index - 1];
+    const preceedingTaskIndentation = preceedingTask?.indentation ?? -1;
+
+    const followingTasks = tasks.slice(index + 1);
+    const followingNonDescendentsOfDragging = followingTasks.filter(
+      (task) => !isDescendant(tasks_, task, dragging),
+    );
+
+    const followingTask = tasks[index + 1];
+    const followingIndentation = followingNonDescendentsOfDragging[0]?.indentation ?? 0;
+
+    if (followingTask?.id === dragging.id) return dropTargetsBelow(tasks_, index + 1);
+
+    const isDragging = task.id === dragging.id;
+
+    return dropTargetsBetween(
+      followingIndentation,
+      isDescendant(tasks_, task, dragging)
+        ? tasks[draggingIndex].indentation
+        : Math.max(
+            isDragging ? preceedingTaskIndentation : 0,
+            isDragging ? task.indentation - 1 : task.indentation,
+          ) + 1,
+    );
   }
 
   return toList(filtered).map((task, index) => ({
@@ -156,14 +192,14 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     done: task.done ?? false,
     badges: badges(findNode(tasks, task)!),
     dropIndicator: dropIndicator(task),
-    dropTargets: [
-      ...(index === 0
-        ? [{indentation: 0, width: "full", side: "above"} as const]
-        : dropTargetsBelow(filtered, index - 1).map((dropTarget) => ({
+    dropTargets: taskDrag.dragging
+      ? [
+          ...dropTargetsBelow(filtered, index - 1).map((dropTarget) => ({
             ...dropTarget,
             side: "above" as const,
-          }))),
-      ...dropTargetsBelow(filtered, index),
-    ],
+          })),
+          ...dropTargetsBelow(filtered, index),
+        ]
+      : [],
   }));
 }
