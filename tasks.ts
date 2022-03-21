@@ -161,8 +161,21 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     if (followingTask?.id === dragging.id) return dropTargetsBelow(tasks_, index + 1);
 
     if (task.id === dragging.id) {
+      let indentationOfNextTaskThatIsNotDescendant = 0;
+      for (let i = index + 1; i < tasks.length; i++) {
+        const followingTask = tasks[i];
+        if (followingTask.indentation <= task.indentation) {
+          indentationOfNextTaskThatIsNotDescendant = followingTask.indentation;
+          break;
+        }
+      }
+
       let result: DropTarget[] = [];
-      for (let i = followingIndentation; i <= Math.max(preceedingTaskIndentation + 1, task.indentation) - 1; i++) {
+      for (
+        let i = indentationOfNextTaskThatIsNotDescendant;
+        i <= Math.max(preceedingTaskIndentation + 1, task.indentation) - 1;
+        i++
+      ) {
         result.push({width: 1, indentation: i, side: "below"});
       }
       result.push({

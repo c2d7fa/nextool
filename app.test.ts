@@ -415,6 +415,47 @@ describe("nesting tasks with drag and drop", () => {
 
         expectNthTaskNearbyDropTargetsToHave(example, 1, [{width: "full", indentation: 1}]);
       });
+
+      test("even at the end of a subtree, task cannot be dragged beyong following task", () => {
+        const example = updateAll(empty, [
+          ...addTask("Task 0"),
+          ...addTask("Task 1"),
+          ...addTask("Task 2"),
+          ...addTask("Task 3"),
+          ...addTask("Task 4"),
+          ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+          ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
+          ...dragAndDropNth(3, 2, {side: "below", indentation: 2}),
+          ...dragAndDropNth(4, 3, {side: "below", indentation: 1}),
+          startDragNthTask(3),
+        ]);
+
+        expectNthTaskNearbyDropTargetsToHave(example, 3, [
+          {width: 1, indentation: 1},
+          {width: 1, indentation: 2},
+          {width: "full", indentation: 3},
+        ]);
+      });
+
+      test("however, tasks that are descendants of the task being dragged are not taken into account", () => {
+        const example = updateAll(empty, [
+          ...addTask("Task 0"),
+          ...addTask("Task 1"),
+          ...addTask("Task 2"),
+          ...addTask("Task 3"),
+          ...addTask("Task 4"),
+          ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+          ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
+          ...dragAndDropNth(3, 2, {side: "below", indentation: 2}),
+          startDragNthTask(2),
+        ]);
+
+        expectNthTaskNearbyDropTargetsToHave(example, 2, [
+          {width: 1, indentation: 0},
+          {width: 1, indentation: 1},
+          {width: "full", indentation: 2},
+        ]);
+      });
     });
   });
 });
