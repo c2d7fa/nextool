@@ -401,6 +401,21 @@ describe("nesting tasks with drag and drop", () => {
         ]);
       });
     });
+
+    describe("unindenting an item in-place is disallowed when it would mess with following tasks", () => {
+      test("when the task has logical sibling following it, it cannot be unindented at all", () => {
+        const example = updateAll(empty, [
+          ...addTask("Task 0"),
+          ...addTask("Task 1"),
+          ...addTask("Task 2"),
+          ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+          ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
+          startDragNthTask(1),
+        ]);
+
+        expectNthTaskNearbyDropTargetsToHave(example, 1, [{width: "full", indentation: 1}]);
+      });
+    });
   });
 });
 

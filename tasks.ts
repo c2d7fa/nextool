@@ -162,7 +162,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
 
     if (task.id === dragging.id) {
       let result: DropTarget[] = [];
-      for (let i = 0; i <= Math.max(preceedingTaskIndentation + 1, task.indentation) - 1; i++) {
+      for (let i = followingIndentation; i <= Math.max(preceedingTaskIndentation + 1, task.indentation) - 1; i++) {
         result.push({width: 1, indentation: i, side: "below"});
       }
       result.push({
