@@ -1,7 +1,7 @@
 import * as React from "react";
 import style from "./task-editor.module.scss";
 
-import {Tasks, find} from "./tasks";
+import {Tasks, find, EditOperation} from "./tasks";
 import {Send} from "./app";
 import {UnnamedTextField} from "./text-field";
 
@@ -56,6 +56,11 @@ export function update(state: State, ev: Event): State {
   }
 
   return state;
+}
+
+export function editOperationsFor(state: State, ev: Event): EditOperation[] {
+  if (ev.component.id.property === "title") return [{type: "set", property: "title", value: ev.value}];
+  else return [];
 }
 
 export function load({tasks}: {tasks: Tasks}, taskId: string): State {

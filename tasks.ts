@@ -74,39 +74,43 @@ export type EditOperation =
   | {type: "move"; side: "above" | "below"; target: string; indentation: number}
   | {type: "moveToFilter"; filter: FilterId};
 
-export function edit(tasks: Tasks, id: string, operation: EditOperation): Tasks {
-  if (operation.type === "delete") {
-    return fromList(toList(tasks.filter((task) => task.id !== id)));
-  } else if (operation.type === "set") {
-    return fromList(
-      toList(tasks).map((task) => {
-        if (task.id === id) {
-          return {...task, [operation.property]: operation.value};
-        }
-        return task;
-      }),
-    );
-  } else if (operation.type === "moveToFilter") {
-    const filter = operation.filter;
+export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): Tasks {
+  function edit_(tasks: Tasks, operation: EditOperation): Tasks {
+    if (operation.type === "delete") {
+      return fromList(toList(tasks.filter((task) => task.id !== id)));
+    } else if (operation.type === "set") {
+      return fromList(
+        toList(tasks).map((task) => {
+          if (task.id === id) {
+            return {...task, [operation.property]: operation.value};
+          }
+          return task;
+        }),
+      );
+    } else if (operation.type === "moveToFilter") {
+      const filter = operation.filter;
 
-    const update =
-      filter === "ready"
-        ? ({property: "action", value: true} as const)
-        : filter === "done"
-        ? ({property: "done", value: true} as const)
-        : filter === "stalled"
-        ? ({property: "action", value: false} as const)
-        : filter === "not-done"
-        ? ({property: "done", value: false} as const)
-        : (null as never);
+      const update =
+        filter === "ready"
+          ? ({property: "action", value: true} as const)
+          : filter === "done"
+          ? ({property: "done", value: true} as const)
+          : filter === "stalled"
+          ? ({property: "action", value: false} as const)
+          : filter === "not-done"
+          ? ({property: "done", value: false} as const)
+          : (null as never);
 
-    return edit(tasks, id, {type: "set", ...update});
-  } else if (operation.type === "move") {
-    return moveItemInTree(tasks, {id}, operation);
-  } else {
-    const unreachable: never = operation;
-    return unreachable;
+      return edit(tasks, id, {type: "set", ...update});
+    } else if (operation.type === "move") {
+      return moveItemInTree(tasks, {id}, operation);
+    } else {
+      const unreachable: never = operation;
+      return unreachable;
+    }
   }
+
+  return operations.reduce(edit_, tasks);
 }
 
 function badges(task: Task): ("ready" | "stalled")[] {
