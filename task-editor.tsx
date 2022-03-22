@@ -92,13 +92,17 @@ function TextComponent(props: {view: ViewComponent & {type: "text"}; send: Send}
 
 function PickerComponent(props: {view: ViewComponent & {type: "picker"}; send: Send}) {
   return (
-    <select>
+    <div className={`${style.picker}`}>
       {props.view.options.map((option) => (
-        <option key={option.value} value={option.value} selected={option.active}>
-          {option.label}
-        </option>
+        <button
+          className={`${style.option} ${option.active ? style.active : style.inactive}`}
+          key={option.value}
+          onClick={() => {}}
+        >
+          <div className={style.label}>{option.label}</div>
+        </button>
       ))}
-    </select>
+    </div>
   );
 }
 

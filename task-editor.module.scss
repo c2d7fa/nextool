@@ -49,3 +49,59 @@
     }
   }
 }
+
+.picker {
+  display: flex;
+  flex-direction: row;
+
+  @include shared.input-shadow;
+
+  background-color: #00000008;
+  border-radius: 3px;
+
+  .option {
+    @include shared.reset-button;
+
+    cursor: default;
+
+    font-family: "Roboto", sans-serif;
+    font-size: 0.9em;
+
+    flex: 1;
+    text-align: center;
+
+    background: linear-gradient(to top, #f0f0f0, #f4f4f4);
+    @include shared.input-padding;
+    @include shared.input-color;
+    @include shared.input-border;
+    color: #888;
+
+    border-radius: 0;
+
+    box-sizing: border-box;
+    margin-right: -1px; // Hide overlapping border
+
+    &:first-child {
+      border-radius: 3px 0 0 3px;
+    }
+
+    &:last-child {
+      border-radius: 0 3px 3px 0;
+    }
+
+    transition: transform 50ms ease-out;
+
+    &:not(.active):active {
+      transform: translateY(3px);
+      background: linear-gradient(to top, #f6f6f6, #fcfcfc);
+    }
+
+    &.active {
+      background: linear-gradient(to top, #f6f6f6, #fcfcfc);
+
+      color: #666;
+      font-weight: 500;
+      @include shared.input-shadow(3px, inset);
+    }
+  }
+}
