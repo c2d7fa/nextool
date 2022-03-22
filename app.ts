@@ -120,7 +120,8 @@ export function updateApp(app: State, ev: Event): State {
     const [drag, drop] = dropped_;
 
     if (drop.type === "filter") {
-      return {...app, tasks: edit(app.tasks, drag.id, {type: "moveToFilter", filter: drop.id})};
+      const app_ = {...app, tasks: edit(app.tasks, drag.id, {type: "moveToFilter", filter: drop.id})};
+      return {...app_, editor: TaskEditor.reload(app_)};
     } else if (drop.type === "task") {
       return {
         ...app,

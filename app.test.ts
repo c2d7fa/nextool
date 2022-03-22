@@ -843,4 +843,64 @@ describe("the task editor", () => {
       });
     });
   });
+
+  describe("marking tasks as action", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the example task has the stalled badge in the task list", () => {
+        expect(view(step1).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+      });
+
+      test("there is a component titled 'Actionable'", () => {
+        expect(componentTitled(view(step1), "Actionable")).not.toBeNull();
+      });
+
+      test("it is a picker component", () => {
+        expect(componentTitled(view(step1), "Actionable")).toMatchObject({type: "picker"});
+      });
+
+      test("it has the correct options", () => {
+        expect(
+          (componentTitled(view(step1), "Actionable") as any).options.map((option: any) => option.value),
+        ).toEqual(["yes", "no"]);
+      });
+
+      test("the selected option is 'Not Ready'", () => {
+        expect(
+          (componentTitled(view(step1), "Actionable") as any).options.map((option: any) => option.active),
+        ).toEqual([false, true]);
+      });
+    });
+
+    const step2 = updateAll(step1, [...dragToFilter(nthTask(step1, 0).id, "ready")]);
+
+    describe("after dragging the task into the ready filter", () => {
+      test("the task has the ready badge in the task list", () => {
+        expect(view(step2).taskList.map((t) => t.badges)).toEqual([["ready"]]);
+      });
+
+      test("the selected option becomes 'Ready'", () => {
+        expect(
+          (componentTitled(view(step2), "Actionable") as any).options.map((option: any) => option.active),
+        ).toEqual([true, false]);
+      });
+    });
+
+    const step3 = updateAll(step2, [
+      {tag: "editor", type: "component", component: componentTitled(view(step2), "Actionable")!, value: "no"},
+    ]);
+
+    describe("after changing the task status back in the editor", () => {
+      test("the task reverts to the stalled badge", () => {
+        expect(view(step3).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+      });
+
+      test("the selected option becomes 'Not Ready' again", () => {
+        expect(
+          (componentTitled(view(step3), "Actionable") as any).options.map((option: any) => option.active),
+        ).toEqual([false, true]);
+      });
+    });
+  });
 });

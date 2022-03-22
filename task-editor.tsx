@@ -81,6 +81,10 @@ export function editOperationsFor(state: State, ev: Event): EditOperation[] {
     if (ev.value === "active") return [{type: "set", property: "done", value: false}];
     if (ev.value === "done") return [{type: "set", property: "done", value: true}];
     else return [];
+  } else if (ev.component.id.property === "action") {
+    if (ev.value === "yes") return [{type: "set", property: "action", value: true}];
+    if (ev.value === "no") return [{type: "set", property: "action", value: false}];
+    else return [];
   } else return [];
 }
 
@@ -109,6 +113,21 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
                 {value: "done", label: "Completed", active: status === "done"},
               ],
               property: "status",
+            },
+          ],
+        },
+      ],
+      [
+        {
+          title: "Actionable",
+          components: [
+            {
+              type: "picker",
+              options: [
+                {value: "yes", label: "Action", active: task.action},
+                {value: "no", label: "Not Ready", active: !task.action},
+              ],
+              property: "action",
             },
           ],
         },
