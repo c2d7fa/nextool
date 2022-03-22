@@ -119,6 +119,8 @@ function isDone(task: TaskData): boolean {
 }
 
 function badges(task: Task): ("ready" | "stalled")[] {
+  if (task.status === "paused") return [];
+
   if (task.action && !isDone(task) && !task.children.some((child) => !isDone(child))) return ["ready"];
   else if (!isDone(task) && !task.children.some((child) => !isDone(child))) return ["stalled"];
   else return [];

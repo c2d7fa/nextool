@@ -919,7 +919,7 @@ describe("paused tasks", () => {
     const step2 = updateAll(step1, [setComponentValue("Status", "paused")]);
 
     describe("after changing the task status to paused in the editor", () => {
-      test.skip("the task loses its badges", () => {
+      test("the task loses its badges", () => {
         expect(view(step2).taskList.map((t) => t.badges)).toEqual([[]]);
       });
 
