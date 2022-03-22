@@ -178,7 +178,7 @@ export function updateApp(app: State, ev: Event): State {
 
   function handleChecked(app: State, ev: Event) {
     if (ev.tag !== "checked") return app;
-    const tasks = merge(app.tasks, [{id: ev.id, done: ev.checked}]);
+    const tasks = edit(app.tasks, ev.id, {type: "set", property: "status", value: "done"});
     return {...app, tasks, editor: TaskEditor.reload({...app, tasks})};
   }
 

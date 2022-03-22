@@ -723,15 +723,23 @@ describe("filtered views of tasks", () => {
   });
 });
 
-describe("the task editor", () => {
+function componentTitled(view: View, title: string) {
   function groups(view: View) {
     return view.editor?.sections.flatMap((section) => section) ?? [];
   }
 
-  function componentTitled(view: View, title: string) {
-    return groups(view).find((group) => group.title === title)?.components[0] ?? null;
-  }
+  return groups(view).find((group) => group.title === title)?.components[0] ?? null;
+}
 
+function setComponentValue(componentTitle: string, value: string) {
+  return (view: View) => {
+    const component = componentTitled(view, componentTitle);
+    if (component == null) throw "no such component";
+    return [{tag: "editor", type: "component", component, value} as const];
+  };
+}
+
+describe("the task editor", () => {
   describe("editing task title", () => {
     const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task")]);
 
@@ -761,14 +769,7 @@ describe("the task editor", () => {
       });
     });
 
-    const step3 = updateAll(step2, [
-      {
-        tag: "editor",
-        type: "component",
-        component: componentTitled(view(step2), "Title")!,
-        value: "Task with edited title",
-      },
-    ]);
+    const step3 = updateAll(step2, [setComponentValue("Title", "Task with edited title")]);
 
     describe("after editing title in the editor", () => {
       test("the title component contains the new title", () => {
@@ -827,9 +828,7 @@ describe("the task editor", () => {
       });
     });
 
-    const step2b = updateAll(step1, [
-      {tag: "editor", type: "component", component: componentTitled(view(step1), "Status")!, value: "done"},
-    ]);
+    const step2b = updateAll(step1, [setComponentValue("Status", "done")]);
 
     describe("if the task status is changed in the editor instead", () => {
       test("the task is marked as done in the task list", () => {
@@ -887,9 +886,7 @@ describe("the task editor", () => {
       });
     });
 
-    const step3 = updateAll(step2, [
-      {tag: "editor", type: "component", component: componentTitled(view(step2), "Actionable")!, value: "no"},
-    ]);
+    const step3 = updateAll(step2, [setComponentValue("Actionable", "no")]);
 
     describe("after changing the task status back in the editor", () => {
       test("the task reverts to the stalled badge", () => {
@@ -900,6 +897,74 @@ describe("the task editor", () => {
         expect(
           (componentTitled(view(step3), "Actionable") as any).options.map((option: any) => option.active),
         ).toEqual([false, true]);
+      });
+    });
+  });
+});
+
+describe("paused tasks", () => {
+  describe("in an example with a single stalled task", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the task has the stalled badge", () => {
+        expect(view(step1).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+      });
+
+      test("the task is not paused", () => {
+        expect(view(step1).taskList.map((t) => t.paused)).toEqual([false]);
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Status", "paused")]);
+
+    describe("after changing the task status to paused in the editor", () => {
+      test("the task loses its badges", () => {
+        expect(view(step2).taskList.map((t) => t.badges)).toEqual([[]]);
+      });
+
+      test("the task is paused", () => {
+        expect(view(step2).taskList.map((t) => t.paused)).toEqual([true]);
+      });
+    });
+  });
+
+  describe("in an example with a child task", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Parent"),
+      ...addTask("Child"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      openNth(0),
+    ]);
+
+    describe("initially", () => {
+      test("neither the parent nor the child is paused", () => {
+        expect(view(step1).taskList.map((t) => t.paused)).toEqual([false, false]);
+      });
+
+      test("the child has the stalled badge", () => {
+        expect(view(step1).taskList.map((t) => t.badges)).toEqual([[], ["stalled"]]);
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Status", "paused")]);
+
+    describe("after changing the parent's task status to paused in the editor", () => {
+      test("both the parent and the child are paused", () => {
+        expect(view(step2).taskList.map((t) => t.paused)).toEqual([true, true]);
+      });
+
+      test("neither task has any badges", () => {
+        expect(view(step2).taskList.map((t) => t.badges)).toEqual([[], []]);
+      });
+    });
+
+    const step3 = updateAll(step2, [...switchToFilter("stalled")]);
+
+    describe("after switching to the stalled filter", () => {
+      test("the task list is empty", () => {
+        expect(view(step3).taskList).toEqual([]);
       });
     });
   });

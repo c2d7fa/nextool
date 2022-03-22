@@ -79,6 +79,11 @@ function findNodeLocation<T extends {id: string}>(tree: Tree<T>, query: {id: str
   return null;
 }
 
+export function findParent<T extends {id: string}>(tree: Tree<T>, query: {id: string}): TreeNode<T> | null {
+  const parent = findNodeLocation(tree, query)?.parent ?? null;
+  return parent === null ? null : findNode(tree, {id: parent});
+}
+
 export function listInsertLocationToTreeLocation<T extends {id: string}>(
   tree: Tree<T>,
   location: IndentedListInsertLocation,
