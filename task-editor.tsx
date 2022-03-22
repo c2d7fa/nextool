@@ -1,7 +1,7 @@
 import * as React from "react";
 import style from "./task-editor.module.scss";
 
-import {EditOperation, Tasks, find} from "./tasks";
+import {Tasks, find} from "./tasks";
 import {Send} from "./app";
 import {UnnamedTextField} from "./text-field";
 
@@ -21,17 +21,40 @@ export const empty: State = null;
 type ViewSection = ViewGroup[];
 type ViewGroup = {title: string; components: ViewComponent[]};
 type ViewComponent =
-  | {type: "text"; value: string; property: "title"; id: string}
-  | {type: "picker"; options: {value: string; label: string; active: boolean}[]; property: string; id: string};
+  | {type: "text"; value: string; property: "title"; id: {property: string; taskId: string}}
+  | {
+      type: "picker";
+      options: {value: string; label: string; active: boolean}[];
+      id: {property: string; taskId: string};
+    };
 
 export type View = null | {sections: ViewSection[]};
 
-export type Event = {tag: "edit"; id: string; operation: EditOperation};
+export type Event = {
+  tag: "editor";
+  type: "component";
+  component: {id: {property: string; taskId: string}};
+  value: string;
+};
 
 export function update(state: State, ev: Event): State {
   if (state === null) return null;
-  if (ev.operation.type === "delete") return null;
-  if (ev.operation.type === "set") return {...state, [ev.operation.property]: ev.operation.value};
+
+  if (ev.type === "component") {
+    return {
+      ...state,
+      sections: state.sections.map((section) => {
+        return section.map((group) => ({
+          ...group,
+          components: group.components.map((component) => {
+            if (component.property !== ev.component.id.property) return component;
+            return {...component, value: ev.value};
+          }),
+        }));
+      }),
+    };
+  }
+
   return state;
 }
 
@@ -61,12 +84,6 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
           ],
         },
       ],
-      [
-        {
-          title: "Title",
-          components: [{type: "text", value: task.title, property: "title"}],
-        },
-      ],
     ],
   };
 }
@@ -79,7 +96,7 @@ export function view(state: State): View {
         title: group.title,
         components: group.components.map((component) => ({
           ...component,
-          id: state.id,
+          id: {property: component.property, taskId: state.id},
         })),
       })),
     ),
@@ -87,7 +104,20 @@ export function view(state: State): View {
 }
 
 function TextComponent(props: {view: ViewComponent & {type: "text"}; send: Send}) {
-  return <UnnamedTextField value={props.view.value} send={(ev) => {}} />;
+  return (
+    <UnnamedTextField
+      value={props.view.value}
+      send={(ev) => {
+        if (ev.type === "submit") return;
+        props.send({
+          tag: "editor",
+          type: "component",
+          component: {id: props.view.id},
+          value: ev.value,
+        });
+      }}
+    />
+  );
 }
 
 function PickerComponent(props: {view: ViewComponent & {type: "picker"}; send: Send}) {

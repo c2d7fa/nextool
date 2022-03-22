@@ -64,6 +64,10 @@ function switchToFilter(filter: FilterId): Event[] {
   return [{tag: "selectFilter", filter}];
 }
 
+function openNth(n: number) {
+  return (view: View) => [{tag: "selectEditingTask", id: nthTask(view, n).id} as const];
+}
+
 describe("adding tasks", () => {
   describe("with empty state", () => {
     test("there are no tasks", () => {
@@ -714,6 +718,68 @@ describe("filtered views of tasks", () => {
 
       test("the task is now marked as done", () => {
         expect(nthTask(example2, 1).done).toBe(true);
+      });
+    });
+  });
+});
+
+describe("the task editor", () => {
+  function groups(view: View) {
+    return view.editor?.sections.flatMap((section) => section) ?? [];
+  }
+
+  function componentTitled(view: View, title: string) {
+    return groups(view).find((group) => group.title === title)?.components[0] ?? null;
+  }
+
+  describe("editing task title", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task")]);
+
+    describe("initially", () => {
+      test("the example task is shown in the task list", () => {
+        expect(view(step1).taskList.map((t) => t.title)).toEqual(["Task"]);
+      });
+
+      test("the task editor is hidden", () => {
+        expect(view(step1).editor).toEqual(null);
+      });
+    });
+
+    const step2 = updateAll(step1, [openNth(0)]);
+
+    describe("after opening the task in the editor", () => {
+      test("the task editor is shown", () => {
+        expect(view(step2).editor).not.toBeNull();
+      });
+
+      test("there is a component called 'Title'", () => {
+        expect(componentTitled(view(step2), "Title")).not.toBeNull();
+      });
+
+      test("the component contains the task title", () => {
+        expect(componentTitled(view(step2), "Title")).toMatchObject({type: "text", value: "Task"});
+      });
+    });
+
+    const step3 = updateAll(step2, [
+      {
+        tag: "editor",
+        type: "component",
+        component: componentTitled(view(step2), "Title")!,
+        value: "Task with edited title",
+      },
+    ]);
+
+    describe("after editing title in the editor", () => {
+      test("the title component contains the new title", () => {
+        expect(componentTitled(view(step3), "Title")).toMatchObject({
+          type: "text",
+          value: "Task with edited title",
+        });
+      });
+
+      test("the task in the task list has the new title", () => {
+        expect(view(step3).taskList.map((t) => t.title)).toEqual(["Task with edited title"]);
       });
     });
   });

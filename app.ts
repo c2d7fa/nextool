@@ -167,8 +167,8 @@ export function updateApp(app: State, ev: Event): State {
   }
 
   function handleEdit(app: State, ev: Event) {
-    if (ev.tag !== "edit") return app;
-    return {...app, editor: TaskEditor.update(app.editor, ev), tasks: edit(app.tasks, ev.id, ev.operation)};
+    if (ev.tag !== "editor") return app;
+    return {...app, editor: TaskEditor.update(app.editor, ev)};
   }
 
   function handleChecked(app: State, ev: Event) {
