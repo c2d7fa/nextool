@@ -14,7 +14,7 @@ import {
 type TaskData = {
   id: string;
   title: string;
-  done: boolean;
+  status: "active" | "paused" | "done";
   action: boolean;
 };
 
@@ -22,11 +22,11 @@ type Task = TreeNode<TaskData>;
 export type Tasks = Tree<TaskData>;
 
 export const empty: Tasks = [
-  {id: "0", title: "Task 1", done: false, action: false, children: []},
-  {id: "1", title: "Task 2", done: true, action: true, children: []},
-  {id: "2", title: "Task 3", done: false, action: true, children: []},
-  {id: "3", title: "Task 4", done: false, action: false, children: []},
-  {id: "4", title: "Task 5", done: false, action: true, children: []},
+  {id: "0", title: "Task 1", status: "active", action: false, children: []},
+  {id: "1", title: "Task 2", status: "done", action: true, children: []},
+  {id: "2", title: "Task 3", status: "active", action: true, children: []},
+  {id: "3", title: "Task 4", status: "paused", action: false, children: []},
+  {id: "4", title: "Task 5", status: "active", action: true, children: []},
 ];
 
 type DropTarget = {width: number | "full"; indentation: number; side: "above" | "below"};
@@ -36,6 +36,7 @@ export type TaskListView = {
   title: string;
   indentation: number;
   done: boolean;
+  paused: boolean;
   badges: ("ready" | "stalled")[];
   dropIndicator: null | {side: "above" | "below"; indentation: number};
   dropTargets: DropTarget[];
@@ -56,7 +57,7 @@ export function add(tasks: Tasks, values: Partial<Task>): Tasks {
       id: randomId(),
       title: values.title ?? "",
       action: false,
-      done: false,
+      status: "active",
       children: [],
     },
   ];
@@ -69,7 +70,7 @@ export function find(tasks: Tasks, id: string): TaskData | null {
 export type EditOperation =
   | {type: "delete"}
   | {type: "set"; property: "title"; value: string}
-  | {type: "set"; property: "done"; value: boolean}
+  | {type: "set"; property: "status"; value: "active" | "paused" | "done"}
   | {type: "set"; property: "action"; value: boolean}
   | {type: "move"; side: "above" | "below"; target: string; indentation: number}
   | {type: "moveToFilter"; filter: FilterId};
@@ -94,11 +95,11 @@ export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): 
         filter === "ready"
           ? ({property: "action", value: true} as const)
           : filter === "done"
-          ? ({property: "done", value: true} as const)
+          ? ({property: "status", value: "done"} as const)
           : filter === "stalled"
           ? ({property: "action", value: false} as const)
           : filter === "not-done"
-          ? ({property: "done", value: false} as const)
+          ? ({property: "status", value: "active"} as const)
           : (null as never);
 
       return edit(tasks, id, {type: "set", ...update});
@@ -113,9 +114,13 @@ export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): 
   return operations.reduce(edit_, tasks);
 }
 
+function isDone(task: TaskData): boolean {
+  return task.status === "done";
+}
+
 function badges(task: Task): ("ready" | "stalled")[] {
-  if (task.action && !task.done && !task.children.some((child) => !child.done)) return ["ready"];
-  else if (!task.done && !task.children.some((child) => !child.done)) return ["stalled"];
+  if (task.action && !isDone(task) && !task.children.some((child) => !isDone(child))) return ["ready"];
+  else if (!isDone(task) && !task.children.some((child) => !isDone(child))) return ["stalled"];
   else return [];
 }
 
@@ -123,9 +128,9 @@ export type FilterId = "all" | "ready" | "done" | "stalled" | "not-done";
 
 function doesTaskMatch(task: Task, filter: FilterId): boolean {
   if (filter === "ready") return badges(task).includes("ready");
-  else if (filter === "done") return task.done;
+  else if (filter === "done") return isDone(task);
   else if (filter === "stalled") return badges(task).includes("stalled");
-  else if (filter === "not-done") return !task.done;
+  else if (filter === "not-done") return !isDone(task);
   else return true;
 }
 
@@ -193,7 +198,8 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     id: task.id,
     title: task.title,
     indentation: task.indentation,
-    done: task.done ?? false,
+    done: isDone(task),
+    paused: task.status === "paused",
     badges: badges(findNode(tasks, task)!),
     dropIndicator: dropIndicator(task),
     dropTargets: taskDrag.dragging

@@ -78,8 +78,9 @@ export function editOperationsFor(state: State, ev: Event): EditOperation[] {
   if (ev.component.id.property === "title") {
     return [{type: "set", property: "title", value: ev.value}];
   } else if (ev.component.id.property === "status") {
-    if (ev.value === "active") return [{type: "set", property: "done", value: false}];
-    if (ev.value === "done") return [{type: "set", property: "done", value: true}];
+    if (ev.value === "active") return [{type: "set", property: "status", value: "active"}];
+    if (ev.value === "paused") return [{type: "set", property: "status", value: "paused"}];
+    if (ev.value === "done") return [{type: "set", property: "status", value: "done"}];
     else return [];
   } else if (ev.component.id.property === "action") {
     if (ev.value === "yes") return [{type: "set", property: "action", value: true}];
@@ -91,8 +92,6 @@ export function editOperationsFor(state: State, ev: Event): EditOperation[] {
 export function load({tasks}: {tasks: Tasks}, taskId: string): State {
   const task = find(tasks, taskId);
   if (task === null) return null;
-
-  const status = task.done ? "done" : "active";
 
   return {
     id: taskId,
@@ -108,9 +107,9 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
             {
               type: "picker",
               options: [
-                {value: "active", label: "Active", active: status === "active"},
-                {value: "paused", label: "Paused", active: false},
-                {value: "done", label: "Completed", active: status === "done"},
+                {value: "active", label: "Active", active: task.status === "active"},
+                {value: "paused", label: "Paused", active: task.status === "paused"},
+                {value: "done", label: "Completed", active: task.status === "done"},
               ],
               property: "status",
             },

@@ -901,3 +901,31 @@ describe("the task editor", () => {
     });
   });
 });
+
+describe("paused tasks", () => {
+  describe("in an example with a single stalled task", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the task has the stalled badge", () => {
+        expect(view(step1).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+      });
+
+      test("the task is not paused", () => {
+        expect(view(step1).taskList.map((t) => t.paused)).toEqual([false]);
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Status", "paused")]);
+
+    describe("after changing the task status to paused in the editor", () => {
+      test.skip("the task loses its badges", () => {
+        expect(view(step2).taskList.map((t) => t.badges)).toEqual([[]]);
+      });
+
+      test("the task is paused", () => {
+        expect(view(step2).taskList.map((t) => t.paused)).toEqual([true]);
+      });
+    });
+  });
+});
