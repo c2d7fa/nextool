@@ -928,4 +928,44 @@ describe("paused tasks", () => {
       });
     });
   });
+
+  describe("in an example with a child task", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Parent"),
+      ...addTask("Child"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      openNth(0),
+    ]);
+
+    describe("initially", () => {
+      test("neither the parent nor the child is paused", () => {
+        expect(view(step1).taskList.map((t) => t.paused)).toEqual([false, false]);
+      });
+
+      test("the child has the stalled badge", () => {
+        expect(view(step1).taskList.map((t) => t.badges)).toEqual([[], ["stalled"]]);
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Status", "paused")]);
+
+    describe("after changing the parent's task status to paused in the editor", () => {
+      test("both the parent and the child are paused", () => {
+        expect(view(step2).taskList.map((t) => t.paused)).toEqual([true, true]);
+      });
+
+      test("neither task has any badges", () => {
+        expect(view(step2).taskList.map((t) => t.badges)).toEqual([[], []]);
+      });
+    });
+
+    const step3 = updateAll(step2, [...switchToFilter("stalled")]);
+
+    describe("after switching to the stalled filter", () => {
+      test("the task list is empty", () => {
+        expect(view(step3).taskList).toEqual([]);
+      });
+    });
+  });
 });

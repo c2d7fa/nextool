@@ -9,6 +9,7 @@ import {
   merge as mergeNodes,
   moveItemInTree,
   isDescendant,
+  findParent,
 } from "./indented-list";
 
 type TaskData = {
@@ -118,30 +119,43 @@ function isDone(task: TaskData): boolean {
   return task.status === "done";
 }
 
-function badges(task: Task): ("ready" | "stalled")[] {
-  if (task.status === "paused") return [];
+function isPaused(tasks: Tasks, task: Task): boolean {
+  if (task.status === "paused") return true;
+  const parent = findParent(tasks, task);
+  if (parent) return isPaused(tasks, parent);
+  return false;
+}
 
-  if (task.action && !isDone(task) && !task.children.some((child) => !isDone(child))) return ["ready"];
-  else if (!isDone(task) && !task.children.some((child) => !isDone(child))) return ["stalled"];
-  else return [];
+function badges(tasks: Tasks, task: Task): ("ready" | "stalled")[] {
+  if (isPaused(tasks, task)) return [];
+  if (isDone(task)) return [];
+
+  if (task.action && !task.children.some((child) => !isDone(child))) return ["ready"];
+  if (!task.children.some((child) => !isDone(child))) return ["stalled"];
+
+  return [];
 }
 
 export type FilterId = "all" | "ready" | "done" | "stalled" | "not-done";
 
-function doesTaskMatch(task: Task, filter: FilterId): boolean {
-  if (filter === "ready") return badges(task).includes("ready");
+function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
+  if (filter === "ready") return badges(tasks, task).includes("ready");
   else if (filter === "done") return isDone(task);
-  else if (filter === "stalled") return badges(task).includes("stalled");
+  else if (filter === "stalled") return badges(tasks, task).includes("stalled");
   else if (filter === "not-done") return !isDone(task);
   else return true;
 }
 
 function filterTasks(tasks: Tasks, filter: FilterId): Tasks {
-  return tasks.flatMap((task) => {
-    const matches = doesTaskMatch(task, filter);
-    if (matches) return [task];
-    return filterTasks(task.children, filter);
-  });
+  function filter_(tasks_: TreeNode<TaskData>[]): TreeNode<TaskData>[] {
+    return tasks_.flatMap((task) => {
+      const matches = doesTaskMatch(tasks, task, filter);
+      if (matches) return [task];
+      return filter_(task.children);
+    });
+  }
+
+  return filter_(tasks);
 }
 
 export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<DragId, DropId>}): TaskListView {
@@ -201,8 +215,8 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     title: task.title,
     indentation: task.indentation,
     done: isDone(task),
-    paused: task.status === "paused",
-    badges: badges(findNode(tasks, task)!),
+    paused: isPaused(tasks, findNode(tasks, task)!),
+    badges: badges(tasks, findNode(tasks, task)!),
     dropIndicator: dropIndicator(task),
     dropTargets: taskDrag.dragging
       ? [
