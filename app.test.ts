@@ -783,4 +783,64 @@ describe("the task editor", () => {
       });
     });
   });
+
+  describe("setting task status", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the example task is not checked in the task list", () => {
+        expect(view(step1).taskList.map((t) => t.done)).toEqual([false]);
+      });
+
+      test("there is a component titled 'Status'", () => {
+        expect(componentTitled(view(step1), "Status")).not.toBeNull();
+      });
+
+      test("it is a picker component", () => {
+        expect(componentTitled(view(step1), "Status")).toMatchObject({type: "picker"});
+      });
+
+      test("it has the correct options", () => {
+        expect((componentTitled(view(step1), "Status") as any).options.map((option: any) => option.value)).toEqual(
+          ["active", "paused", "done"],
+        );
+      });
+
+      test("the selected option is 'Active'", () => {
+        expect(
+          (componentTitled(view(step1), "Status") as any).options.map((option: any) => option.active),
+        ).toEqual([true, false, false]);
+      });
+    });
+
+    const step2a = updateAll(step1, [{tag: "checked", id: nthTask(step1, 0).id, checked: true}]);
+
+    describe("if the task is checked in the task list", () => {
+      test("the task is marked as done in the task list", () => {
+        expect(view(step2a).taskList.map((t) => t.done)).toEqual([true]);
+      });
+
+      test("the selected status option is changed", () => {
+        expect(
+          (componentTitled(view(step2a), "Status") as any).options.map((option: any) => option.active),
+        ).toEqual([false, false, true]);
+      });
+    });
+
+    const step2b = updateAll(step1, [
+      {tag: "editor", type: "component", component: componentTitled(view(step1), "Status")!, value: "done"},
+    ]);
+
+    describe("if the task status is changed in the editor instead", () => {
+      test("the task is marked as done in the task list", () => {
+        expect(view(step2b).taskList.map((t) => t.done)).toEqual([true]);
+      });
+
+      test("the selected status option is changed", () => {
+        expect(
+          (componentTitled(view(step2b), "Status") as any).options.map((option: any) => option.active),
+        ).toEqual([false, false, true]);
+      });
+    });
+  });
 });

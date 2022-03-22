@@ -40,6 +40,22 @@ export type Event = {
 export function update(state: State, ev: Event): State {
   if (state === null) return null;
 
+  function updateComponent(component: StateComponent, value: string): StateComponent {
+    if (component.type === "text") {
+      return {type: "text", value, property: component.property};
+    } else if (component.type === "picker") {
+      return {
+        ...component,
+        options: component.options.map((option) => ({
+          ...option,
+          active: option.value === value,
+        })),
+      };
+    } else {
+      return component;
+    }
+  }
+
   if (ev.type === "component") {
     return {
       ...state,
@@ -48,7 +64,7 @@ export function update(state: State, ev: Event): State {
           ...group,
           components: group.components.map((component) => {
             if (component.property !== ev.component.id.property) return component;
-            return {...component, value: ev.value};
+            return updateComponent(component, ev.value);
           }),
         }));
       }),
@@ -59,13 +75,21 @@ export function update(state: State, ev: Event): State {
 }
 
 export function editOperationsFor(state: State, ev: Event): EditOperation[] {
-  if (ev.component.id.property === "title") return [{type: "set", property: "title", value: ev.value}];
-  else return [];
+  if (ev.component.id.property === "title") {
+    return [{type: "set", property: "title", value: ev.value}];
+  } else if (ev.component.id.property === "status") {
+    if (ev.value === "active") return [{type: "set", property: "done", value: false}];
+    if (ev.value === "done") return [{type: "set", property: "done", value: true}];
+    else return [];
+  } else return [];
 }
 
 export function load({tasks}: {tasks: Tasks}, taskId: string): State {
   const task = find(tasks, taskId);
   if (task === null) return null;
+
+  const status = task.done ? "done" : "active";
+
   return {
     id: taskId,
     sections: [
@@ -80,9 +104,9 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
             {
               type: "picker",
               options: [
-                {value: "active", label: "Active", active: false},
-                {value: "inactive", label: "Paused", active: true},
-                {value: "done", label: "Completed", active: false},
+                {value: "active", label: "Active", active: status === "active"},
+                {value: "paused", label: "Paused", active: false},
+                {value: "done", label: "Completed", active: status === "done"},
               ],
               property: "status",
             },
@@ -91,6 +115,11 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
       ],
     ],
   };
+}
+
+export function reload({editor, tasks}: {editor: State; tasks: Tasks}): State {
+  if (editor === null) return null;
+  else return load({tasks}, editor.id);
 }
 
 export function view(state: State): View {
@@ -132,7 +161,14 @@ function PickerComponent(props: {view: ViewComponent & {type: "picker"}; send: S
         <button
           className={`${style.option} ${option.active ? style.active : style.inactive}`}
           key={option.value}
-          onClick={() => {}}
+          onClick={() =>
+            props.send({
+              tag: "editor",
+              type: "component",
+              component: {id: props.view.id},
+              value: option.value,
+            })
+          }
         >
           <div className={style.label}>{option.label}</div>
         </button>
