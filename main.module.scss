@@ -51,7 +51,7 @@
     grid-area: main;
 
     display: grid;
-    grid: "left right" 1fr / 5fr 2fr;
+    grid: "left right" 1fr / 1fr 18em;
     column-gap: 1em;
 
     .left {
