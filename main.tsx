@@ -119,7 +119,7 @@ function Main() {
             <AddTask send={send} />
           </div>
           <div className={style.right}>
-            <TaskEditor editor={app.editor} send={send} />
+            <TaskEditor view={view_.editor} send={send} />
           </div>
         </div>
       </div>

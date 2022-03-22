@@ -1,55 +1,37 @@
 import * as React from "react";
-import {EditOperation, Tasks, find} from "./tasks";
-import {UnnamedTextField} from "./text-field";
-import {Button} from "./ui";
-
 import style from "./task-editor.module.scss";
 
-export type TaskEditorState = null | {
+import {EditOperation, Tasks, find} from "./tasks";
+import {Send} from "./app";
+
+export type State = null | {
   id: string;
   title: string;
   done: boolean;
   action: boolean;
 };
 
-export type TaskEditorEvent = {tag: "edit"; id: string; operation: EditOperation};
+export const empty: State = null;
 
-export function updateEditor(state: TaskEditorState, ev: TaskEditorEvent): TaskEditorState {
+export type View = null;
+
+export type Event = {tag: "edit"; id: string; operation: EditOperation};
+
+export function update(state: State, ev: Event): State {
   if (state === null) return null;
   if (ev.operation.type === "delete") return null;
   if (ev.operation.type === "set") return {...state, [ev.operation.property]: ev.operation.value};
   return state;
 }
 
-export function reload({tasks}: {tasks: Tasks}, taskId: string): TaskEditorState {
+export function load({tasks}: {tasks: Tasks}, taskId: string): State {
   return find(tasks, taskId);
 }
 
-export function TaskEditor(props: {editor: TaskEditorState; send(ev: TaskEditorEvent): void}) {
-  const editor = props.editor;
-  if (editor === null) return null;
-  return (
-    <div className={style.taskEditor}>
-      <UnnamedTextField
-        value={editor.title}
-        send={(ev) => {
-          if (ev.type === "edit")
-            props.send({
-              tag: "edit",
-              id: editor.id,
-              operation: {type: "set", property: "title", value: ev.value},
-            });
-        }}
-      />
-      <pre>{JSON.stringify(editor, null, 2)}</pre>
-      <Button onClick={() => props.send({tag: "edit", id: editor.id, operation: {type: "delete"}})}>Delete</Button>
-      <Button
-        onClick={() =>
-          props.send({tag: "edit", id: editor.id, operation: {type: "set", property: "done", value: true}})
-        }
-      >
-        Mark Done
-      </Button>
-    </div>
-  );
+export function view(state: State): View {
+  return null;
+}
+
+export function TaskEditor(props: {view: View; send: Send}) {
+  return <div className={style.taskEditor}></div>;
 }

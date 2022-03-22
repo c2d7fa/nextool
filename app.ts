@@ -1,9 +1,8 @@
 import {TextFieldEvent, TextFieldStates} from "./text-field";
 import * as Tasks from "./tasks";
 import {TaskListView} from "./tasks";
-import {TaskEditorEvent, TaskEditorState} from "./task-editor";
+import * as TaskEditor from "./task-editor";
 import {add, edit, merge} from "./tasks";
-import {reload, updateEditor} from "./task-editor";
 import {update as updateTextFields, value as textFieldValue} from "./text-field";
 import * as Drag from "./drag";
 
@@ -28,7 +27,7 @@ export type Event =
   | TextFieldEvent<TextFieldId>
   | SelectEditingTask
   | SelectFilterEvent
-  | TaskEditorEvent
+  | TaskEditor.Event
   | Drag.DragEvent<DragId, DropId>;
 
 export type Send = (event: Event) => void;
@@ -37,14 +36,14 @@ export type State = {
   filter: FilterId;
   tasks: Tasks.Tasks;
   textFields: TextFieldStates<TextFieldId>;
-  editor: TaskEditorState;
+  editor: TaskEditor.State;
   taskDrag: Drag.DragState<DragId, DropId>;
 };
 
 export const empty: State = {
   tasks: [],
   textFields: {addTitle: ""},
-  editor: null,
+  editor: TaskEditor.empty,
   filter: "ready",
   taskDrag: {dragging: null, hovering: null},
 };
@@ -55,7 +54,7 @@ export type SideBarSectionView = {title: string; filters: FilterView[]};
 export type View = {
   sideBar: SideBarSectionView[];
   taskList: TaskListView;
-  editor: TaskEditorState;
+  editor: TaskEditor.View;
 };
 
 export function view(app: State): View {
@@ -99,7 +98,7 @@ export function view(app: State): View {
       },
     ],
     taskList: Tasks.view(app),
-    editor: app.editor,
+    editor: TaskEditor.view(app.editor),
   };
 }
 
@@ -169,7 +168,7 @@ export function updateApp(app: State, ev: Event): State {
 
   function handleEdit(app: State, ev: Event) {
     if (ev.tag !== "edit") return app;
-    return {...app, editor: updateEditor(app.editor, ev), tasks: edit(app.tasks, ev.id, ev.operation)};
+    return {...app, editor: TaskEditor.update(app.editor, ev), tasks: edit(app.tasks, ev.id, ev.operation)};
   }
 
   function handleChecked(app: State, ev: Event) {
@@ -179,7 +178,7 @@ export function updateApp(app: State, ev: Event): State {
 
   function handleSelectEditingTask(app: State, ev: Event) {
     if (ev.tag !== "selectEditingTask") return app;
-    return {...app, editor: reload(app, ev.id)};
+    return {...app, editor: TaskEditor.load(app, ev.id)};
   }
 
   return compose<State>([
