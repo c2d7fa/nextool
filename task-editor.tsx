@@ -7,7 +7,9 @@ import {UnnamedTextField} from "./text-field";
 
 type StateSection = StateGroup[];
 type StateGroup = {title: string; components: StateComponent[]};
-type StateComponent = {type: "text"; value: string; property: "title"};
+type StateComponent =
+  | {type: "text"; value: string; property: "title"}
+  | {type: "picker"; options: {value: string; label: string; active: boolean}[]; property: string};
 
 export type State = null | {
   id: string;
@@ -18,7 +20,9 @@ export const empty: State = null;
 
 type ViewSection = ViewGroup[];
 type ViewGroup = {title: string; components: ViewComponent[]};
-type ViewComponent = {type: "text"; value: string; property: "title"; id: string};
+type ViewComponent =
+  | {type: "text"; value: string; property: "title"; id: string}
+  | {type: "picker"; options: {value: string; label: string; active: boolean}[]; property: string; id: string};
 
 export type View = null | {sections: ViewSection[]};
 
@@ -40,19 +44,26 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
       [
         {
           title: "Title",
-          components: [
-            {type: "text", value: task.title, property: "title"},
-            {type: "text", value: task.title, property: "title"},
-          ],
+          components: [{type: "text", value: task.title, property: "title"}],
         },
         {
-          title: "Another title",
-          components: [{type: "text", value: task.title, property: "title"}],
+          title: "Status",
+          components: [
+            {
+              type: "picker",
+              options: [
+                {value: "active", label: "Active", active: false},
+                {value: "inactive", label: "Paused", active: true},
+                {value: "done", label: "Completed", active: false},
+              ],
+              property: "status",
+            },
+          ],
         },
       ],
       [
         {
-          title: "Title in new group",
+          title: "Title",
           components: [{type: "text", value: task.title, property: "title"}],
         },
       ],
@@ -79,8 +90,21 @@ function TextComponent(props: {view: ViewComponent & {type: "text"}; send: Send}
   return <UnnamedTextField value={props.view.value} send={(ev) => {}} />;
 }
 
+function PickerComponent(props: {view: ViewComponent & {type: "picker"}; send: Send}) {
+  return (
+    <select>
+      {props.view.options.map((option) => (
+        <option key={option.value} value={option.value} selected={option.active}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 function Component(props: {view: ViewComponent; send: Send}) {
   if (props.view.type === "text") return <TextComponent view={props.view} send={props.send} />;
+  else if (props.view.type === "picker") return <PickerComponent view={props.view} send={props.send} />;
   else return <div>Unknown component</div>;
 }
 
