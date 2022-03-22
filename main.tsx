@@ -1,18 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import {
-  updateApp,
-  State,
-  Event,
-  SelectFilterEvent,
-  View,
-  view,
-  DropId,
-  empty,
-  FilterView,
-  SideBarSectionView,
-  Send,
-} from "./app";
+import * as App from "./app";
 import {loadTasks, saveTasks} from "./storage";
 import {Button} from "./ui";
 import {TaskEditor} from "./task-editor";
@@ -22,13 +10,13 @@ import {TaskList} from "./task-list";
 
 import style from "./main.module.scss";
 
-const AppContext = React.createContext<State>(null as any);
+const AppContext = React.createContext<App.State>(null as any);
 
-function useApp(): State {
+function useApp(): App.State {
   return React.useContext(AppContext);
 }
 
-function AddTask(props: {send(ev: Event): void}) {
+function AddTask(props: {send(ev: App.Event): void}) {
   const textFields = useApp().textFields;
   return (
     <div className={style.newTask}>
@@ -43,7 +31,10 @@ function AddTask(props: {send(ev: Event): void}) {
   );
 }
 
-function Filter(props: {filter: FilterView; send(ev: SelectFilterEvent | Drag.DragEvent<never, DropId>): void}) {
+function Filter(props: {
+  filter: App.FilterView;
+  send(ev: App.SelectFilterEvent | Drag.DragEvent<never, App.DropId>): void;
+}) {
   const inner = (
     <button
       onClick={() => props.send({tag: "selectFilter", filter: props.filter.filter})}
@@ -62,7 +53,7 @@ function Filter(props: {filter: FilterView; send(ev: SelectFilterEvent | Drag.Dr
   );
 }
 
-function FilterSelector(props: {filters: FilterView[]; send: Send}) {
+function FilterSelector(props: {filters: App.FilterView[]; send: App.Send}) {
   return (
     <div className={style.filterSelector}>
       {props.filters.map((filter, i) => (
@@ -72,7 +63,7 @@ function FilterSelector(props: {filters: FilterView[]; send: Send}) {
   );
 }
 
-function SideBarSection(props: {section: SideBarSectionView; send: Send}) {
+function SideBarSection(props: {section: App.SideBarSectionView; send: App.Send}) {
   return (
     <>
       <h1>{props.section.title}</h1>
@@ -81,7 +72,7 @@ function SideBarSection(props: {section: SideBarSectionView; send: Send}) {
   );
 }
 
-function SideBar(props: {sections: SideBarSectionView[]; send: Send}) {
+function SideBar(props: {sections: App.SideBarSectionView[]; send: App.Send}) {
   return (
     <div className={style.sidebar}>
       {props.sections.map((section) => (
@@ -92,17 +83,17 @@ function SideBar(props: {sections: SideBarSectionView[]; send: Send}) {
 }
 
 function Main() {
-  const [app, setApp] = React.useState<State>(empty);
+  const [app, setApp] = React.useState<App.State>(App.empty);
 
-  const view_ = view(app);
+  const view_ = App.view(app);
 
   React.useEffect(() => {
     setApp((app) => ({...app, tasks: loadTasks()}));
   }, []);
 
-  const send = React.useCallback((ev: Event) => {
+  const send = React.useCallback((ev: App.Event) => {
     setApp((app) => {
-      const app_ = updateApp(app, ev);
+      const app_ = App.updateApp(app, ev);
       saveTasks(app_.tasks);
       return app_;
     });
