@@ -14,7 +14,7 @@
   @include reset-input;
   font-family: "Roboto", sans-serif;
 
-  background-color: #f8f8f8;
+  background-color: #fafafa;
   @include shared.input-padding;
   @include shared.input-color;
   @include shared.input-shadow(3px, inset);

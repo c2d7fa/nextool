@@ -3,17 +3,24 @@ import style from "./task-editor.module.scss";
 
 import {EditOperation, Tasks, find} from "./tasks";
 import {Send} from "./app";
+import {UnnamedTextField} from "./text-field";
+
+type StateSection = StateGroup[];
+type StateGroup = {title: string; components: StateComponent[]};
+type StateComponent = {type: "text"; value: string; property: "title"};
 
 export type State = null | {
   id: string;
-  title: string;
-  done: boolean;
-  action: boolean;
+  sections: StateSection[];
 };
 
 export const empty: State = null;
 
-export type View = null;
+type ViewSection = ViewGroup[];
+type ViewGroup = {title: string; components: ViewComponent[]};
+type ViewComponent = {type: "text"; value: string; property: "title"; id: string};
+
+export type View = null | {sections: ViewSection[]};
 
 export type Event = {tag: "edit"; id: string; operation: EditOperation};
 
@@ -25,13 +32,88 @@ export function update(state: State, ev: Event): State {
 }
 
 export function load({tasks}: {tasks: Tasks}, taskId: string): State {
-  return find(tasks, taskId);
+  const task = find(tasks, taskId);
+  if (task === null) return null;
+  return {
+    id: taskId,
+    sections: [
+      [
+        {
+          title: "Title",
+          components: [
+            {type: "text", value: task.title, property: "title"},
+            {type: "text", value: task.title, property: "title"},
+          ],
+        },
+        {
+          title: "Another title",
+          components: [{type: "text", value: task.title, property: "title"}],
+        },
+      ],
+      [
+        {
+          title: "Title in new group",
+          components: [{type: "text", value: task.title, property: "title"}],
+        },
+      ],
+    ],
+  };
 }
 
 export function view(state: State): View {
-  return null;
+  if (state === null) return null;
+  return {
+    sections: state.sections.map((section) =>
+      section.map((group) => ({
+        title: group.title,
+        components: group.components.map((component) => ({
+          ...component,
+          id: state.id,
+        })),
+      })),
+    ),
+  };
+}
+
+function TextComponent(props: {view: ViewComponent & {type: "text"}; send: Send}) {
+  return <UnnamedTextField value={props.view.value} send={(ev) => {}} />;
+}
+
+function Component(props: {view: ViewComponent; send: Send}) {
+  if (props.view.type === "text") return <TextComponent view={props.view} send={props.send} />;
+  else return <div>Unknown component</div>;
+}
+
+function Group(props: {view: ViewGroup; send: Send}) {
+  return (
+    <div className={style.group}>
+      <h1>{props.view.title}</h1>
+      <div className={style.components}>
+        {props.view.components.map((component, index) => (
+          <Component key={index} view={component} send={props.send} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Section(props: {view: ViewSection; send: Send}) {
+  return (
+    <div className={style.section}>
+      {props.view.map((group, index) => (
+        <Group key={index} view={group} send={props.send} />
+      ))}
+    </div>
+  );
 }
 
 export function TaskEditor(props: {view: View; send: Send}) {
-  return <div className={style.taskEditor}></div>;
+  if (props.view === null) return null;
+  return (
+    <div className={style.taskEditor}>
+      {props.view.sections.map((section, index) => (
+        <Section key={index} view={section} send={props.send} />
+      ))}
+    </div>
+  );
 }
