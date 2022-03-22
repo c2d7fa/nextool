@@ -72,7 +72,12 @@ describe("adding tasks", () => {
   });
 
   describe("after adding three new tasks", () => {
-    const example = updateAll(empty, [...addTask("Task 1"), ...addTask("Task 2"), ...addTask("Task 3")]);
+    const example = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Task 1"),
+      ...addTask("Task 2"),
+      ...addTask("Task 3"),
+    ]);
 
     test("there are three tasks in the task list", () => {
       expect(view(example).taskList.length).toEqual(3);
@@ -95,6 +100,7 @@ describe("adding tasks", () => {
 describe("dragging tasks to filters", () => {
   describe("in an example with three tasks", () => {
     const example = updateAll(empty, [
+      ...switchToFilter("all"),
       ...addTask("Task 1"),
       ...addTask("Task 2"),
       ...addTask("Task 3"),
@@ -133,7 +139,12 @@ describe("dragging tasks to filters", () => {
 
 describe("reordering tasks with drag and drop", () => {
   describe("in an example with three tasks", () => {
-    const example = updateAll(empty, [...addTask("Task 1"), ...addTask("Task 2"), ...addTask("Task 3")]);
+    const example = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Task 1"),
+      ...addTask("Task 2"),
+      ...addTask("Task 3"),
+    ]);
 
     function testReorder(from: number, to: number, side: "above" | "below", result: number[]): void {
       test(`dragging task ${from} to ${side} ${to}`, () => {
@@ -165,6 +176,7 @@ describe("reordering tasks with drag and drop", () => {
 describe("nesting tasks with drag and drop", () => {
   describe("with a flat list of items", () => {
     const example = updateAll(empty, [
+      ...switchToFilter("all"),
       ...addTask("Task 1"),
       ...addTask("Task 2"),
       ...addTask("Task 3"),
@@ -193,6 +205,7 @@ describe("nesting tasks with drag and drop", () => {
 
   describe("when dragging one task into another", () => {
     const example = updateAll(empty, [
+      ...switchToFilter("all"),
       ...addTask("Task 1"),
       ...addTask("Task 2"),
       ...addTask("Task 3"),
@@ -241,6 +254,7 @@ describe("nesting tasks with drag and drop", () => {
 
   describe("scenario where the following task is at a higher level of indentation", () => {
     const example = updateAll(empty, [
+      ...switchToFilter("all"),
       ...addTask("Task 0"),
       ...addTask("Task 1"),
       ...addTask("Task 2"),
@@ -276,7 +290,7 @@ describe("nesting tasks with drag and drop", () => {
 
   describe("making a task a descendant of itself is not allowed", () => {
     describe("in a list of just one task", () => {
-      const example = updateAll(empty, [...addTask("Task 1"), startDragNthTask(0)]);
+      const example = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1"), startDragNthTask(0)]);
 
       test("there are drop targets above and below the task itself at the same level of indentation", () => {
         expect(nthTask(example, 0).dropTargets).toContainEqual({width: "full", indentation: 0, side: "above"});
@@ -290,6 +304,7 @@ describe("nesting tasks with drag and drop", () => {
 
     describe("when dragging a subtree of tasks", () => {
       const example = updateAll(empty, [
+        ...switchToFilter("all"),
         ...addTask("Task 0"),
         ...addTask("Task 1"),
         ...addTask("Task 2"),
@@ -341,6 +356,7 @@ describe("nesting tasks with drag and drop", () => {
 
     describe("in a flat list", () => {
       const example = updateAll(empty, [
+        ...switchToFilter("all"),
         ...addTask("Task 0"),
         ...addTask("Task 1"),
         ...addTask("Task 2"),
@@ -384,6 +400,7 @@ describe("nesting tasks with drag and drop", () => {
 
     describe("unindenting the last item in the subtree of a top-level item", () => {
       const example = updateAll(empty, [
+        ...switchToFilter("all"),
         ...addTask("Task 0"),
         ...addTask("Task 1"),
         ...addTask("Task 2"),
@@ -405,6 +422,7 @@ describe("nesting tasks with drag and drop", () => {
     describe("unindenting an item in-place is disallowed when it would mess with following tasks", () => {
       test("when the task has logical sibling following it, it cannot be unindented at all", () => {
         const example = updateAll(empty, [
+          ...switchToFilter("all"),
           ...addTask("Task 0"),
           ...addTask("Task 1"),
           ...addTask("Task 2"),
@@ -418,6 +436,7 @@ describe("nesting tasks with drag and drop", () => {
 
       test("even at the end of a subtree, task cannot be dragged beyong following task", () => {
         const example = updateAll(empty, [
+          ...switchToFilter("all"),
           ...addTask("Task 0"),
           ...addTask("Task 1"),
           ...addTask("Task 2"),
@@ -439,6 +458,7 @@ describe("nesting tasks with drag and drop", () => {
 
       test("however, tasks that are descendants of the task being dragged are not taken into account", () => {
         const example = updateAll(empty, [
+          ...switchToFilter("all"),
           ...addTask("Task 0"),
           ...addTask("Task 1"),
           ...addTask("Task 2"),
@@ -460,6 +480,7 @@ describe("nesting tasks with drag and drop", () => {
 
     test("dragging a task below its last descendant is like dragging the item to itself except it can't be indented further", () => {
       const example = updateAll(empty, [
+        ...switchToFilter("all"),
         ...addTask("Task 0"),
         ...addTask("Task 1"),
         ...addTask("Task 2"),
@@ -480,6 +501,7 @@ describe("nesting tasks with drag and drop", () => {
     describe("bugs", () => {
       test("the indentation of the preceeding item would be taken into account when it shouldn't", () => {
         const example = updateAll(empty, [
+          ...switchToFilter("all"),
           ...addTask("Task 0"),
           ...addTask("Task 1"),
           ...addTask("Task 2"),
@@ -583,6 +605,7 @@ describe("an action that has unfinished children isn't ready", () => {
 
 describe("dragging a subtree of tasks", () => {
   const example = updateAll(empty, [
+    ...switchToFilter("all"),
     ...addTask("Task 0"),
     ...addTask("Task 1"),
     ...addTask("Task 2"),
