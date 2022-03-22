@@ -64,6 +64,10 @@ function switchToFilter(filter: FilterId): Event[] {
   return [{tag: "selectFilter", filter}];
 }
 
+function openNth(n: number) {
+  return (view: View) => [{tag: "selectEditingTask", id: nthTask(view, n).id} as const];
+}
+
 describe("adding tasks", () => {
   describe("with empty state", () => {
     test("there are no tasks", () => {
@@ -714,6 +718,253 @@ describe("filtered views of tasks", () => {
 
       test("the task is now marked as done", () => {
         expect(nthTask(example2, 1).done).toBe(true);
+      });
+    });
+  });
+});
+
+function componentTitled(view: View, title: string) {
+  function groups(view: View) {
+    return view.editor?.sections.flatMap((section) => section) ?? [];
+  }
+
+  return groups(view).find((group) => group.title === title)?.components[0] ?? null;
+}
+
+function setComponentValue(componentTitle: string, value: string) {
+  return (view: View) => {
+    const component = componentTitled(view, componentTitle);
+    if (component == null) throw "no such component";
+    return [{tag: "editor", type: "component", component, value} as const];
+  };
+}
+
+describe("the task editor", () => {
+  describe("editing task title", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task")]);
+
+    describe("initially", () => {
+      test("the example task is shown in the task list", () => {
+        expect(view(step1).taskList.map((t) => t.title)).toEqual(["Task"]);
+      });
+
+      test("the task editor is hidden", () => {
+        expect(view(step1).editor).toEqual(null);
+      });
+    });
+
+    const step2 = updateAll(step1, [openNth(0)]);
+
+    describe("after opening the task in the editor", () => {
+      test("the task editor is shown", () => {
+        expect(view(step2).editor).not.toBeNull();
+      });
+
+      test("there is a component called 'Title'", () => {
+        expect(componentTitled(view(step2), "Title")).not.toBeNull();
+      });
+
+      test("the component contains the task title", () => {
+        expect(componentTitled(view(step2), "Title")).toMatchObject({type: "text", value: "Task"});
+      });
+    });
+
+    const step3 = updateAll(step2, [setComponentValue("Title", "Task with edited title")]);
+
+    describe("after editing title in the editor", () => {
+      test("the title component contains the new title", () => {
+        expect(componentTitled(view(step3), "Title")).toMatchObject({
+          type: "text",
+          value: "Task with edited title",
+        });
+      });
+
+      test("the task in the task list has the new title", () => {
+        expect(view(step3).taskList.map((t) => t.title)).toEqual(["Task with edited title"]);
+      });
+    });
+  });
+
+  describe("setting task status", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the example task is not checked in the task list", () => {
+        expect(view(step1).taskList.map((t) => t.done)).toEqual([false]);
+      });
+
+      test("there is a component titled 'Status'", () => {
+        expect(componentTitled(view(step1), "Status")).not.toBeNull();
+      });
+
+      test("it is a picker component", () => {
+        expect(componentTitled(view(step1), "Status")).toMatchObject({type: "picker"});
+      });
+
+      test("it has the correct options", () => {
+        expect((componentTitled(view(step1), "Status") as any).options.map((option: any) => option.value)).toEqual(
+          ["active", "paused", "done"],
+        );
+      });
+
+      test("the selected option is 'Active'", () => {
+        expect(
+          (componentTitled(view(step1), "Status") as any).options.map((option: any) => option.active),
+        ).toEqual([true, false, false]);
+      });
+    });
+
+    const step2a = updateAll(step1, [{tag: "checked", id: nthTask(step1, 0).id, checked: true}]);
+
+    describe("if the task is checked in the task list", () => {
+      test("the task is marked as done in the task list", () => {
+        expect(view(step2a).taskList.map((t) => t.done)).toEqual([true]);
+      });
+
+      test("the selected status option is changed", () => {
+        expect(
+          (componentTitled(view(step2a), "Status") as any).options.map((option: any) => option.active),
+        ).toEqual([false, false, true]);
+      });
+    });
+
+    const step2b = updateAll(step1, [setComponentValue("Status", "done")]);
+
+    describe("if the task status is changed in the editor instead", () => {
+      test("the task is marked as done in the task list", () => {
+        expect(view(step2b).taskList.map((t) => t.done)).toEqual([true]);
+      });
+
+      test("the selected status option is changed", () => {
+        expect(
+          (componentTitled(view(step2b), "Status") as any).options.map((option: any) => option.active),
+        ).toEqual([false, false, true]);
+      });
+    });
+  });
+
+  describe("marking tasks as action", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the example task has the stalled badge in the task list", () => {
+        expect(view(step1).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+      });
+
+      test("there is a component titled 'Actionable'", () => {
+        expect(componentTitled(view(step1), "Actionable")).not.toBeNull();
+      });
+
+      test("it is a picker component", () => {
+        expect(componentTitled(view(step1), "Actionable")).toMatchObject({type: "picker"});
+      });
+
+      test("it has the correct options", () => {
+        expect(
+          (componentTitled(view(step1), "Actionable") as any).options.map((option: any) => option.value),
+        ).toEqual(["yes", "no"]);
+      });
+
+      test("the selected option is 'Not Ready'", () => {
+        expect(
+          (componentTitled(view(step1), "Actionable") as any).options.map((option: any) => option.active),
+        ).toEqual([false, true]);
+      });
+    });
+
+    const step2 = updateAll(step1, [...dragToFilter(nthTask(step1, 0).id, "ready")]);
+
+    describe("after dragging the task into the ready filter", () => {
+      test("the task has the ready badge in the task list", () => {
+        expect(view(step2).taskList.map((t) => t.badges)).toEqual([["ready"]]);
+      });
+
+      test("the selected option becomes 'Ready'", () => {
+        expect(
+          (componentTitled(view(step2), "Actionable") as any).options.map((option: any) => option.active),
+        ).toEqual([true, false]);
+      });
+    });
+
+    const step3 = updateAll(step2, [setComponentValue("Actionable", "no")]);
+
+    describe("after changing the task status back in the editor", () => {
+      test("the task reverts to the stalled badge", () => {
+        expect(view(step3).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+      });
+
+      test("the selected option becomes 'Not Ready' again", () => {
+        expect(
+          (componentTitled(view(step3), "Actionable") as any).options.map((option: any) => option.active),
+        ).toEqual([false, true]);
+      });
+    });
+  });
+});
+
+describe("paused tasks", () => {
+  describe("in an example with a single stalled task", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the task has the stalled badge", () => {
+        expect(view(step1).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+      });
+
+      test("the task is not paused", () => {
+        expect(view(step1).taskList.map((t) => t.paused)).toEqual([false]);
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Status", "paused")]);
+
+    describe("after changing the task status to paused in the editor", () => {
+      test("the task loses its badges", () => {
+        expect(view(step2).taskList.map((t) => t.badges)).toEqual([[]]);
+      });
+
+      test("the task is paused", () => {
+        expect(view(step2).taskList.map((t) => t.paused)).toEqual([true]);
+      });
+    });
+  });
+
+  describe("in an example with a child task", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Parent"),
+      ...addTask("Child"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      openNth(0),
+    ]);
+
+    describe("initially", () => {
+      test("neither the parent nor the child is paused", () => {
+        expect(view(step1).taskList.map((t) => t.paused)).toEqual([false, false]);
+      });
+
+      test("the child has the stalled badge", () => {
+        expect(view(step1).taskList.map((t) => t.badges)).toEqual([[], ["stalled"]]);
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Status", "paused")]);
+
+    describe("after changing the parent's task status to paused in the editor", () => {
+      test("both the parent and the child are paused", () => {
+        expect(view(step2).taskList.map((t) => t.paused)).toEqual([true, true]);
+      });
+
+      test("neither task has any badges", () => {
+        expect(view(step2).taskList.map((t) => t.badges)).toEqual([[], []]);
+      });
+    });
+
+    const step3 = updateAll(step2, [...switchToFilter("stalled")]);
+
+    describe("after switching to the stalled filter", () => {
+      test("the task list is empty", () => {
+        expect(view(step3).taskList).toEqual([]);
       });
     });
   });

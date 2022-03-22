@@ -26,6 +26,13 @@
       text-decoration: line-through;
     }
   }
+
+  &.paused {
+    .title {
+      color: #888;
+      font-weight: normal;
+    }
+  }
 }
 
 .id {

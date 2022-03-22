@@ -33,7 +33,13 @@ function Badges(props: {task: TaskListView[number]}) {
 
 function Title(props: {task: TaskListView[number]}) {
   return (
-    <span className={[style.task, props.task.done ? style.done : style.todo].join(" ")}>
+    <span
+      className={[
+        style.task,
+        props.task.done ? style.done : style.todo,
+        props.task.paused ? style.paused : "",
+      ].join(" ")}
+    >
       <span className={style.title}>{props.task.title}</span>
       <Badges task={props.task} />
     </span>

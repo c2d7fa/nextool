@@ -3,22 +3,105 @@
 .taskEditor {
   display: flex;
   flex-direction: column;
-  row-gap: 1em;
 
   overflow: auto;
 
-  pre {
-    margin: 0;
-    background-color: #ececec;
-    padding: 1em;
-    border-radius: 3px;
-    white-space: pre-wrap;
-  }
-
   background-color: #f8f8f8;
-  padding: 1em;
   border: 1px solid #c8c8c8;
   border-radius: 3px;
   @include shared.input-shadow;
   color: #444;
+
+  .section {
+    padding: 0 1em;
+    padding-top: 1em;
+
+    background-color: #fafafa;
+    border-bottom: 1px solid #c8c8c8;
+
+    &:last-child {
+      @include shared.input-shadow;
+    }
+
+    .group {
+      h1 {
+        font-family: "Roboto Condensed", sans-serif;
+        text-transform: uppercase;
+        padding: 0;
+        margin: 0;
+        font-weight: normal;
+        font-size: 0.8em;
+        color: #888;
+        letter-spacing: 0.2ex;
+        user-select: none;
+      }
+
+      padding-bottom: 2em;
+
+      .components {
+        display: flex;
+        flex-direction: column;
+
+        & > * {
+          margin-top: 0.3em;
+        }
+      }
+    }
+  }
+}
+
+.picker {
+  display: flex;
+  flex-direction: row;
+
+  @include shared.input-shadow;
+
+  background-color: #00000008;
+  border-radius: 3px;
+
+  .option {
+    @include shared.reset-button;
+
+    cursor: default;
+
+    font-family: "Roboto", sans-serif;
+    font-size: 0.9em;
+
+    flex: 1;
+    text-align: center;
+
+    background: linear-gradient(to top, #f0f0f0, #f4f4f4);
+    @include shared.input-padding;
+    @include shared.input-color;
+    @include shared.input-border;
+    color: #888;
+
+    border-radius: 0;
+
+    box-sizing: border-box;
+    margin-right: -1px; // Hide overlapping border
+
+    &:first-child {
+      border-radius: 3px 0 0 3px;
+    }
+
+    &:last-child {
+      border-radius: 0 3px 3px 0;
+    }
+
+    transition: transform 50ms ease-out;
+
+    &:not(.active):active {
+      transform: translateY(3px);
+      background: linear-gradient(to top, #f6f6f6, #fcfcfc);
+    }
+
+    &.active {
+      background: linear-gradient(to top, #f6f6f6, #fcfcfc);
+
+      color: #666;
+      font-weight: 500;
+      @include shared.input-shadow(3px, inset);
+    }
+  }
 }
