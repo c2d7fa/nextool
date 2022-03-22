@@ -723,15 +723,23 @@ describe("filtered views of tasks", () => {
   });
 });
 
-describe("the task editor", () => {
+function componentTitled(view: View, title: string) {
   function groups(view: View) {
     return view.editor?.sections.flatMap((section) => section) ?? [];
   }
 
-  function componentTitled(view: View, title: string) {
-    return groups(view).find((group) => group.title === title)?.components[0] ?? null;
-  }
+  return groups(view).find((group) => group.title === title)?.components[0] ?? null;
+}
 
+function setComponentValue(componentTitle: string, value: string) {
+  return (view: View) => {
+    const component = componentTitled(view, componentTitle);
+    if (component == null) throw "no such component";
+    return [{tag: "editor", type: "component", component, value} as const];
+  };
+}
+
+describe("the task editor", () => {
   describe("editing task title", () => {
     const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task")]);
 
@@ -761,14 +769,7 @@ describe("the task editor", () => {
       });
     });
 
-    const step3 = updateAll(step2, [
-      {
-        tag: "editor",
-        type: "component",
-        component: componentTitled(view(step2), "Title")!,
-        value: "Task with edited title",
-      },
-    ]);
+    const step3 = updateAll(step2, [setComponentValue("Title", "Task with edited title")]);
 
     describe("after editing title in the editor", () => {
       test("the title component contains the new title", () => {
@@ -827,9 +828,7 @@ describe("the task editor", () => {
       });
     });
 
-    const step2b = updateAll(step1, [
-      {tag: "editor", type: "component", component: componentTitled(view(step1), "Status")!, value: "done"},
-    ]);
+    const step2b = updateAll(step1, [setComponentValue("Status", "done")]);
 
     describe("if the task status is changed in the editor instead", () => {
       test("the task is marked as done in the task list", () => {
@@ -887,9 +886,7 @@ describe("the task editor", () => {
       });
     });
 
-    const step3 = updateAll(step2, [
-      {tag: "editor", type: "component", component: componentTitled(view(step2), "Actionable")!, value: "no"},
-    ]);
+    const step3 = updateAll(step2, [setComponentValue("Actionable", "no")]);
 
     describe("after changing the task status back in the editor", () => {
       test("the task reverts to the stalled badge", () => {
