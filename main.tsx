@@ -76,7 +76,7 @@ function SideBar(props: {sections: App.SideBarSectionView[]; send: App.Send}) {
   return (
     <div className={style.sidebar}>
       {props.sections.map((section) => (
-        <SideBarSection section={section} send={props.send} />
+        <SideBarSection key={section.title} section={section} send={props.send} />
       ))}
     </div>
   );

@@ -89,8 +89,8 @@ function TaskRow(props: {task: TaskListView[number]; send: Send}) {
             style={{left: `${2 * props.task.dropIndicator.indentation}em`}}
           />
         )}
-        {props.task.dropTargets.map((dropTarget) => (
-          <DropTarget id={props.task.id} {...dropTarget} send={props.send} />
+        {props.task.dropTargets.map((dropTarget, index) => (
+          <DropTarget key={index} id={props.task.id} {...dropTarget} send={props.send} />
         ))}
       </div>
     </Drag.Draggable>
