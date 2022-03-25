@@ -33,6 +33,12 @@
       font-weight: normal;
     }
   }
+
+  &.project {
+    .title {
+      color: #468;
+    }
+  }
 }
 
 .id {
@@ -113,7 +119,7 @@
     min-height: 22px;
 
     display: grid;
-    grid-template-columns: auto max-content 1fr max-content;
+    grid-template: "indentation checkbox title id" 1fr / auto max-content 1fr max-content ;
 
     &:hover {
       background-color: #f8f8f8;
@@ -122,6 +128,10 @@
     span {
       display: inline-flex;
       align-items: center;
+    }
+
+    .indentationColumn {
+      grid-area: indentation;
     }
 
     .checkboxColumn {
@@ -135,6 +145,23 @@
 
     .titleColumn {
       overflow: hidden;
+    }
+
+    &.project .checkboxColumn {
+      display: none;
+    }
+
+    &.project .titleColumn {
+      grid-row-start: checkbox;
+      grid-row-end: title;
+    }
+
+    &.project {
+      background-color: #44668812;
+
+      &:hover {
+        background-color: #4466881c;
+      }
     }
 
     position: relative;
