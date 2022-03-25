@@ -9,13 +9,12 @@
   }
 
   :global(#root) {
-    min-height: 100vh;
+    display: grid;
+    height: 100vh;
   }
 }
 
 .outerContainer {
-  min-height: 100vh;
-
   display: grid;
   grid: "top-bar top-bar" 3em "sidebar main" 1fr / 18em 1fr;
 

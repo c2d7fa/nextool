@@ -35,14 +35,23 @@ export const empty: Tasks = [
     children: [{id: "1", title: "Task 2", status: "done", action: true, children: [], type: "task"}],
   },
   {
-    id: "2",
-    title: "Task 3",
+    id: "5",
+    title: "Project 1",
     status: "active",
-    action: true,
-    type: "task",
-    children: [{id: "3", title: "Task 4", status: "paused", action: false, children: [], type: "task"}],
+    action: false,
+    children: [
+      {
+        id: "2",
+        title: "Task 3",
+        status: "active",
+        action: true,
+        type: "task",
+        children: [{id: "3", title: "Task 4", status: "paused", action: false, children: [], type: "task"}],
+      },
+      {id: "4", title: "Task 5", status: "active", action: true, children: [], type: "task"},
+    ],
+    type: "project",
   },
-  {id: "4", title: "Task 5", status: "active", action: true, children: [], type: "task"},
 ];
 
 type DropTarget = {width: number | "full"; indentation: number; side: "above" | "below"};
