@@ -16,6 +16,7 @@ type TaskData = {
   id: string;
   title: string;
   status: "active" | "paused" | "done";
+  type: "task" | "project";
   action: boolean;
 };
 
@@ -28,16 +29,18 @@ export const empty: Tasks = [
     title: "Task 1",
     status: "active",
     action: true,
-    children: [{id: "1", title: "Task 2", status: "done", action: true, children: []}],
+    type: "task",
+    children: [{id: "1", title: "Task 2", status: "done", action: true, children: [], type: "task"}],
   },
   {
     id: "2",
     title: "Task 3",
     status: "active",
     action: true,
-    children: [{id: "3", title: "Task 4", status: "paused", action: false, children: []}],
+    type: "task",
+    children: [{id: "3", title: "Task 4", status: "paused", action: false, children: [], type: "task"}],
   },
-  {id: "4", title: "Task 5", status: "active", action: true, children: []},
+  {id: "4", title: "Task 5", status: "active", action: true, children: [], type: "task"},
 ];
 
 type DropTarget = {width: number | "full"; indentation: number; side: "above" | "below"};
@@ -48,6 +51,7 @@ export type TaskListView = {
   indentation: number;
   done: boolean;
   paused: boolean;
+  project: boolean;
   badges: ("ready" | "stalled")[];
   dropIndicator: null | {side: "above" | "below"; indentation: number};
   dropTargets: DropTarget[];
@@ -69,6 +73,7 @@ export function add(tasks: Tasks, values: Partial<Task>): Tasks {
       title: values.title ?? "",
       action: false,
       status: "active",
+      type: "task",
       children: [],
     },
   ];
@@ -82,6 +87,7 @@ export type EditOperation =
   | {type: "delete"}
   | {type: "set"; property: "title"; value: string}
   | {type: "set"; property: "status"; value: "active" | "paused" | "done"}
+  | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action"; value: boolean}
   | {type: "move"; side: "above" | "below"; target: string; indentation: number}
   | {type: "moveToFilter"; filter: FilterId};
@@ -227,6 +233,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     done: isDone(task),
     paused: isPaused(tasks, findNode(tasks, task)!),
     badges: badges(tasks, findNode(tasks, task)!),
+    project: task.type === "project",
     dropIndicator: dropIndicator(task),
     dropTargets: taskDrag.dragging
       ? [

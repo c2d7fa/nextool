@@ -1063,3 +1063,37 @@ describe("counter next to filters", () => {
     expect(indicatorForFilter(view(step3), "Stalled")).toEqual(null);
   });
 });
+
+function pickerValue(view: View, title: string) {
+  const component = componentTitled(view, title);
+  if (component?.type !== "picker") return null;
+  return component.options.find((option) => option.active)?.value;
+}
+
+describe("projects", () => {
+  describe("marking a task as a project in the task list", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Project"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the task has type task in editor", () => {
+        expect(pickerValue(view(step1), "Type")).toEqual("task");
+      });
+
+      test("the task is not a project in task list", () => {
+        expect(view(step1).taskList.map((t) => t.project)).toEqual([false]);
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Type", "project")]);
+
+    describe("after changing the type to project", () => {
+      test("the task has type project in editor", () => {
+        expect(pickerValue(view(step2), "Type")).toEqual("project");
+      });
+
+      test("the task is a project in task list", () => {
+        expect(view(step2).taskList.map((t) => t.project)).toEqual([true]);
+      });
+    });
+  });
+});
