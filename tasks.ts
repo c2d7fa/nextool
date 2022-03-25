@@ -23,10 +23,20 @@ type Task = TreeNode<TaskData>;
 export type Tasks = Tree<TaskData>;
 
 export const empty: Tasks = [
-  {id: "0", title: "Task 1", status: "active", action: false, children: []},
-  {id: "1", title: "Task 2", status: "done", action: true, children: []},
-  {id: "2", title: "Task 3", status: "active", action: true, children: []},
-  {id: "3", title: "Task 4", status: "paused", action: false, children: []},
+  {
+    id: "0",
+    title: "Task 1",
+    status: "active",
+    action: true,
+    children: [{id: "1", title: "Task 2", status: "done", action: true, children: []}],
+  },
+  {
+    id: "2",
+    title: "Task 3",
+    status: "active",
+    action: true,
+    children: [{id: "3", title: "Task 4", status: "paused", action: false, children: []}],
+  },
   {id: "4", title: "Task 5", status: "active", action: true, children: []},
 ];
 
