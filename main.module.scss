@@ -76,8 +76,13 @@
   display: flex;
   flex-direction: column;
 
-  & *:first-child > button, & > button:first-of-type {
+  & *:first-child > button, & > button:first-child {
     border-top: 1px solid #c0c0c0;
+    border-top-left-radius: 3px;
+  }
+
+  & *:last-child > button, & > button:last-child {
+    border-bottom-left-radius: 3px;
   }
 
   button {
@@ -97,6 +102,9 @@
     background-color: #f8f8f8;
 
     border-bottom: 1px solid #c0c0c0;
+
+    margin-left: 0.5em;
+    border-left: 1px solid #c0c0c0;
 
     .label {
       display: inline-block;
