@@ -86,6 +86,9 @@
     @include shared.input-color;
     font-family: "Roboto", sans-serif;
 
+    display: flex;
+    align-items: center;
+
     cursor: default;
     text-align: left;
 
@@ -121,6 +124,13 @@
       .label {
         transform: translateX(1em);
       }
+    }
+
+    .indicator {
+      margin-left: auto;
+      font-size: 0.8em;
+      font-weight: 500;
+      opacity: 0.75;
     }
   }
 }

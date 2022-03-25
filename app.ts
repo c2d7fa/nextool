@@ -48,7 +48,13 @@ export const empty: State = {
   taskDrag: {dragging: null, hovering: null},
 };
 
-export type FilterView = {label: string; filter: FilterId; selected: boolean; dropTarget: DropId | null};
+export type FilterView = {
+  label: string;
+  filter: FilterId;
+  selected: boolean;
+  dropTarget: DropId | null;
+  indicator: null | {text: string};
+};
 export type SideBarSectionView = {title: string; filters: FilterView[]};
 
 export type View = {
@@ -68,24 +74,27 @@ export function view(app: State): View {
             filter: "ready",
             selected: app.filter === "ready",
             dropTarget: {type: "filter", id: "ready"},
+            indicator: null,
           },
           {
             label: "Stalled",
             filter: "stalled",
             selected: app.filter === "stalled",
             dropTarget: {type: "filter", id: "stalled"},
+            indicator: {text: "3"},
           },
         ],
       },
       {
         title: "Tasks",
         filters: [
-          {label: "All", filter: "all", selected: app.filter === "all", dropTarget: null},
+          {label: "All", filter: "all", selected: app.filter === "all", dropTarget: null, indicator: null},
           {
             label: "Unfinished",
             filter: "not-done",
             selected: app.filter === "not-done",
             dropTarget: {type: "filter", id: "not-done"},
+            indicator: null,
           },
 
           {
@@ -93,6 +102,7 @@ export function view(app: State): View {
             filter: "done",
             selected: app.filter === "done",
             dropTarget: {type: "filter", id: "done"},
+            indicator: null,
           },
         ],
       },
