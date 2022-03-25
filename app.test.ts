@@ -1071,7 +1071,7 @@ function pickerValue(view: View, title: string) {
 }
 
 describe("projects", () => {
-  describe("marking a task as a project in the task list", () => {
+  describe("marking a task as a project in the task list updates type", () => {
     const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Project"), openNth(0)]);
 
     describe("initially", () => {
@@ -1093,6 +1093,28 @@ describe("projects", () => {
 
       test("the task is a project in task list", () => {
         expect(view(step2).taskList.map((t) => t.project)).toEqual([true]);
+      });
+    });
+  });
+
+  describe("marking a task as a project adds it to the sidebar", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Project"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the list of active projects in the sidebar is empty", () => {
+        expect(view(step1).sideBar.flatMap((section) => section.projects)).toEqual([]);
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Type", "project")]);
+
+    describe("after changing the type to project", () => {
+      test("the project is added to the list of active projects in the sidebar", () => {
+        expect(
+          view(step2)
+            .sideBar.flatMap((section) => section.projects)
+            .map((project) => project.label),
+        ).toEqual(["Project"]);
       });
     });
   });

@@ -10,6 +10,8 @@ import {
   moveItemInTree,
   isDescendant,
   findParent,
+  IndentedListItem,
+  filterNodes,
 } from "./indented-list";
 
 type TaskData = {
@@ -172,6 +174,14 @@ function filterTasks(tasks: Tasks, filter: FilterId): Tasks {
   }
 
   return filter_(tasks);
+}
+
+export function projects(tasks: Tasks): IndentedListItem<TaskData & {project: true}>[] {
+  return filterNodes(tasks, (node) => node.type === "project").map((project) => ({
+    ...project,
+    indentation: 0,
+    project: true,
+  }));
 }
 
 export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<DragId, DropId>}): TaskListView {

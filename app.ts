@@ -55,7 +55,13 @@ export type FilterView = {
   dropTarget: DropId | null;
   indicator: null | {text: string};
 };
-export type SideBarSectionView = {title: string; filters: FilterView[]};
+
+export type SideBarProjectView = {
+  label: string;
+  selected: boolean;
+};
+
+export type SideBarSectionView = {title: string; filters: FilterView[]; projects: SideBarProjectView[]};
 
 export type View = {
   sideBar: SideBarSectionView[];
@@ -65,6 +71,8 @@ export type View = {
 
 export function view(app: State): View {
   const stalledTasks = Tasks.view({tasks: app.tasks, filter: "stalled", taskDrag: app.taskDrag}).length;
+
+  const projects = Tasks.projects(app.tasks);
 
   return {
     sideBar: [
@@ -86,6 +94,7 @@ export function view(app: State): View {
             indicator: stalledTasks === 0 ? null : {text: `${stalledTasks}`},
           },
         ],
+        projects: [],
       },
       {
         title: "Tasks",
@@ -107,6 +116,12 @@ export function view(app: State): View {
             indicator: null,
           },
         ],
+        projects: [],
+      },
+      {
+        title: "Active projects",
+        filters: [],
+        projects: projects.map((project) => ({label: project.title, selected: false})),
       },
     ],
     taskList: Tasks.view(app),

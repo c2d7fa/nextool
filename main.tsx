@@ -54,6 +54,17 @@ function Filter(props: {
   );
 }
 
+function Project(props: {
+  project: App.SideBarProjectView;
+  send(ev: App.SelectFilterEvent | Drag.DragEvent<never, App.DropId>): void;
+}) {
+  return (
+    <button onClick={() => {}} className={props.project.selected ? style.selected : ""}>
+      <span className={style.label}>{props.project.label}</span>
+    </button>
+  );
+}
+
 function FilterSelector(props: {filters: App.FilterView[]; send: App.Send}) {
   return (
     <div className={style.filterSelector}>
@@ -64,11 +75,22 @@ function FilterSelector(props: {filters: App.FilterView[]; send: App.Send}) {
   );
 }
 
+function ProjectList(props: {projects: App.SideBarProjectView[]; send: App.Send}) {
+  return (
+    <div className={style.filterSelector}>
+      {props.projects.map((project, i) => (
+        <Project key={i} project={project} send={props.send} />
+      ))}
+    </div>
+  );
+}
+
 function SideBarSection(props: {section: App.SideBarSectionView; send: App.Send}) {
   return (
     <>
       <h1>{props.section.title}</h1>
       <FilterSelector filters={props.section.filters} send={props.send} />
+      <ProjectList projects={props.section.projects} send={props.send} />
     </>
   );
 }

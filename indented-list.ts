@@ -35,14 +35,19 @@ function reposition<T>(list: T[], sourceIndex: number, target: {index: number; s
     : repositionBelow(list, sourceIndex, target.index - 1);
 }
 
-export function findNode<T extends {id: string}>(tree: Tree<T>, query: {id: string}): TreeNode<T> | null {
-  const topLevel = tree.find((node) => node.id === query.id);
-  if (topLevel) return topLevel;
-  for (const node of tree) {
-    const child = findNode(node.children, query);
-    if (child) return child;
+export function filterNodes<T extends {id: string}>(tree: Tree<T>, pred: (node: T) => boolean): TreeNode<T>[] {
+  let result: TreeNode<T>[] = [];
+  function filter(node: TreeNode<T>): void {
+    if (pred(node)) result.push(node);
+    node.children.forEach(filter);
   }
-  return null;
+  tree.forEach(filter);
+  return result;
+}
+
+export function findNode<T extends {id: string}>(tree: Tree<T>, query: {id: string}): TreeNode<T> | null {
+  const matching = filterNodes(tree, (node) => node.id === query.id);
+  return matching.length === 0 ? null : matching[0];
 }
 
 export function updateNode<T extends {id: string}>(
