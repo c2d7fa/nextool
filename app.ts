@@ -64,6 +64,8 @@ export type View = {
 };
 
 export function view(app: State): View {
+  const stalledTasks = Tasks.view({tasks: app.tasks, filter: "stalled", taskDrag: app.taskDrag}).length;
+
   return {
     sideBar: [
       {
@@ -81,7 +83,7 @@ export function view(app: State): View {
             filter: "stalled",
             selected: app.filter === "stalled",
             dropTarget: {type: "filter", id: "stalled"},
-            indicator: {text: "3"},
+            indicator: stalledTasks === 0 ? null : {text: `${stalledTasks}`},
           },
         ],
       },
