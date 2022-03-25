@@ -41,6 +41,7 @@ function Filter(props: {
       className={props.filter.selected ? style.selected : ""}
     >
       <span className={style.label}>{props.filter.label}</span>
+      {props.filter.indicator && <span className={style.indicator}>{props.filter.indicator.text}</span>}
     </button>
   );
 

@@ -969,3 +969,27 @@ describe("paused tasks", () => {
     });
   });
 });
+
+describe("counter next to filters", () => {
+  function indicatorForFilter(view: View, label: string) {
+    return view.sideBar.flatMap((section) => section.filters).find((filter) => filter.label === label)?.indicator;
+  }
+
+  const step1 = updateAll(empty, []);
+
+  test("with no tasks, the counter isn't shown", () => {
+    expect(indicatorForFilter(view(step1), "Stalled")).toEqual(null);
+  });
+
+  const step2 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task")]);
+
+  test("after adding task, the counter is shown", () => {
+    expect(indicatorForFilter(view(step2), "Stalled")).toEqual({text: "1"});
+  });
+
+  const step3 = updateAll(step2, [...dragToFilter(nthTask(step2, 0).id, "ready")]);
+
+  test("after dragging task into ready filter, the counter is hidden again", () => {
+    expect(indicatorForFilter(view(step3), "Stalled")).toEqual(null);
+  });
+});
