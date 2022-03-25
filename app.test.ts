@@ -968,6 +968,76 @@ describe("paused tasks", () => {
       });
     });
   });
+
+  describe("when paused tasks are children of non-paused parents", () => {
+    describe("paused children prevents otherwise actionable parent from being ready", () => {
+      const step1 = updateAll(empty, [
+        ...switchToFilter("all"),
+        ...addTask("Parent"),
+        ...addTask("Child"),
+        ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+        openNth(0),
+        setComponentValue("Actionable", "yes"),
+        openNth(1),
+        setComponentValue("Status", "paused"),
+      ]);
+
+      describe("when child is paused", () => {
+        test("parent is stalled", () => {
+          expect(view(step1).taskList.map((t) => t.badges)).toEqual([["stalled"], []]);
+        });
+
+        test("child is paused", () => {
+          expect(view(step1).taskList.map((t) => t.paused)).toEqual([false, true]);
+        });
+      });
+
+      const step2 = updateAll(step1, [{tag: "checked", id: nthTask(step1, 1).id, checked: true}]);
+
+      describe("after marking child as done", () => {
+        test("parent becomes ready", () => {
+          expect(view(step2).taskList.map((t) => t.badges)).toEqual([["ready"], []]);
+        });
+
+        test("child is not paused", () => {
+          expect(view(step2).taskList.map((t) => t.paused)).toEqual([false, false]);
+        });
+      });
+    });
+
+    describe("task that would be stalled without paused child is still stalled", () => {
+      const step1 = updateAll(empty, [
+        ...switchToFilter("all"),
+        ...addTask("Parent"),
+        ...addTask("Child"),
+        ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+        openNth(1),
+        setComponentValue("Status", "paused"),
+      ]);
+
+      describe("when child is paused", () => {
+        test("parent is stalled", () => {
+          expect(view(step1).taskList.map((t) => t.badges)).toEqual([["stalled"], []]);
+        });
+
+        test("child is paused", () => {
+          expect(view(step1).taskList.map((t) => t.paused)).toEqual([false, true]);
+        });
+      });
+
+      const step2 = updateAll(step1, [{tag: "checked", id: nthTask(step1, 1).id, checked: true}]);
+
+      describe("after marking child as done", () => {
+        test("parent is still stalled", () => {
+          expect(view(step2).taskList.map((t) => t.badges)).toEqual([["stalled"], []]);
+        });
+
+        test("child is not paused", () => {
+          expect(view(step2).taskList.map((t) => t.paused)).toEqual([false, false]);
+        });
+      });
+    });
+  });
 });
 
 describe("counter next to filters", () => {

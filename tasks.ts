@@ -131,7 +131,7 @@ function badges(tasks: Tasks, task: Task): ("ready" | "stalled")[] {
   if (isDone(task)) return [];
 
   if (task.action && !task.children.some((child) => !isDone(child))) return ["ready"];
-  if (!task.children.some((child) => !isDone(child))) return ["stalled"];
+  if (!task.children.some((child) => !isDone(child) && !isPaused(tasks, child))) return ["stalled"];
 
   return [];
 }
