@@ -2,9 +2,8 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as App from "./app";
 import {loadTasks, saveTasks} from "./storage";
-import {Button} from "./ui";
 import {TaskEditor} from "./task-editor";
-import {TextField, value as textFieldValue} from "./text-field";
+import {TextField, TextFieldButton, value as textFieldValue} from "./text-field";
 import * as Drag from "./drag";
 import {TaskList} from "./task-list";
 
@@ -26,7 +25,9 @@ function AddTask(props: {send(ev: App.Event): void}) {
         value={textFieldValue(textFields, "addTitle")}
         send={props.send}
       />
-      <Button onClick={() => props.send({tag: "add"})}>Add Task</Button>
+      <TextFieldButton send={props.send} field="addTitle">
+        Add Task
+      </TextFieldButton>
     </div>
   );
 }
