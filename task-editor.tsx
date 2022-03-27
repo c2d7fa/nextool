@@ -97,6 +97,20 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
   const task = find(tasks, taskId);
   if (task === null) return null;
 
+  const actionable: StateGroup = {
+    title: "Actionable",
+    components: [
+      {
+        type: "picker",
+        options: [
+          {value: "yes", label: "Action", active: task.action},
+          {value: "no", label: "Not Ready", active: !task.action},
+        ],
+        property: "action",
+      },
+    ],
+  };
+
   return {
     id: taskId,
     sections: [
@@ -134,19 +148,7 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
             },
           ],
         },
-        {
-          title: "Actionable",
-          components: [
-            {
-              type: "picker",
-              options: [
-                {value: "yes", label: "Action", active: task.action},
-                {value: "no", label: "Not Ready", active: !task.action},
-              ],
-              property: "action",
-            },
-          ],
-        },
+        ...(task.type === "task" ? [actionable] : []),
       ],
     ],
   };

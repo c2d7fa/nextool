@@ -1118,4 +1118,35 @@ describe("projects", () => {
       });
     });
   });
+
+  describe("projects cannot be marked as actionable", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Project"),
+      openNth(0),
+      setComponentValue("Actionable", "yes"),
+    ]);
+
+    describe("before marking an action as a project", () => {
+      test("there is a component in the editor called 'Actionable'", () => {
+        expect(componentTitled(view(step1), "Actionable")).not.toBeNull();
+      });
+
+      test("the task has the ready badge", () => {
+        expect(view(step1).taskList.map((t) => t.badges)).toEqual([["ready"]]);
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Type", "project")]);
+
+    describe("after marking a task as a project", () => {
+      test("there is no component in the editor called 'Actionable'", () => {
+        expect(componentTitled(view(step2), "Actionable")).toBeNull();
+      });
+
+      test("the project has the stalled badge", () => {
+        expect(view(step2).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+      });
+    });
+  });
 });

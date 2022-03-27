@@ -157,8 +157,12 @@ function badges(tasks: Tasks, task: Task): ("ready" | "stalled")[] {
   if (isPaused(tasks, task)) return [];
   if (isDone(task)) return [];
 
-  if (task.action && !task.children.some((child) => !isDone(child))) return ["ready"];
-  if (!task.children.some((child) => !isDone(child) && !isPaused(tasks, child))) return ["stalled"];
+  const isProject = task.type === "project";
+  const hasUnfinishedChildren = task.children.some((child) => !isDone(child));
+  const hasActiveChildren = task.children.some((child) => !isDone(child) && !isPaused(tasks, child));
+
+  if (!isProject && task.action && !hasUnfinishedChildren) return ["ready"];
+  if (!hasActiveChildren) return ["stalled"];
 
   return [];
 }
