@@ -1097,28 +1097,6 @@ describe("projects", () => {
     });
   });
 
-  describe("marking a task as a project adds it to the sidebar", () => {
-    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Project"), openNth(0)]);
-
-    describe("initially", () => {
-      test("the list of active projects in the sidebar is empty", () => {
-        expect(view(step1).sideBar.flatMap((section) => section.projects)).toEqual([]);
-      });
-    });
-
-    const step2 = updateAll(step1, [setComponentValue("Type", "project")]);
-
-    describe("after changing the type to project", () => {
-      test("the project is added to the list of active projects in the sidebar", () => {
-        expect(
-          view(step2)
-            .sideBar.flatMap((section) => section.projects)
-            .map((project) => project.label),
-        ).toEqual(["Project"]);
-      });
-    });
-  });
-
   describe("projects cannot be marked as actionable", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
@@ -1146,6 +1124,52 @@ describe("projects", () => {
 
       test("the project has the stalled badge", () => {
         expect(view(step2).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+      });
+    });
+  });
+
+  describe("list of projects in the sidebar", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Project"), openNth(0)]);
+
+    describe("without any projects", () => {
+      test("the list of active projects in the sidebar is empty", () => {
+        expect(view(step1).sideBar.flatMap((section) => section.projects)).toEqual([]);
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Type", "project")]);
+
+    describe("after marking a task as a project", () => {
+      test("the project is added to the list of active projects in the sidebar", () => {
+        expect(
+          view(step2)
+            .sideBar.flatMap((section) => section.projects)
+            .map((project) => project.label),
+        ).toEqual(["Project"]);
+      });
+    });
+
+    const step3a = updateAll(step2, [setComponentValue("Status", "paused")]);
+
+    describe("after marking the project as paused", () => {
+      test("the sidebar becomes empty again", () => {
+        expect(view(step3a).sideBar.flatMap((section) => section.projects)).toEqual([]);
+      });
+
+      test("but the item is still shown as a project in the task list", () => {
+        expect(view(step3a).taskList.map((t) => t.project)).toEqual([true]);
+      });
+    });
+
+    const step3b = updateAll(step2, [setComponentValue("Status", "done")]);
+
+    describe("after marking the project as done", () => {
+      test("the sidebar becomes empty again", () => {
+        expect(view(step3b).sideBar.flatMap((section) => section.projects)).toEqual([]);
+      });
+
+      test("but the item is still shown as a project in the task list", () => {
+        expect(view(step3b).taskList.map((t) => t.project)).toEqual([true]);
       });
     });
   });

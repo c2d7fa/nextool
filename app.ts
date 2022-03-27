@@ -72,7 +72,7 @@ export type View = {
 export function view(app: State): View {
   const stalledTasks = Tasks.view({tasks: app.tasks, filter: "stalled", taskDrag: app.taskDrag}).length;
 
-  const projects = Tasks.projects(app.tasks);
+  const activeProjects = Tasks.projects(app.tasks).filter((project) => project.status === "active");
 
   return {
     sideBar: [
@@ -121,7 +121,7 @@ export function view(app: State): View {
       {
         title: "Active projects",
         filters: [],
-        projects: projects.map((project) => ({label: project.title, selected: false})),
+        projects: activeProjects.map((project) => ({label: project.title, selected: false})),
       },
     ],
     taskList: Tasks.view(app),
