@@ -135,10 +135,27 @@
     }
 
     .indicator {
+      display: flex;
+      place-items: center;
+      place-content: center;
+
+      opacity: 0.7;
+
       margin-left: auto;
+      font-weight: normal;
       font-size: 0.8em;
-      font-weight: 500;
-      opacity: 0.75;
+
+      border: 1px solid #00000040;
+      background-color: #f5d197;
+      color: #72644b;
+
+      border-radius: 1em;
+      height: 1em;
+      width: 1em;
+    }
+
+    &.selected .indicator {
+      opacity: 1;
     }
   }
 }
