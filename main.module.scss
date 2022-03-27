@@ -9,13 +9,12 @@
   }
 
   :global(#root) {
-    min-height: 100vh;
+    display: grid;
+    height: 100vh;
   }
 }
 
 .outerContainer {
-  min-height: 100vh;
-
   display: grid;
   grid: "top-bar top-bar" 3em "sidebar main" 1fr / 18em 1fr;
 
@@ -41,6 +40,7 @@
 
       text-transform: uppercase;
       letter-spacing: 0.2ex;
+      word-spacing: 0.6ex;
       font-size: 0.8em;
       user-select: none;
     }
@@ -135,10 +135,37 @@
     }
 
     .indicator {
+      display: flex;
+      place-items: center;
+      place-content: center;
+
+      opacity: 0.7;
+
       margin-left: auto;
-      font-size: 0.8em;
-      font-weight: 500;
-      opacity: 0.75;
+      font-weight: normal;
+      font-size: 0.9em;
+
+      border: 1px solid #00000040;
+      background-color: #f5d197;
+      color: #72644b;
+
+      border-radius: 1em;
+      height: 1em;
+      min-width: 1em;
+      padding: 0 0.5ex;
+
+      .text {
+        font-size: 0.9em;
+      }
+
+      &.small {
+        font-size: 0.7em;
+        padding: 0;
+      }
+    }
+
+    &.selected .indicator {
+      opacity: 1;
     }
   }
 }

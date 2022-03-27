@@ -86,12 +86,30 @@ export function editOperationsFor(state: State, ev: Event): EditOperation[] {
     if (ev.value === "yes") return [{type: "set", property: "action", value: true}];
     if (ev.value === "no") return [{type: "set", property: "action", value: false}];
     else return [];
+  } else if (ev.component.id.property === "type") {
+    if (ev.value === "task") return [{type: "set", property: "type", value: "task"}];
+    if (ev.value === "project") return [{type: "set", property: "type", value: "project"}];
+    else return [];
   } else return [];
 }
 
 export function load({tasks}: {tasks: Tasks}, taskId: string): State {
   const task = find(tasks, taskId);
   if (task === null) return null;
+
+  const actionable: StateGroup = {
+    title: "Actionable",
+    components: [
+      {
+        type: "picker",
+        options: [
+          {value: "yes", label: "Action", active: task.action},
+          {value: "no", label: "Not Ready", active: !task.action},
+        ],
+        property: "action",
+      },
+    ],
+  };
 
   return {
     id: taskId,
@@ -118,18 +136,19 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
       ],
       [
         {
-          title: "Actionable",
+          title: "Type",
           components: [
             {
               type: "picker",
               options: [
-                {value: "yes", label: "Action", active: task.action},
-                {value: "no", label: "Not Ready", active: !task.action},
+                {value: "task", label: "Task", active: task.type === "task"},
+                {value: "project", label: "Project", active: task.type === "project"},
               ],
-              property: "action",
+              property: "type",
             },
           ],
         },
+        ...(task.type === "task" ? [actionable] : []),
       ],
     ],
   };

@@ -35,13 +35,22 @@ function Filter(props: {
   filter: App.FilterView;
   send(ev: App.SelectFilterEvent | Drag.DragEvent<never, App.DropId>): void;
 }) {
+  const indicator =
+    props.filter.indicator === null ? null : "text" in props.filter.indicator ? (
+      <span className={style.indicator}>
+        <span className={style.text}>{props.filter.indicator.text}</span>
+      </span>
+    ) : (
+      <span className={[style.indicator, style.small].join(" ")} />
+    );
+
   const inner = (
     <button
       onClick={() => props.send({tag: "selectFilter", filter: props.filter.filter})}
       className={props.filter.selected ? style.selected : ""}
     >
       <span className={style.label}>{props.filter.label}</span>
-      {props.filter.indicator && <span className={style.indicator}>{props.filter.indicator.text}</span>}
+      {indicator}
     </button>
   );
 

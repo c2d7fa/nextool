@@ -53,8 +53,9 @@ export type FilterView = {
   filter: FilterId;
   selected: boolean;
   dropTarget: DropId | null;
-  indicator: null | {text: string};
+  indicator: null | {text: string} | {};
 };
+
 export type SideBarSectionView = {title: string; filters: FilterView[]};
 
 export type View = {
@@ -65,6 +66,8 @@ export type View = {
 
 export function view(app: State): View {
   const stalledTasks = Tasks.view({tasks: app.tasks, filter: "stalled", taskDrag: app.taskDrag}).length;
+
+  const activeProjects = Tasks.projects(app.tasks).filter((project) => project.status === "active");
 
   return {
     sideBar: [
@@ -107,6 +110,19 @@ export function view(app: State): View {
             indicator: null,
           },
         ],
+      },
+      {
+        title: "Active projects",
+        filters: activeProjects.map((project) => ({
+          label: project.title,
+          selected:
+            typeof app.filter === "object" &&
+            app.filter.type === "project" &&
+            app.filter.project.id === project.id,
+          filter: {type: "project", project: project},
+          dropTarget: null,
+          indicator: Tasks.isStalled(app.tasks, project) ? {} : null,
+        })),
       },
     ],
     taskList: Tasks.view(app),
@@ -181,11 +197,8 @@ export function updateApp(app: State, ev: Event): State {
 
   function handleEdit(app: State, ev: Event) {
     if (ev.tag !== "editor") return app;
-    return {
-      ...app,
-      editor: TaskEditor.update(app.editor, ev),
-      tasks: edit(app.tasks, ev.component.id.taskId, ...TaskEditor.editOperationsFor(app.editor, ev)),
-    };
+    const tasks = edit(app.tasks, ev.component.id.taskId, ...TaskEditor.editOperationsFor(app.editor, ev));
+    return {...app, editor: TaskEditor.load({tasks}, app.editor!.id), tasks};
   }
 
   function handleChecked(app: State, ev: Event) {

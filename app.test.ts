@@ -68,6 +68,10 @@ function openNth(n: number) {
   return (view: View) => [{tag: "selectEditingTask", id: nthTask(view, n).id} as const];
 }
 
+function sideBarActiveProjects(view: View) {
+  return view.sideBar.find((section) => section.title === "Active projects")?.filters ?? [];
+}
+
 describe("adding tasks", () => {
   describe("with empty state", () => {
     test("there are no tasks", () => {
@@ -1061,5 +1065,187 @@ describe("counter next to filters", () => {
 
   test("after dragging task into ready filter, the counter is hidden again", () => {
     expect(indicatorForFilter(view(step3), "Stalled")).toEqual(null);
+  });
+});
+
+function pickerValue(view: View, title: string) {
+  const component = componentTitled(view, title);
+  if (component?.type !== "picker") return null;
+  return component.options.find((option) => option.active)?.value;
+}
+
+describe("projects", () => {
+  describe("marking a task as a project in the task list updates type", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Project"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the task has type task in editor", () => {
+        expect(pickerValue(view(step1), "Type")).toEqual("task");
+      });
+
+      test("the task is not a project in task list", () => {
+        expect(view(step1).taskList.map((t) => t.project)).toEqual([false]);
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Type", "project")]);
+
+    describe("after changing the type to project", () => {
+      test("the task has type project in editor", () => {
+        expect(pickerValue(view(step2), "Type")).toEqual("project");
+      });
+
+      test("the task is a project in task list", () => {
+        expect(view(step2).taskList.map((t) => t.project)).toEqual([true]);
+      });
+    });
+  });
+
+  describe("projects cannot be marked as actionable", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Project"),
+      openNth(0),
+      setComponentValue("Actionable", "yes"),
+    ]);
+
+    describe("before marking an action as a project", () => {
+      test("there is a component in the editor called 'Actionable'", () => {
+        expect(componentTitled(view(step1), "Actionable")).not.toBeNull();
+      });
+
+      test("the task has the ready badge", () => {
+        expect(view(step1).taskList.map((t) => t.badges)).toEqual([["ready"]]);
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Type", "project")]);
+
+    describe("after marking a task as a project", () => {
+      test("there is no component in the editor called 'Actionable'", () => {
+        expect(componentTitled(view(step2), "Actionable")).toBeNull();
+      });
+
+      test("the project has the stalled badge", () => {
+        expect(view(step2).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+      });
+    });
+  });
+
+  describe("list of projects in the sidebar", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Project"), openNth(0)]);
+
+    describe("without any projects", () => {
+      test("the list of active projects in the sidebar is empty", () => {
+        expect(sideBarActiveProjects(view(step1))).toEqual([]);
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Type", "project")]);
+
+    describe("after marking a task as a project", () => {
+      test("the project is added to the list of active projects in the sidebar", () => {
+        expect(sideBarActiveProjects(view(step2)).map((project) => project.label)).toEqual(["Project"]);
+      });
+    });
+
+    const step3a = updateAll(step2, [setComponentValue("Status", "paused")]);
+
+    describe("after marking the project as paused", () => {
+      test("the sidebar becomes empty again", () => {
+        expect(sideBarActiveProjects(view(step3a))).toEqual([]);
+      });
+
+      test("but the item is still shown as a project in the task list", () => {
+        expect(view(step3a).taskList.map((t) => t.project)).toEqual([true]);
+      });
+    });
+
+    const step3b = updateAll(step2, [setComponentValue("Status", "done")]);
+
+    describe("after marking the project as done", () => {
+      test("the sidebar becomes empty again", () => {
+        expect(sideBarActiveProjects(view(step3b))).toEqual([]);
+      });
+
+      test("but the item is still shown as a project in the task list", () => {
+        expect(view(step3b).taskList.map((t) => t.project)).toEqual([true]);
+      });
+    });
+  });
+
+  describe("stalled projects have indicators in sidebar", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Project"),
+      openNth(0),
+      setComponentValue("Type", "project"),
+    ]);
+
+    test("stalled project has indicator in sidebar", () => {
+      expect(sideBarActiveProjects(view(step1))[0]).toMatchObject({
+        label: "Project",
+        indicator: {},
+      });
+    });
+
+    const step2 = updateAll(step1, [
+      ...addTask("Action"),
+      openNth(1),
+      setComponentValue("Type", "action"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+    ]);
+
+    test("after adding action as child, indicator is removed", () => {
+      expect(sideBarActiveProjects(view(step2))[0]).toMatchObject({
+        label: "Project",
+        indicator: null,
+      });
+    });
+  });
+
+  describe("opening project from sidebar", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Example project"),
+      openNth(0),
+      setComponentValue("Type", "project"),
+      ...addTask("Inside project"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      ...addTask("Outside project"),
+    ]);
+
+    describe("in the 'all' filter", () => {
+      test("there are three tasks", () => {
+        expect(view(step1).taskList.length).toEqual(3);
+      });
+
+      test("the 'all' filter is the only active filter in the sidebar", () => {
+        expect(
+          view(step1)
+            .sideBar.flatMap((section) => section.filters)
+            .filter((filter) => filter.selected)
+            .map((filter) => filter.label),
+        ).toEqual(["All"]);
+      });
+    });
+
+    const projectFilter = sideBarActiveProjects(view(step1))[0].filter;
+    const step2 = updateAll(step1, [...switchToFilter(projectFilter)]);
+
+    describe("after switching to the project filter", () => {
+      test("it becomes the only active filter in the sidebar", () => {
+        expect(
+          view(step2)
+            .sideBar.flatMap((section) => section.filters)
+            .filter((filter) => filter.selected)
+            .map((filter) => filter.label),
+        ).toEqual(["Example project"]);
+      });
+
+      test("only one task (which is in the project) is shown now", () => {
+        expect(view(step2).taskList.length).toEqual(1);
+      });
+    });
   });
 });
