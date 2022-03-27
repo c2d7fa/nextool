@@ -92,7 +92,7 @@ export function view(app: State): View {
             filter: "stalled",
             selected: app.filter === "stalled",
             dropTarget: {type: "filter", id: "stalled"},
-            indicator: stalledTasks === 0 ? null : {text: `${stalledTasks}`},
+            indicator: stalledTasks === 0 ? null : {text: `${stalledTasks > 9 ? "" : stalledTasks}`},
           },
         ],
         projects: [],
