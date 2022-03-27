@@ -35,17 +35,22 @@ function Filter(props: {
   filter: App.FilterView;
   send(ev: App.SelectFilterEvent | Drag.DragEvent<never, App.DropId>): void;
 }) {
+  const indicator =
+    props.filter.indicator === null ? null : "text" in props.filter.indicator ? (
+      <span className={style.indicator}>
+        <span className={style.text}></span>
+      </span>
+    ) : (
+      <span className={[style.indicator, style.small].join(" ")} />
+    );
+
   const inner = (
     <button
       onClick={() => props.send({tag: "selectFilter", filter: props.filter.filter})}
       className={props.filter.selected ? style.selected : ""}
     >
       <span className={style.label}>{props.filter.label}</span>
-      {props.filter.indicator && (
-        <span className={style.indicator}>
-          <span className={style.text}>{props.filter.indicator.text}</span>
-        </span>
-      )}
+      {indicator}
     </button>
   );
 
@@ -55,18 +60,6 @@ function Filter(props: {
     </Drag.DropTarget>
   ) : (
     inner
-  );
-}
-
-function Project(props: {
-  project: App.SideBarProjectView;
-  send(ev: App.SelectFilterEvent | Drag.DragEvent<never, App.DropId>): void;
-}) {
-  return (
-    <button onClick={() => {}} className={props.project.selected ? style.selected : ""}>
-      <span className={style.label}>{props.project.label}</span>
-      {props.project.indicator && <span className={[style.indicator, style.small].join(" ")} />}
-    </button>
   );
 }
 
@@ -80,22 +73,11 @@ function FilterSelector(props: {filters: App.FilterView[]; send: App.Send}) {
   );
 }
 
-function ProjectList(props: {projects: App.SideBarProjectView[]; send: App.Send}) {
-  return (
-    <div className={style.filterSelector}>
-      {props.projects.map((project, i) => (
-        <Project key={i} project={project} send={props.send} />
-      ))}
-    </div>
-  );
-}
-
 function SideBarSection(props: {section: App.SideBarSectionView; send: App.Send}) {
   return (
     <>
       <h1>{props.section.title}</h1>
       <FilterSelector filters={props.section.filters} send={props.send} />
-      <ProjectList projects={props.section.projects} send={props.send} />
     </>
   );
 }

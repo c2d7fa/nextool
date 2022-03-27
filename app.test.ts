@@ -68,6 +68,10 @@ function openNth(n: number) {
   return (view: View) => [{tag: "selectEditingTask", id: nthTask(view, n).id} as const];
 }
 
+function sideBarActiveProjects(view: View) {
+  return view.sideBar.find((section) => section.title === "Active projects")?.filters ?? [];
+}
+
 describe("adding tasks", () => {
   describe("with empty state", () => {
     test("there are no tasks", () => {
@@ -1133,7 +1137,7 @@ describe("projects", () => {
 
     describe("without any projects", () => {
       test("the list of active projects in the sidebar is empty", () => {
-        expect(view(step1).sideBar.flatMap((section) => section.projects)).toEqual([]);
+        expect(sideBarActiveProjects(view(step1))).toEqual([]);
       });
     });
 
@@ -1141,11 +1145,7 @@ describe("projects", () => {
 
     describe("after marking a task as a project", () => {
       test("the project is added to the list of active projects in the sidebar", () => {
-        expect(
-          view(step2)
-            .sideBar.flatMap((section) => section.projects)
-            .map((project) => project.label),
-        ).toEqual(["Project"]);
+        expect(sideBarActiveProjects(view(step2)).map((project) => project.label)).toEqual(["Project"]);
       });
     });
 
@@ -1153,7 +1153,7 @@ describe("projects", () => {
 
     describe("after marking the project as paused", () => {
       test("the sidebar becomes empty again", () => {
-        expect(view(step3a).sideBar.flatMap((section) => section.projects)).toEqual([]);
+        expect(sideBarActiveProjects(view(step3a))).toEqual([]);
       });
 
       test("but the item is still shown as a project in the task list", () => {
@@ -1165,7 +1165,7 @@ describe("projects", () => {
 
     describe("after marking the project as done", () => {
       test("the sidebar becomes empty again", () => {
-        expect(view(step3b).sideBar.flatMap((section) => section.projects)).toEqual([]);
+        expect(sideBarActiveProjects(view(step3b))).toEqual([]);
       });
 
       test("but the item is still shown as a project in the task list", () => {
@@ -1183,9 +1183,10 @@ describe("projects", () => {
     ]);
 
     test("stalled project has indicator in sidebar", () => {
-      expect(view(step1).sideBar.flatMap((section) => section.projects)).toEqual([
-        {label: "Project", selected: false, indicator: {}},
-      ]);
+      expect(sideBarActiveProjects(view(step1))[0]).toMatchObject({
+        label: "Project",
+        indicator: {},
+      });
     });
 
     const step2 = updateAll(step1, [
@@ -1196,9 +1197,10 @@ describe("projects", () => {
     ]);
 
     test("after adding action as child, indicator is removed", () => {
-      expect(view(step2).sideBar.flatMap((section) => section.projects)).toEqual([
-        {label: "Project", selected: false, indicator: null},
-      ]);
+      expect(sideBarActiveProjects(view(step2))[0]).toMatchObject({
+        label: "Project",
+        indicator: null,
+      });
     });
   });
 });

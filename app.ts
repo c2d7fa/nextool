@@ -53,16 +53,10 @@ export type FilterView = {
   filter: FilterId;
   selected: boolean;
   dropTarget: DropId | null;
-  indicator: null | {text: string};
+  indicator: null | {text: string} | {};
 };
 
-export type SideBarProjectView = {
-  label: string;
-  selected: boolean;
-  indicator: null | {};
-};
-
-export type SideBarSectionView = {title: string; filters: FilterView[]; projects: SideBarProjectView[]};
+export type SideBarSectionView = {title: string; filters: FilterView[]};
 
 export type View = {
   sideBar: SideBarSectionView[];
@@ -95,7 +89,6 @@ export function view(app: State): View {
             indicator: stalledTasks === 0 ? null : {text: `${stalledTasks > 9 ? "" : stalledTasks}`},
           },
         ],
-        projects: [],
       },
       {
         title: "Tasks",
@@ -117,14 +110,14 @@ export function view(app: State): View {
             indicator: null,
           },
         ],
-        projects: [],
       },
       {
         title: "Active projects",
-        filters: [],
-        projects: activeProjects.map((project) => ({
+        filters: activeProjects.map((project) => ({
           label: project.title,
           selected: false,
+          filter: "all",
+          dropTarget: null,
           indicator: Tasks.isStalled(app.tasks, project) ? {} : null,
         })),
       },
