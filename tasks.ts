@@ -1,18 +1,6 @@
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
-import {
-  Tree,
-  TreeNode,
-  toList,
-  fromList,
-  findNode,
-  merge as mergeNodes,
-  moveItemInTree,
-  isDescendant,
-  findParent,
-  IndentedListItem,
-  filterNodes,
-} from "./indented-list";
+import * as IndentedList from "./indented-list";
 
 type TaskData = {
   id: string;
@@ -22,8 +10,8 @@ type TaskData = {
   action: boolean;
 };
 
-type Task = TreeNode<TaskData>;
-export type Tasks = Tree<TaskData>;
+type Task = IndentedList.TreeNode<TaskData>;
+export type Tasks = IndentedList.Tree<TaskData>;
 
 export const empty: Tasks = [
   {
@@ -69,7 +57,7 @@ export type TaskListView = {
 }[];
 
 export function merge(tasks: Tasks, updates: ({id: string} & Partial<Task>)[]): Tasks {
-  return mergeNodes(tasks, updates);
+  return IndentedList.merge(tasks, updates);
 }
 
 export function add(tasks: Tasks, values: Partial<Task>): Tasks {
@@ -91,7 +79,7 @@ export function add(tasks: Tasks, values: Partial<Task>): Tasks {
 }
 
 export function find(tasks: Tasks, id: string): TaskData | null {
-  return findNode(tasks, {id});
+  return IndentedList.findNode(tasks, {id});
 }
 
 export type EditOperation =
@@ -106,10 +94,10 @@ export type EditOperation =
 export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): Tasks {
   function edit_(tasks: Tasks, operation: EditOperation): Tasks {
     if (operation.type === "delete") {
-      return fromList(toList(tasks.filter((task) => task.id !== id)));
+      return IndentedList.fromList(IndentedList.toList(tasks.filter((task) => task.id !== id)));
     } else if (operation.type === "set") {
-      return fromList(
-        toList(tasks).map((task) => {
+      return IndentedList.fromList(
+        IndentedList.toList(tasks).map((task) => {
           if (task.id === id) {
             return {...task, [operation.property]: operation.value};
           }
@@ -132,7 +120,7 @@ export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): 
 
       return edit(tasks, id, {type: "set", ...update});
     } else if (operation.type === "move") {
-      return moveItemInTree(tasks, {id}, operation);
+      return IndentedList.moveItemInTree(tasks, {id}, operation);
     } else {
       const unreachable: never = operation;
       return unreachable;
@@ -148,13 +136,13 @@ function isDone(task: TaskData): boolean {
 
 function isPaused(tasks: Tasks, task: Task): boolean {
   if (task.status === "paused") return true;
-  const parent = findParent(tasks, task);
+  const parent = IndentedList.findParent(tasks, task);
   if (parent) return isPaused(tasks, parent);
   return false;
 }
 
 export function isStalled(tasks: Tasks, task: {id: string}): boolean {
-  const task_ = findNode(tasks, task);
+  const task_ = IndentedList.findNode(tasks, task);
   if (task_ === null) return false;
 
   return badges(tasks, task_).includes("stalled");
@@ -185,7 +173,7 @@ function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
 }
 
 function filterTasks(tasks: Tasks, filter: FilterId): Tasks {
-  function filter_(tasks_: TreeNode<TaskData>[]): TreeNode<TaskData>[] {
+  function filter_(tasks_: IndentedList.TreeNode<TaskData>[]): IndentedList.TreeNode<TaskData>[] {
     return tasks_.flatMap((task) => {
       const matches = doesTaskMatch(tasks, task, filter);
       if (matches) return [task];
@@ -196,8 +184,8 @@ function filterTasks(tasks: Tasks, filter: FilterId): Tasks {
   return filter_(tasks);
 }
 
-export function projects(tasks: Tasks): IndentedListItem<TaskData & {project: true}>[] {
-  return filterNodes(tasks, (node) => node.type === "project").map((project) => ({
+export function projects(tasks: Tasks): IndentedList.IndentedListItem<TaskData & {project: true}>[] {
+  return IndentedList.filterNodes(tasks, (node) => node.type === "project").map((project) => ({
     ...project,
     indentation: 0,
     project: true,
@@ -224,7 +212,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
 
     if (index === -1) return [{width: "full", indentation: 0, side: "below"}];
 
-    const tasks = toList(tasks_);
+    const tasks = IndentedList.toList(tasks_);
     const task = tasks[index];
 
     const dragging = taskDrag.dragging!.id;
@@ -235,7 +223,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
 
     const followingTasks = tasks.slice(index + 1);
     const followingNonDescendentsOfDragging = followingTasks.filter(
-      (task) => !isDescendant(tasks_, task, dragging),
+      (task) => !IndentedList.isDescendant(tasks_, task, dragging),
     );
 
     const followingTask = tasks[index + 1];
@@ -247,7 +235,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
 
     return dropTargetsBetween(
       followingIndentation,
-      isDescendant(tasks_, task, dragging)
+      IndentedList.isDescendant(tasks_, task, dragging)
         ? tasks[draggingIndex].indentation
         : Math.max(
             isDragging ? preceedingTaskIndentation : 0,
@@ -256,13 +244,13 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     );
   }
 
-  return toList(filtered).map((task, index) => ({
+  return IndentedList.toList(filtered).map((task, index) => ({
     id: task.id,
     title: task.title,
     indentation: task.indentation,
     done: isDone(task),
-    paused: isPaused(tasks, findNode(tasks, task)!),
-    badges: badges(tasks, findNode(tasks, task)!),
+    paused: isPaused(tasks, IndentedList.findNode(tasks, task)!),
+    badges: badges(tasks, IndentedList.findNode(tasks, task)!),
     project: task.type === "project",
     dropIndicator: dropIndicator(task),
     dropTargets: taskDrag.dragging
