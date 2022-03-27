@@ -1173,4 +1173,32 @@ describe("projects", () => {
       });
     });
   });
+
+  describe("stalled projects have indicators in sidebar", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Project"),
+      openNth(0),
+      setComponentValue("Type", "project"),
+    ]);
+
+    test("stalled project has indicator in sidebar", () => {
+      expect(view(step1).sideBar.flatMap((section) => section.projects)).toEqual([
+        {label: "Project", selected: false, indicator: {}},
+      ]);
+    });
+
+    const step2 = updateAll(step1, [
+      ...addTask("Action"),
+      openNth(1),
+      setComponentValue("Type", "action"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+    ]);
+
+    test("after adding action as child, indicator is removed", () => {
+      expect(view(step2).sideBar.flatMap((section) => section.projects)).toEqual([
+        {label: "Project", selected: false, indicator: null},
+      ]);
+    });
+  });
 });

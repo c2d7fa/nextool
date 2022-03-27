@@ -153,6 +153,13 @@ function isPaused(tasks: Tasks, task: Task): boolean {
   return false;
 }
 
+export function isStalled(tasks: Tasks, task: {id: string}): boolean {
+  const task_ = findNode(tasks, task);
+  if (task_ === null) return false;
+
+  return badges(tasks, task_).includes("stalled");
+}
+
 function badges(tasks: Tasks, task: Task): ("ready" | "stalled")[] {
   if (isPaused(tasks, task)) return [];
   if (isDone(task)) return [];

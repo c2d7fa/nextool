@@ -59,6 +59,7 @@ export type FilterView = {
 export type SideBarProjectView = {
   label: string;
   selected: boolean;
+  indicator: null | {};
 };
 
 export type SideBarSectionView = {title: string; filters: FilterView[]; projects: SideBarProjectView[]};
@@ -121,7 +122,11 @@ export function view(app: State): View {
       {
         title: "Active projects",
         filters: [],
-        projects: activeProjects.map((project) => ({label: project.title, selected: false})),
+        projects: activeProjects.map((project) => ({
+          label: project.title,
+          selected: false,
+          indicator: Tasks.isStalled(app.tasks, project) ? {} : null,
+        })),
       },
     ],
     taskList: Tasks.view(app),

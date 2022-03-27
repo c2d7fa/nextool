@@ -65,6 +65,7 @@ function Project(props: {
   return (
     <button onClick={() => {}} className={props.project.selected ? style.selected : ""}>
       <span className={style.label}>{props.project.label}</span>
+      {props.project.indicator && <span className={[style.indicator, style.small].join(" ")} />}
     </button>
   );
 }

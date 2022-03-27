@@ -143,7 +143,7 @@
 
       margin-left: auto;
       font-weight: normal;
-      font-size: 0.8em;
+      font-size: 0.9em;
 
       border: 1px solid #00000040;
       background-color: #f5d197;
@@ -152,6 +152,14 @@
       border-radius: 1em;
       height: 1em;
       width: 1em;
+
+      .text {
+        font-size: 0.9em;
+      }
+
+      &.small {
+        font-size: 0.7em;
+      }
     }
 
     &.selected .indicator {
