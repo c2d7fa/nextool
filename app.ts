@@ -115,8 +115,11 @@ export function view(app: State): View {
         title: "Active projects",
         filters: activeProjects.map((project) => ({
           label: project.title,
-          selected: false,
-          filter: "all",
+          selected:
+            typeof app.filter === "object" &&
+            app.filter.type === "project" &&
+            app.filter.project.id === project.id,
+          filter: {type: "project", project: project},
           dropTarget: null,
           indicator: Tasks.isStalled(app.tasks, project) ? {} : null,
         })),

@@ -162,9 +162,27 @@ function badges(tasks: Tasks, task: Task): ("ready" | "stalled")[] {
   return [];
 }
 
-export type FilterId = "all" | "ready" | "done" | "stalled" | "not-done";
+export type FilterId =
+  | "all"
+  | "ready"
+  | "done"
+  | "stalled"
+  | "not-done"
+  | {type: "project"; project: {id: string}};
+
+function taskProject(tasks: Tasks, task: Task): null | {id: string} {
+  const parent = IndentedList.findParent(tasks, task);
+  if (parent === null) return null;
+  else if (parent.type === "project") return parent;
+  else return taskProject(tasks, parent);
+}
 
 function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
+  if (typeof filter === "object") {
+    if (taskProject(tasks, task)?.id === filter.project.id) return true;
+    else return false;
+  }
+
   if (filter === "ready") return badges(tasks, task).includes("ready");
   else if (filter === "done") return isDone(task);
   else if (filter === "stalled") return badges(tasks, task).includes("stalled");

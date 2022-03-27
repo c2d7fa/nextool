@@ -1203,4 +1203,49 @@ describe("projects", () => {
       });
     });
   });
+
+  describe("opening project from sidebar", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Example project"),
+      openNth(0),
+      setComponentValue("Type", "project"),
+      ...addTask("Inside project"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      ...addTask("Outside project"),
+    ]);
+
+    describe("in the 'all' filter", () => {
+      test("there are three tasks", () => {
+        expect(view(step1).taskList.length).toEqual(3);
+      });
+
+      test("the 'all' filter is the only active filter in the sidebar", () => {
+        expect(
+          view(step1)
+            .sideBar.flatMap((section) => section.filters)
+            .filter((filter) => filter.selected)
+            .map((filter) => filter.label),
+        ).toEqual(["All"]);
+      });
+    });
+
+    const projectFilter = sideBarActiveProjects(view(step1))[0].filter;
+    const step2 = updateAll(step1, [...switchToFilter(projectFilter)]);
+
+    describe("after switching to the project filter", () => {
+      test("it becomes the only active filter in the sidebar", () => {
+        expect(
+          view(step2)
+            .sideBar.flatMap((section) => section.filters)
+            .filter((filter) => filter.selected)
+            .map((filter) => filter.label),
+        ).toEqual(["Example project"]);
+      });
+
+      test("only one task (which is in the project) is shown now", () => {
+        expect(view(step2).taskList.length).toEqual(1);
+      });
+    });
+  });
 });
