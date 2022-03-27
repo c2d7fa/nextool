@@ -1,6 +1,7 @@
 import * as React from "react";
-
 import styles from "./text-field.module.scss";
+
+import {Button} from "./ui";
 
 export type TextFieldEvent<Id extends string> =
   | {tag: "textField"; type: "edit"; field: Id; value: string}
@@ -56,5 +57,17 @@ export function TextField<Id extends string>(props: {
         props.send({...ev, tag: "textField", field: props.field});
       }}
     />
+  );
+}
+
+export function TextFieldButton<Id extends string>(props: {
+  field: Id;
+  children: React.ReactNode;
+  send: (ev: TextFieldEvent<Id>) => void;
+}) {
+  return (
+    <Button onClick={() => props.send({tag: "textField", type: "submit", field: props.field})}>
+      {props.children}
+    </Button>
   );
 }

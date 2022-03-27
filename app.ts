@@ -11,7 +11,6 @@ type TextFieldId = "addTitle";
 import type {FilterId} from "./tasks";
 export type {FilterId};
 
-export type AddEvent = {tag: "add"};
 export type SelectFilterEvent = {tag: "selectFilter"; filter: FilterId};
 export type CheckedEvent = {tag: "checked"; id: string; checked: boolean};
 export type SelectEditingTask = {tag: "selectEditingTask"; id: string};
@@ -23,7 +22,6 @@ export type DropId =
 
 export type Event =
   | CheckedEvent
-  | AddEvent
   | TextFieldEvent<TextFieldId>
   | SelectEditingTask
   | SelectFilterEvent
@@ -176,23 +174,14 @@ export function updateApp(app: State, ev: Event): State {
     return {...app, filter: ev.filter};
   }
 
-  function handleAdd(app: State, ev: Event) {
-    let result = app;
-    if ((ev.tag === "textField" && ev.field === "addTitle" && ev.type === "submit") || ev.tag === "add") {
-      result = {...app, tasks: add(app.tasks, {title: textFieldValue(app.textFields, "addTitle")})};
-    }
-    if (ev.tag === "add") {
-      result = {
-        ...app,
-        textFields: updateTextFields(app.textFields, {tag: "textField", field: "addTitle", type: "submit"}),
-      };
-    }
-    return result;
-  }
-
   function handleTextField(app: State, ev: Event) {
     if (ev.tag !== "textField") return app;
-    return {...app, textFields: updateTextFields(app.textFields, ev)};
+    const result = {...app, textFields: updateTextFields(app.textFields, ev)};
+    if (ev.type === "submit") {
+      return {...result, tasks: add(app.tasks, {title: textFieldValue(app.textFields, "addTitle")})};
+    } else {
+      return result;
+    }
   }
 
   function handleEdit(app: State, ev: Event) {
@@ -213,7 +202,6 @@ export function updateApp(app: State, ev: Event): State {
   }
 
   return compose<State>([
-    (app) => handleAdd(app, ev),
     (app) => handleChecked(app, ev),
     (app) => handleEdit(app, ev),
     (app) => handleSelectFilter(app, ev),
