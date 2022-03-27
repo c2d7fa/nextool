@@ -156,6 +156,16 @@ function moveNodeInTree<T extends {id: string}>(tree: Tree<T>, from: TreeLocatio
   return inserted;
 }
 
+export function moveInto<T extends {id: string}>(
+  tree: Tree<T>,
+  node: {id: string},
+  parent: {id: string},
+): Tree<T> {
+  const from = {parent: null, index: tree.findIndex((x) => x.id === node.id)};
+  const to = {parent: parent.id, index: findNode(tree, parent)?.children.length ?? 0};
+  return moveNodeInTree(tree, from, to);
+}
+
 function indexInList<T extends {id: string}>(tree: Tree<T>, query: {id: string}): number {
   const list = toList(tree);
   return list.findIndex((x) => x.id === query.id);

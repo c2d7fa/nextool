@@ -113,6 +113,39 @@ describe("adding tasks in filter", () => {
       expect(view(example).taskList.map((t) => t.title)).toEqual(["Task 1"]);
     });
   });
+
+  describe("in a project filter", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Project"),
+      ...addTask("Outside project"),
+      openNth(0),
+      setComponentValue("Type", "project"),
+      (view) => switchToFilter(sideBarActiveProjects(view)[0].filter),
+    ]);
+
+    describe("before adding any tasks", () => {
+      test("no tasks are shown", () => {
+        expect(view(step1).taskList).toEqual([]);
+      });
+    });
+
+    const step2 = updateAll(step1, [...addTask("Inside project")]);
+
+    describe("after adding a task", () => {
+      test("the task is shown in the current task list", () => {
+        expect(view(step2).taskList.map((t) => t.title)).toEqual(["Inside project"]);
+      });
+    });
+
+    const step3 = updateAll(step2, [...addTask("Another task")]);
+
+    describe("after adding another task", () => {
+      test("the task is added to the end of the list", () => {
+        expect(view(step3).taskList.map((t) => t.title)).toEqual(["Inside project", "Another task"]);
+      });
+    });
+  });
 });
 
 describe("dragging tasks to filters", () => {

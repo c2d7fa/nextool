@@ -119,6 +119,10 @@ export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): 
     } else if (operation.type === "moveToFilter") {
       const filter = operation.filter;
 
+      if (typeof filter === "object" && filter.type === "project") {
+        return IndentedList.moveInto(tasks, {id}, filter.project);
+      }
+
       const update =
         filter === "ready"
           ? ({property: "action", value: true} as const)
@@ -128,7 +132,9 @@ export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): 
           ? ({property: "action", value: false} as const)
           : filter === "not-done"
           ? ({property: "status", value: "active"} as const)
-          : (null as never);
+          : null;
+
+      if (update === null) return tasks;
 
       return edit(tasks, id, {type: "set", ...update});
     } else if (operation.type === "move") {
