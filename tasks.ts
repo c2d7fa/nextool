@@ -40,6 +40,14 @@ export const empty: Tasks = [
     ],
     type: "project",
   },
+  {
+    id: "6",
+    title: "Project 2",
+    status: "active",
+    action: false,
+    children: [],
+    type: "project",
+  },
 ];
 
 type DropTarget = {width: number | "full"; indentation: number; side: "above" | "below"};
