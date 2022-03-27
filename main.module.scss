@@ -151,7 +151,8 @@
 
       border-radius: 1em;
       height: 1em;
-      width: 1em;
+      min-width: 1em;
+      padding: 0 0.5ex;
 
       .text {
         font-size: 0.9em;
@@ -159,6 +160,7 @@
 
       &.small {
         font-size: 0.7em;
+        padding: 0;
       }
     }
 

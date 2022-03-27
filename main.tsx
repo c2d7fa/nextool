@@ -38,7 +38,7 @@ function Filter(props: {
   const indicator =
     props.filter.indicator === null ? null : "text" in props.filter.indicator ? (
       <span className={style.indicator}>
-        <span className={style.text}></span>
+        <span className={style.text}>{props.filter.indicator.text}</span>
       </span>
     ) : (
       <span className={[style.indicator, style.small].join(" ")} />
