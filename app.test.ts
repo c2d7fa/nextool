@@ -105,6 +105,16 @@ describe("adding tasks", () => {
   });
 });
 
+describe("adding tasks in filter", () => {
+  describe("in ready filter", () => {
+    const example = updateAll(empty, [...switchToFilter("ready"), ...addTask("Task 1")]);
+
+    test("the task is shown in the current task list", () => {
+      expect(view(example).taskList.map((t) => t.title)).toEqual(["Task 1"]);
+    });
+  });
+});
+
 describe("dragging tasks to filters", () => {
   describe("in an example with three tasks", () => {
     const example = updateAll(empty, [

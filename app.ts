@@ -178,7 +178,7 @@ export function updateApp(app: State, ev: Event): State {
     if (ev.tag !== "textField") return app;
     const result = {...app, textFields: updateTextFields(app.textFields, ev)};
     if (ev.type === "submit") {
-      return {...result, tasks: add(app.tasks, {title: textFieldValue(app.textFields, "addTitle")})};
+      return {...result, tasks: add(app, {title: textFieldValue(app.textFields, "addTitle")})};
     } else {
       return result;
     }

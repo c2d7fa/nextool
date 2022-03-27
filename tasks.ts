@@ -68,15 +68,17 @@ export function merge(tasks: Tasks, updates: ({id: string} & Partial<Task>)[]): 
   return IndentedList.merge(tasks, updates);
 }
 
-export function add(tasks: Tasks, values: Partial<Task>): Tasks {
+export function add({tasks, filter}: {tasks: Tasks; filter: FilterId}, values: Partial<Task>): Tasks {
   function randomId() {
     return Math.floor(Math.random() * 36 ** 8).toString(36);
   }
 
-  return [
+  const id = randomId();
+
+  const result: Tasks = [
     ...tasks,
     {
-      id: randomId(),
+      id,
       title: values.title ?? "",
       action: false,
       status: "active",
@@ -84,6 +86,8 @@ export function add(tasks: Tasks, values: Partial<Task>): Tasks {
       children: [],
     },
   ];
+
+  return edit(result, id, {type: "moveToFilter", filter});
 }
 
 export function find(tasks: Tasks, id: string): TaskData | null {
