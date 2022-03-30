@@ -46,7 +46,7 @@ function nthTask(view: View | State, n: number) {
   return viewed(view).taskList[n];
 }
 
-function check(view: View, n: number): Event[] {
+function check(view: View | State, n: number): Event[] {
   return [{tag: "check", id: nthTask(view, n).id}];
 }
 
@@ -106,6 +106,26 @@ describe("adding tasks", () => {
     test("they are marked as stalled", () => {
       expect(view(example).taskList.map((t) => t.badges)).toEqual([["stalled"], ["stalled"], ["stalled"]]);
     });
+  });
+});
+
+describe("checking and unchecking tasks", () => {
+  const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1")]);
+
+  test("the task is marked as unfinished by default", () => {
+    expect(nthTask(step1, 0).done).toBe(false);
+  });
+
+  const step2 = updateAll(step1, [...check(step1, 0)]);
+
+  test("after checking once, the task becomes finished", () => {
+    expect(nthTask(step2, 0).done).toBe(true);
+  });
+
+  const step3 = updateAll(step2, [...check(step2, 0)]);
+
+  test("after checking twice, the task becomes unfinished again", () => {
+    expect(nthTask(step3, 0).done).toBe(false);
   });
 });
 

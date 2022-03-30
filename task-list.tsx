@@ -10,7 +10,7 @@ function CheckBox(props: {checked: boolean; id: string; send: Send}) {
   return (
     <div
       className={[style.checkBox, props.checked ? style.checked : style.unchecked].join(" ")}
-      onClick={() => props.send({tag: "checked", id: props.id, checked: !props.checked})}
+      onClick={() => props.send({tag: "check", id: props.id})}
     />
   );
 }

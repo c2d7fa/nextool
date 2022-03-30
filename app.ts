@@ -192,7 +192,8 @@ export function updateApp(app: State, ev: Event): State {
 
   function handleCheck(app: State, ev: Event) {
     if (ev.tag !== "check") return app;
-    const tasks = edit(app.tasks, ev.id, {type: "set", property: "status", value: "done"});
+    const value = Tasks.find(app.tasks, ev.id)?.status === "done" ? "active" : "done";
+    const tasks = edit(app.tasks, ev.id, {type: "set", property: "status", value});
     return {...app, tasks, editor: TaskEditor.reload({...app, tasks})};
   }
 
