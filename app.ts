@@ -12,7 +12,7 @@ import type {FilterId} from "./tasks";
 export type {FilterId};
 
 export type SelectFilterEvent = {tag: "selectFilter"; filter: FilterId};
-export type CheckedEvent = {tag: "checked"; id: string; checked: boolean};
+export type CheckEvent = {tag: "check"; id: string};
 export type SelectEditingTask = {tag: "selectEditingTask"; id: string};
 
 export type DragId = {type: "task"; id: string};
@@ -21,7 +21,7 @@ export type DropId =
   | {type: "task"; id: string; side: "above" | "below"; indentation: number};
 
 export type Event =
-  | CheckedEvent
+  | CheckEvent
   | TextFieldEvent<TextFieldId>
   | SelectEditingTask
   | SelectFilterEvent
@@ -190,8 +190,8 @@ export function updateApp(app: State, ev: Event): State {
     return {...app, editor: TaskEditor.load({tasks}, app.editor!.id), tasks};
   }
 
-  function handleChecked(app: State, ev: Event) {
-    if (ev.tag !== "checked") return app;
+  function handleCheck(app: State, ev: Event) {
+    if (ev.tag !== "check") return app;
     const tasks = edit(app.tasks, ev.id, {type: "set", property: "status", value: "done"});
     return {...app, tasks, editor: TaskEditor.reload({...app, tasks})};
   }
@@ -202,7 +202,7 @@ export function updateApp(app: State, ev: Event): State {
   }
 
   return compose<State>([
-    (app) => handleChecked(app, ev),
+    (app) => handleCheck(app, ev),
     (app) => handleEdit(app, ev),
     (app) => handleSelectFilter(app, ev),
     (app) => handleSelectEditingTask(app, ev),

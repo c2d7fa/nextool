@@ -46,6 +46,10 @@ function nthTask(view: View | State, n: number) {
   return viewed(view).taskList[n];
 }
 
+function check(view: View, n: number): Event[] {
+  return [{tag: "check", id: nthTask(view, n).id}];
+}
+
 function dragAndDropNth(
   m: number,
   n: number,
@@ -579,7 +583,7 @@ describe("a task that has an unfinished child task isn't stalled", () => {
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
     ]);
 
-    const childFinished = updateAll(example, [{tag: "checked", id: nthTask(example, 1).id, checked: true}]);
+    const childFinished = updateAll(example, [...check(view(example), 1)]);
 
     describe("when the child has not been marked as done", () => {
       test("the child is unfinished", () => {
@@ -622,7 +626,7 @@ describe("an action that has unfinished children isn't ready", () => {
       (view) => dragToFilter(nthTask(view, 1).id, "ready"),
     ]);
 
-    const childFinished = updateAll(example, [{tag: "checked", id: nthTask(example, 1).id, checked: true}]);
+    const childFinished = updateAll(example, [...check(view(example), 1)]);
 
     describe("when the child has not been marked as done", () => {
       test("the child is unfinished", () => {
@@ -705,9 +709,7 @@ describe("filtered views of tasks", () => {
       ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
     ]);
 
-    const exampleAfterAll = updateAll(exampleBeforeAll, [
-      {tag: "checked", id: nthTask(exampleBeforeAll, 1).id, checked: true},
-    ]);
+    const exampleAfterAll = updateAll(exampleBeforeAll, [...check(view(exampleBeforeAll), 1)]);
 
     const exampleBeforeDone = updateAll(exampleBeforeAll, [{tag: "selectFilter", filter: "done"}]);
 
@@ -755,7 +757,7 @@ describe("filtered views of tasks", () => {
 
     describe("after marking the leaf task as done", () => {
       const example2 = updateAll(exampleAfterAll, [
-        {tag: "checked", id: nthTask(exampleAfterAll, 2).id, checked: true},
+        ...check(view(exampleAfterAll), 2),
         {tag: "selectFilter", filter: "done"},
       ]);
 
@@ -861,7 +863,7 @@ describe("the task editor", () => {
       });
     });
 
-    const step2a = updateAll(step1, [{tag: "checked", id: nthTask(step1, 0).id, checked: true}]);
+    const step2a = updateAll(step1, [...check(view(step1), 0)]);
 
     describe("if the task is checked in the task list", () => {
       test("the task is marked as done in the task list", () => {
@@ -1039,7 +1041,7 @@ describe("paused tasks", () => {
         });
       });
 
-      const step2 = updateAll(step1, [{tag: "checked", id: nthTask(step1, 1).id, checked: true}]);
+      const step2 = updateAll(step1, [...check(view(step1), 1)]);
 
       describe("after marking child as done", () => {
         test("parent becomes ready", () => {
@@ -1072,7 +1074,7 @@ describe("paused tasks", () => {
         });
       });
 
-      const step2 = updateAll(step1, [{tag: "checked", id: nthTask(step1, 1).id, checked: true}]);
+      const step2 = updateAll(step1, [...check(view(step1), 1)]);
 
       describe("after marking child as done", () => {
         test("parent is still stalled", () => {
