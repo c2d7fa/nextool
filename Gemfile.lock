@@ -1,0 +1,19 @@
+GEM
+  specs:
+    childprocess (4.1.0)
+    rexml (3.2.5)
+    rubyzip (2.3.2)
+    selenium-webdriver (4.1.0)
+      childprocess (>= 0.5, < 5.0)
+      rexml (~> 3.2, >= 3.2.5)
+      rubyzip (>= 1.2.2)
+
+PLATFORMS
+  ruby
+  x86_64-linux
+
+DEPENDENCIES
+  selenium-webdriver
+
+BUNDLED WITH
+   2.2.24

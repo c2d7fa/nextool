@@ -26,5 +26,6 @@ Watch unit tests:
 Generate screenshot above:
 
     $ yarn parcel index.html &
-    $ gem install selenium-webdriver
+    $ gem install bundler
+    $ bundle install
     $ ruby screenshot.rb
