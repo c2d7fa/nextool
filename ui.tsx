@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import styles from "./ui.module.scss";
+import * as styles from "./ui.module.scss";
 
 export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const className = [styles.button, props.className].join(" ");

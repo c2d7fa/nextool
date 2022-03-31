@@ -1,5 +1,5 @@
 import * as React from "react";
-import style from "./task-editor.module.scss";
+import * as style from "./task-editor.module.scss";
 
 import {Tasks, find, EditOperation} from "./tasks";
 import {Send} from "./app";
@@ -196,7 +196,7 @@ function PickerComponent(props: {view: ViewComponent & {type: "picker"}; send: S
     <div className={`${style.picker}`}>
       {props.view.options.map((option) => (
         <button
-          className={`${style.option} ${option.active ? style.active : style.inactive}`}
+          className={`${style.option} ${option.active ? style.active : ""}`}
           key={option.value}
           onClick={() =>
             props.send({
@@ -207,7 +207,7 @@ function PickerComponent(props: {view: ViewComponent & {type: "picker"}; send: S
             })
           }
         >
-          <div className={style.label}>{option.label}</div>
+          <div>{option.label}</div>
         </button>
       ))}
     </div>
