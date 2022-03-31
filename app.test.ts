@@ -1355,6 +1355,14 @@ describe("archiving tasks", () => {
       ]);
     });
 
-    test.todo("after unarchiving the task, it is restored to the original location in the main view");
+    const step4 = updateAll(step3, [...dragToFilter(nthTask(view(step3), 0).id, "all"), ...switchToFilter("all")]);
+
+    test("after unarchiving the task, it is restored to the original location in the main view", () => {
+      expect(view(step4).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+        {title: "Task 1", indentation: 0},
+        {title: "Task 2", indentation: 1},
+        {title: "Task 3", indentation: 1},
+      ]);
+    });
   });
 });

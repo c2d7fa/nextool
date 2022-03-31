@@ -111,10 +111,13 @@ export type EditOperation =
   | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action" | "archived"; value: boolean}
   | {type: "move"; side: "above" | "below"; target: string; indentation: number}
-  | {type: "moveToFilter"; filter: FilterId};
+  | {type: "moveToFilter"; filter: FilterId}
+  | null;
 
 export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): Tasks {
   function edit_(tasks: Tasks, operation: EditOperation): Tasks {
+    if (operation === null) return tasks;
+
     if (operation.type === "delete") {
       return IndentedList.fromList(IndentedList.toList(tasks.filter((task) => task.id !== id)));
     } else if (operation.type === "set") {
@@ -135,20 +138,21 @@ export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): 
 
       const update =
         filter === "ready"
-          ? ({property: "action", value: true} as const)
+          ? ({type: "set", property: "action", value: true} as const)
           : filter === "done"
-          ? ({property: "status", value: "done"} as const)
+          ? ({type: "set", property: "status", value: "done"} as const)
           : filter === "stalled"
-          ? ({property: "action", value: false} as const)
+          ? ({type: "set", property: "action", value: false} as const)
           : filter === "not-done"
-          ? ({property: "status", value: "active"} as const)
+          ? ({type: "set", property: "status", value: "active"} as const)
           : filter === "archive"
-          ? ({property: "archived", value: true} as const)
+          ? ({type: "set", property: "archived", value: true} as const)
           : null;
 
-      if (update === null) return tasks;
+      const archiveUpdate =
+        filter !== "archive" ? ({type: "set", property: "archived", value: false} as const) : null;
 
-      return edit(tasks, id, {type: "set", ...update});
+      return edit(tasks, id, update, archiveUpdate);
     } else if (operation.type === "move") {
       return IndentedList.moveItemInTree(tasks, {id}, operation);
     } else {
