@@ -7,6 +7,7 @@ type TaskData = {
   title: string;
   status: "active" | "paused" | "done";
   type: "task" | "project";
+  archived: boolean;
   action: boolean;
 };
 
@@ -20,13 +21,17 @@ export const empty: Tasks = [
     status: "active",
     action: true,
     type: "task",
-    children: [{id: "1", title: "Task 2", status: "done", action: true, children: [], type: "task"}],
+    archived: false,
+    children: [
+      {id: "1", title: "Task 2", status: "done", action: true, children: [], type: "task", archived: false},
+    ],
   },
   {
     id: "5",
     title: "Project 1",
     status: "active",
     action: false,
+    archived: false,
     children: [
       {
         id: "2",
@@ -34,9 +39,12 @@ export const empty: Tasks = [
         status: "active",
         action: true,
         type: "task",
-        children: [{id: "3", title: "Task 4", status: "paused", action: false, children: [], type: "task"}],
+        archived: false,
+        children: [
+          {id: "3", title: "Task 4", status: "paused", action: false, children: [], type: "task", archived: false},
+        ],
       },
-      {id: "4", title: "Task 5", status: "active", action: true, children: [], type: "task"},
+      {id: "4", title: "Task 5", status: "active", action: true, children: [], type: "task", archived: false},
     ],
     type: "project",
   },
@@ -47,6 +55,7 @@ export const empty: Tasks = [
     action: false,
     children: [],
     type: "project",
+    archived: false,
   },
 ];
 
@@ -83,6 +92,7 @@ export function add({tasks, filter}: {tasks: Tasks; filter: FilterId}, values: P
       action: false,
       status: "active",
       type: "task",
+      archived: false,
       children: [],
     },
   ];
@@ -99,7 +109,7 @@ export type EditOperation =
   | {type: "set"; property: "title"; value: string}
   | {type: "set"; property: "status"; value: "active" | "paused" | "done"}
   | {type: "set"; property: "type"; value: "task" | "project"}
-  | {type: "set"; property: "action"; value: boolean}
+  | {type: "set"; property: "action" | "archived"; value: boolean}
   | {type: "move"; side: "above" | "below"; target: string; indentation: number}
   | {type: "moveToFilter"; filter: FilterId};
 
@@ -132,6 +142,8 @@ export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): 
           ? ({property: "action", value: false} as const)
           : filter === "not-done"
           ? ({property: "status", value: "active"} as const)
+          : filter === "archive"
+          ? ({property: "archived", value: true} as const)
           : null;
 
       if (update === null) return tasks;
@@ -186,6 +198,7 @@ export type FilterId =
   | "done"
   | "stalled"
   | "not-done"
+  | "archive"
   | {type: "project"; project: {id: string}};
 
 function taskProject(tasks: Tasks, task: Task): null | {id: string} {
@@ -195,7 +208,14 @@ function taskProject(tasks: Tasks, task: Task): null | {id: string} {
   else return taskProject(tasks, parent);
 }
 
+function doesSubtaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
+  if (task.archived) return false;
+  return true;
+}
+
 function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
+  if (!doesSubtaskMatch(tasks, task, filter)) return false;
+
   if (typeof filter === "object") {
     if (taskProject(tasks, task)?.id === filter.project.id) return true;
     else return false;
@@ -209,10 +229,17 @@ function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
 }
 
 function filterTasks(tasks: Tasks, filter: FilterId): Tasks {
+  function filterSubtasks_(subtasks: IndentedList.TreeNode<TaskData>[]): IndentedList.TreeNode<TaskData>[] {
+    return subtasks.flatMap((subtask) => {
+      if (!doesSubtaskMatch(tasks, subtask, filter)) return [];
+      else return [{...subtask, children: filterSubtasks_(subtask.children)}];
+    });
+  }
+
   function filter_(tasks_: IndentedList.TreeNode<TaskData>[]): IndentedList.TreeNode<TaskData>[] {
     return tasks_.flatMap((task) => {
       const matches = doesTaskMatch(tasks, task, filter);
-      if (matches) return [task];
+      if (matches) return [{...task, children: filterSubtasks_(task.children)}];
       return filter_(task.children);
     });
   }

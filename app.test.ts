@@ -1314,3 +1314,41 @@ describe("projects", () => {
     });
   });
 });
+
+describe("archiving tasks", () => {
+  function archive(n: number) {
+    return (view: View) => dragToFilter(nthTask(view, n).id, "archive");
+  }
+
+  describe("when the archived task is a subtask", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Task 1"),
+      ...addTask("Task 2"),
+      ...addTask("Task 3"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
+    ]);
+
+    test("initially all tasks are shown in the view", () => {
+      expect(view(step1).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+        {title: "Task 1", indentation: 0},
+        {title: "Task 2", indentation: 1},
+        {title: "Task 3", indentation: 1},
+      ]);
+    });
+
+    const step2 = updateAll(step1, [archive(1)]);
+
+    test("after archiving, the subtask is removed from the main view", () => {
+      expect(view(step2).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+        {title: "Task 1", indentation: 0},
+        {title: "Task 3", indentation: 1},
+      ]);
+    });
+
+    test.todo("switching to the archive view shows the archived task");
+
+    test.todo("after unarchiving the task, it is restored to the original location in the main view");
+  });
+});

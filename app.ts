@@ -122,6 +122,18 @@ export function view(app: State): View {
           indicator: Tasks.isStalled(app.tasks, project) ? {} : null,
         })),
       },
+      {
+        title: "Archive",
+        filters: [
+          {
+            label: "Archive",
+            filter: "archive",
+            selected: app.filter === "archive",
+            dropTarget: {type: "filter", id: "archive"},
+            indicator: null,
+          },
+        ],
+      },
     ],
     taskList: Tasks.view(app),
     editor: TaskEditor.view(app.editor),
