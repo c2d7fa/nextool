@@ -1365,4 +1365,23 @@ describe("archiving tasks", () => {
       ]);
     });
   });
+
+  describe("archiving project removes it from active projects list", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Project"),
+      openNth(0),
+      setComponentValue("Type", "project"),
+    ]);
+
+    test("initially the project is shown in the sidebar", () => {
+      expect(sideBarActiveProjects(view(step1)).map(({label}) => ({label}))).toEqual([{label: "Project"}]);
+    });
+
+    const step2 = updateAll(step1, [archive(0)]);
+
+    test("after archiving, the project is removed from the sidebar", () => {
+      expect(sideBarActiveProjects(view(step2))).toEqual([]);
+    });
+  });
 });
