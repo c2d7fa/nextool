@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import * as ReactDOMClient from "react-dom/client";
 import * as App from "./app";
 import {loadTasks, saveTasks} from "./storage";
 import {TaskEditor} from "./task-editor";
@@ -129,4 +129,9 @@ function Main() {
   );
 }
 
-ReactDOM.render(<Main />, document.getElementById("root"));
+const root = ReactDOMClient.createRoot(document.getElementById("root")!);
+root.render(
+  <React.StrictMode>
+    <Main />
+  </React.StrictMode>,
+);
