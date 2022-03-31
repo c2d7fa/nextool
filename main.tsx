@@ -7,7 +7,7 @@ import {TextField, TextFieldButton, value as textFieldValue} from "./text-field"
 import * as Drag from "./drag";
 import {TaskList} from "./task-list";
 
-import style from "./main.module.scss";
+import * as style from "./main.module.scss";
 
 const AppContext = React.createContext<App.State>(null as any);
 

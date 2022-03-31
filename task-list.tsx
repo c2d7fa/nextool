@@ -4,7 +4,7 @@ import {Badge} from "./ui";
 import * as Drag from "./drag";
 import {Send} from "./app";
 
-import style from "./task-list.module.scss";
+import * as style from "./task-list.module.scss";
 
 function CheckBox(props: {checked: boolean; id: string; send: Send}) {
   return (
