@@ -1347,7 +1347,13 @@ describe("archiving tasks", () => {
       ]);
     });
 
-    test.todo("switching to the archive view shows the archived task");
+    const step3 = updateAll(step2, [...switchToFilter("archive")]);
+
+    test("switching to the archive view shows the archived task", () => {
+      expect(view(step3).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+        {title: "Task 2", indentation: 0},
+      ]);
+    });
 
     test.todo("after unarchiving the task, it is restored to the original location in the main view");
   });

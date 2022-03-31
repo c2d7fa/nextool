@@ -209,7 +209,7 @@ function taskProject(tasks: Tasks, task: Task): null | {id: string} {
 }
 
 function doesSubtaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
-  if (task.archived) return false;
+  if (task.archived && filter !== "archive") return false;
   return true;
 }
 
@@ -225,6 +225,7 @@ function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
   else if (filter === "done") return isDone(task);
   else if (filter === "stalled") return badges(tasks, task).includes("stalled");
   else if (filter === "not-done") return !isDone(task);
+  else if (filter === "archive") return task.archived;
   else return true;
 }
 
