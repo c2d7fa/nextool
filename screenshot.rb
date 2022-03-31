@@ -10,6 +10,6 @@ driver.find_element(:xpath, "//*[contains(@class, 'titleColumn')]").click
 driver.find_element(:xpath, "//*[contains(text(), 'All')]").click
 main = driver.find_element(:xpath, "//*[@id = 'root']")
 driver.execute_script("arguments[0].style.maxWidth = '1000px'", main)
-driver.execute_script("arguments[0].style.maxHeight = '450px'", main)
+driver.execute_script("arguments[0].style.maxHeight = '550px'", main)
 driver.execute_script("arguments[0].style.minHeight = 'auto'", main)
 main.save_screenshot("screenshot.png")
