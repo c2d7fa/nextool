@@ -65,7 +65,9 @@ export type View = {
 export function view(app: State): View {
   const stalledTasks = Tasks.view({tasks: app.tasks, filter: "stalled", taskDrag: app.taskDrag}).length;
 
-  const activeProjects = Tasks.projects(app.tasks).filter((project) => project.status === "active");
+  const activeProjects = Tasks.projects(app.tasks).filter(
+    (project) => project.status === "active" && !project.archived,
+  );
 
   return {
     sideBar: [
@@ -91,7 +93,13 @@ export function view(app: State): View {
       {
         title: "Tasks",
         filters: [
-          {label: "All", filter: "all", selected: app.filter === "all", dropTarget: null, indicator: null},
+          {
+            label: "All",
+            filter: "all",
+            selected: app.filter === "all",
+            dropTarget: {type: "filter", id: "all"},
+            indicator: null,
+          },
           {
             label: "Unfinished",
             filter: "not-done",
@@ -121,6 +129,18 @@ export function view(app: State): View {
           dropTarget: null,
           indicator: Tasks.isStalled(app.tasks, project) ? {} : null,
         })),
+      },
+      {
+        title: "Archive",
+        filters: [
+          {
+            label: "Archive",
+            filter: "archive",
+            selected: app.filter === "archive",
+            dropTarget: {type: "filter", id: "archive"},
+            indicator: null,
+          },
+        ],
       },
     ],
     taskList: Tasks.view(app),
