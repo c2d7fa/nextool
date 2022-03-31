@@ -91,7 +91,13 @@ export function view(app: State): View {
       {
         title: "Tasks",
         filters: [
-          {label: "All", filter: "all", selected: app.filter === "all", dropTarget: null, indicator: null},
+          {
+            label: "All",
+            filter: "all",
+            selected: app.filter === "all",
+            dropTarget: {type: "filter", id: "all"},
+            indicator: null,
+          },
           {
             label: "Unfinished",
             filter: "not-done",
