@@ -37,6 +37,8 @@ export function UnnamedTextField(props: {
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           props.send({type: "submit"});
+        } else if (e.key === "Escape") {
+          (e.target as HTMLInputElement).blur();
         }
       }}
     />
