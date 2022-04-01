@@ -1,5 +1,5 @@
 import * as React from "react";
-import {TaskListView} from "./tasks";
+import {BadgeId, TaskListView} from "./tasks";
 import {Badge} from "./ui";
 import * as Drag from "./drag";
 import {Send} from "./app";
@@ -15,10 +15,17 @@ function CheckBox(props: {checked: boolean; id: string; send: Send}) {
   );
 }
 
-function BadgeFor(props: {type: "ready" | "stalled"}) {
-  if (props.type === "ready") return <Badge color="green">Ready</Badge>;
-  else if (props.type === "stalled") return <Badge color="orange">Stalled</Badge>;
-  else return null;
+function BadgeFor(props: {type: BadgeId}) {
+  if (props.type === "ready") {
+    return <Badge color="green">Ready</Badge>;
+  } else if (props.type === "stalled") {
+    return <Badge color="orange">Stalled</Badge>;
+  } else if (props.type === "project") {
+    return <Badge color="project">Project</Badge>;
+  } else {
+    const unreachable: never = props.type;
+    return unreachable;
+  }
 }
 
 function Badges(props: {task: TaskListView[number]}) {

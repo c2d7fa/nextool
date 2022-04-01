@@ -8,8 +8,8 @@ import * as Drag from "./drag";
 
 type TextFieldId = "addTitle";
 
-import type {FilterId} from "./tasks";
-export type {FilterId};
+import type {FilterId, BadgeId} from "./tasks";
+export type {FilterId, BadgeId};
 
 export type SelectFilterEvent = {tag: "selectFilter"; filter: FilterId};
 export type CheckEvent = {tag: "check"; id: string};

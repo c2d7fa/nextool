@@ -7,7 +7,7 @@ export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return <button {...props} className={className} />;
 }
 
-export function Badge(props: {color: "green" | "orange"; children: React.ReactNode}) {
+export function Badge(props: {color: "green" | "orange" | "project"; children: React.ReactNode}) {
   const className = [styles.badge, styles[props.color]].join(" ");
   return <span className={className}>{props.children}</span>;
 }

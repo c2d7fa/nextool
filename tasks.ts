@@ -68,7 +68,7 @@ export type TaskListView = {
   done: boolean;
   paused: boolean;
   project: boolean;
-  badges: ("ready" | "stalled")[];
+  badges: BadgeId[];
   dropIndicator: null | {side: "above" | "below"; indentation: number};
   dropTargets: DropTarget[];
 }[];
@@ -182,13 +182,17 @@ export function isStalled(tasks: Tasks, task: {id: string}): boolean {
   return badges(tasks, task_).includes("stalled");
 }
 
-function badges(tasks: Tasks, task: Task): ("ready" | "stalled")[] {
+export type BadgeId = "ready" | "stalled" | "project";
+
+function badges(tasks: Tasks, task: Task): BadgeId[] {
   if (isPaused(tasks, task)) return [];
   if (isDone(task)) return [];
 
   const isProject = task.type === "project";
   const hasUnfinishedChildren = task.children.some((child) => !isDone(child));
   const hasActiveChildren = task.children.some((child) => !isDone(child) && !isPaused(tasks, child));
+
+  if (isProject) return ["project"];
 
   if (!isProject && task.action && !hasUnfinishedChildren) return ["ready"];
   if (!hasActiveChildren) return ["stalled"];
