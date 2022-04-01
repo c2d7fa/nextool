@@ -185,14 +185,29 @@ export function isStalled(tasks: Tasks, task: {id: string}): boolean {
 export type BadgeId = "ready" | "stalled" | "project";
 
 function badges(tasks: Tasks, task: Task): BadgeId[] {
-  const isProject = task.type === "project";
-  const hasUnfinishedChildren = task.children.some((child) => !isDone(child));
-  const hasActiveChildren = task.children.some((child) => !isDone(child) && !isPaused(tasks, child));
+  function isProject(task: Task): boolean {
+    return task.type === "project";
+  }
 
-  const isReady = !isPaused(tasks, task) && !isDone(task) && !isProject && task.action && !hasUnfinishedChildren;
-  const isStalled = !isPaused(tasks, task) && !isDone(task) && !isReady && !hasActiveChildren;
+  function isReady(task: Task): boolean {
+    const hasUnfinishedChildren = task.children.some((child) => !isDone(child));
+    return !isPaused(tasks, task) && !isDone(task) && !isProject(task) && task.action && !hasUnfinishedChildren;
+  }
 
-  return [isProject && "project", isStalled && "stalled", isReady && "ready"].filter(Boolean) as BadgeId[];
+  function isStalledTask(task: Task): boolean {
+    const hasActiveChildren = task.children.some((child) => !isDone(child) && !isPaused(tasks, child));
+    return !isPaused(tasks, task) && !isDone(task) && !isReady(task) && !hasActiveChildren;
+  }
+
+  function hasReadyDescendants(task: Task): boolean {
+    return task.children.some((child) => isReady(child) || hasReadyDescendants(child));
+  }
+
+  const isStalled = isStalledTask(task) || (isProject(task) && !hasReadyDescendants(task));
+
+  return [isProject(task) && "project", isStalled && "stalled", isReady(task) && "ready"].filter(
+    Boolean,
+  ) as BadgeId[];
 }
 
 export type FilterId =
