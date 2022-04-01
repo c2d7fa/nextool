@@ -1251,6 +1251,18 @@ describe("projects", () => {
 
       expect(view(example).taskList.map((t) => t.badges)).toEqual([["project", "stalled"], ["stalled"]]);
     });
+
+    test("however, project isn't stalled if it's paused", () => {
+      const example = updateAll(empty, [
+        ...switchToFilter("all"),
+        ...addTask("Project"),
+        openNth(0),
+        setComponentValue("Type", "project"),
+        setComponentValue("Status", "paused"),
+      ]);
+
+      expect(view(example).taskList.map((t) => t.badges)).toEqual([["project"]]);
+    });
   });
 
   describe("list of projects in the sidebar", () => {
