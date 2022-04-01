@@ -108,11 +108,15 @@
 
     .label {
       display: inline-block;
-      transition: transform 100ms ease-out;
+      transition: margin-left 100ms ease-out;
+
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     &:active .label {
-      transform: translateX(-6px);
+      margin-left: -6px;
     }
 
     &:hover, &:active {
@@ -130,7 +134,7 @@
       }
 
       .label {
-        transform: translateX(1em);
+        margin-left: 1em;
       }
     }
 
