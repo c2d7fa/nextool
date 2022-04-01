@@ -63,7 +63,7 @@ export type View = {
 };
 
 export function view(app: State): View {
-  const stalledTasks = Tasks.view({tasks: app.tasks, filter: "stalled", taskDrag: app.taskDrag}).length;
+  const stalledTasks = Tasks.countStalledTasks(app.tasks);
 
   const activeProjects = Tasks.projects(app.tasks).filter(
     (project) => project.status === "active" && !project.archived,

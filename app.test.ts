@@ -1114,22 +1114,44 @@ describe("counter next to filters", () => {
     return view.sideBar.flatMap((section) => section.filters).find((filter) => filter.label === label)?.indicator;
   }
 
-  const step1 = updateAll(empty, []);
+  describe("the counter shows stalled tasks", () => {
+    const step1 = updateAll(empty, []);
 
-  test("with no tasks, the counter isn't shown", () => {
-    expect(indicatorForFilter(view(step1), "Stalled")).toEqual(null);
+    test("with no tasks, the counter isn't shown", () => {
+      expect(indicatorForFilter(view(step1), "Stalled")).toEqual(null);
+    });
+
+    const step2 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task")]);
+
+    test("after adding task, the counter is shown", () => {
+      expect(indicatorForFilter(view(step2), "Stalled")).toEqual({text: "1"});
+    });
+
+    const step3 = updateAll(step2, [...dragToFilter(nthTask(step2, 0).id, "ready")]);
+
+    test("after dragging task into ready filter, the counter is hidden again", () => {
+      expect(indicatorForFilter(view(step3), "Stalled")).toEqual(null);
+    });
   });
 
-  const step2 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task")]);
+  describe("subtasks are not included", () => {
+    const example = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Task 1"),
+      ...addTask("Task 2"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      openNth(1),
+      setComponentValue("Status", "paused"),
+      ...switchToFilter("stalled"),
+    ]);
 
-  test("after adding task, the counter is shown", () => {
-    expect(indicatorForFilter(view(step2), "Stalled")).toEqual({text: "1"});
-  });
+    test("there is a paused subtask", () => {
+      expect(view(example).taskList.map((t) => t.paused)).toEqual([false, true]);
+    });
 
-  const step3 = updateAll(step2, [...dragToFilter(nthTask(step2, 0).id, "ready")]);
-
-  test("after dragging task into ready filter, the counter is hidden again", () => {
-    expect(indicatorForFilter(view(step3), "Stalled")).toEqual(null);
+    test("but the counter only shows one task", () => {
+      expect(indicatorForFilter(view(example), "Stalled")).toEqual({text: "1"});
+    });
   });
 });
 

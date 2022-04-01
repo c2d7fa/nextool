@@ -260,6 +260,10 @@ export function projects(tasks: Tasks): IndentedList.IndentedListItem<TaskData &
   }));
 }
 
+export function countStalledTasks(tasks: Tasks): number {
+  return filterTasks(tasks, "stalled").length;
+}
+
 export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<DragId, DropId>}): TaskListView {
   const {tasks, filter, taskDrag} = args;
 
