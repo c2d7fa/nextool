@@ -68,7 +68,7 @@ export type TaskListView = {
   done: boolean;
   paused: boolean;
   project: boolean;
-  badges: ("ready" | "stalled")[];
+  badges: BadgeId[];
   dropIndicator: null | {side: "above" | "below"; indentation: number};
   dropTargets: DropTarget[];
 }[];
@@ -182,18 +182,36 @@ export function isStalled(tasks: Tasks, task: {id: string}): boolean {
   return badges(tasks, task_).includes("stalled");
 }
 
-function badges(tasks: Tasks, task: Task): ("ready" | "stalled")[] {
-  if (isPaused(tasks, task)) return [];
-  if (isDone(task)) return [];
+export type BadgeId = "ready" | "stalled" | "project";
 
-  const isProject = task.type === "project";
-  const hasUnfinishedChildren = task.children.some((child) => !isDone(child));
-  const hasActiveChildren = task.children.some((child) => !isDone(child) && !isPaused(tasks, child));
+function badges(tasks: Tasks, task: Task): BadgeId[] {
+  function isProject(task: Task): boolean {
+    return task.type === "project";
+  }
 
-  if (!isProject && task.action && !hasUnfinishedChildren) return ["ready"];
-  if (!hasActiveChildren) return ["stalled"];
+  function isInactive(task: Task): boolean {
+    return isPaused(tasks, task) || isDone(task);
+  }
 
-  return [];
+  function isReady(task: Task): boolean {
+    const hasUnfinishedChildren = task.children.some((child) => !isDone(child));
+    return !isInactive(task) && !isProject(task) && task.action && !hasUnfinishedChildren;
+  }
+
+  function isStalledTask(task: Task): boolean {
+    const hasActiveChildren = task.children.some((child) => !isInactive(child));
+    return !isInactive(task) && !isReady(task) && !hasActiveChildren;
+  }
+
+  function hasReadyDescendants(task: Task): boolean {
+    return task.children.some((child) => isReady(child) || hasReadyDescendants(child));
+  }
+
+  const isStalled = isStalledTask(task) || (isProject(task) && !isInactive(task) && !hasReadyDescendants(task));
+
+  return [isProject(task) && "project", isStalled && "stalled", isReady(task) && "ready"].filter(
+    Boolean,
+  ) as BadgeId[];
 }
 
 export type FilterId =

@@ -1214,8 +1214,54 @@ describe("projects", () => {
       });
 
       test("the project has the stalled badge", () => {
-        expect(view(step2).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+        expect(view(step2).taskList.map((t) => t.badges)).toEqual([["project", "stalled"]]);
       });
+    });
+  });
+
+  describe("a project is stalled if it has only non-actionable tasks", () => {
+    test("a project with an actionable subtask is not stalled", () => {
+      const example = updateAll(empty, [
+        ...switchToFilter("all"),
+        ...addTask("Project"),
+        openNth(0),
+        setComponentValue("Type", "project"),
+        ...addTask("Task 1"),
+        ...addTask("Task 2"),
+        ...addTask("Task 3"),
+        ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+        ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
+        ...dragAndDropNth(3, 2, {side: "below", indentation: 1}),
+        openNth(2),
+        setComponentValue("Actionable", "yes"),
+      ]);
+
+      expect(view(example).taskList.map((t) => t.badges)).toEqual([["project"], [], ["ready"], ["stalled"]]);
+    });
+
+    test("a project with only a stalled subtask is itself also stalled", () => {
+      const example = updateAll(empty, [
+        ...switchToFilter("all"),
+        ...addTask("Project"),
+        openNth(0),
+        setComponentValue("Type", "project"),
+        ...addTask("Task 1"),
+        ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      ]);
+
+      expect(view(example).taskList.map((t) => t.badges)).toEqual([["project", "stalled"], ["stalled"]]);
+    });
+
+    test("however, project isn't stalled if it's paused", () => {
+      const example = updateAll(empty, [
+        ...switchToFilter("all"),
+        ...addTask("Project"),
+        openNth(0),
+        setComponentValue("Type", "project"),
+        setComponentValue("Status", "paused"),
+      ]);
+
+      expect(view(example).taskList.map((t) => t.badges)).toEqual([["project"]]);
     });
   });
 
@@ -1279,7 +1325,7 @@ describe("projects", () => {
     const step2 = updateAll(step1, [
       ...addTask("Action"),
       openNth(1),
-      setComponentValue("Type", "action"),
+      setComponentValue("Actionable", "yes"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
     ]);
 

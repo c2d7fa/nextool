@@ -1,6 +1,6 @@
 @use "./shared";
 
-$project-hue: 300;
+$project-hue: shared.$project-hue;
 
 .task {
   display: inline-flex;
@@ -16,10 +16,11 @@ $project-hue: 300;
     overflow: auto;
   }
 
-  .badge {
+  .badges {
     margin-left: 1ex;
     display: inline-flex;
     align-items: center;
+    column-gap: 0.5ex;
   }
 
   &.done {
@@ -33,12 +34,6 @@ $project-hue: 300;
     .title {
       color: #888;
       font-weight: normal;
-    }
-  }
-
-  &.project {
-    .title {
-      color: lch(35% 10 $project-hue);
     }
   }
 }
@@ -159,14 +154,20 @@ $project-hue: 300;
     }
 
     &.project {
-      $start: lch(96% 1.5 $project-hue);
-      $end: color-mix(in lch, $start, white 25%);
-      background: linear-gradient(to top, $start, $end);
+      background: linear-gradient(
+        45deg,
+        color-mix(in lch, lch(95% 5 $project-hue), red 5%),
+        lch(97% 5 $project-hue) 1em,
+        white 10em
+      );
 
       &:hover {
-        $starthover: color-mix(in lch, $start, lch(80% 10 $project-hue) 10%);
-        $endhover: color-mix(in lch, $end, lch(80% 10 $project-hue) 10%);
-        background: linear-gradient(to top, $starthover, $endhover);
+        background: linear-gradient(
+        45deg,
+        color-mix(in lch, lch(80% 30 $project-hue) 10%, color-mix(in lch, lch(95% 5 $project-hue), red 5%)),
+        color-mix(in lch, lch(80% 30 $project-hue) 10%, lch(97% 5 $project-hue)) 1em,
+        color-mix(in lch, lch(80% 30 $project-hue) 10%, white) 10em
+      );
       }
     }
 
