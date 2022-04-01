@@ -1214,7 +1214,7 @@ describe("projects", () => {
       });
 
       test("the project has the stalled badge", () => {
-        expect(view(step2).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+        expect(view(step2).taskList.map((t) => t.badges)).toEqual([["project", "stalled"]]);
       });
     });
   });

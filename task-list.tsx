@@ -30,7 +30,7 @@ function BadgeFor(props: {type: BadgeId}) {
 
 function Badges(props: {task: TaskListView[number]}) {
   return (
-    <span className={style.badge}>
+    <span className={style.badges}>
       {props.task.badges.map((badge) => (
         <BadgeFor type={badge} key={badge} />
       ))}

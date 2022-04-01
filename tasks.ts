@@ -185,19 +185,14 @@ export function isStalled(tasks: Tasks, task: {id: string}): boolean {
 export type BadgeId = "ready" | "stalled" | "project";
 
 function badges(tasks: Tasks, task: Task): BadgeId[] {
-  if (isPaused(tasks, task)) return [];
-  if (isDone(task)) return [];
-
   const isProject = task.type === "project";
   const hasUnfinishedChildren = task.children.some((child) => !isDone(child));
   const hasActiveChildren = task.children.some((child) => !isDone(child) && !isPaused(tasks, child));
 
-  if (isProject && hasActiveChildren) return ["project"];
+  const isReady = !isPaused(tasks, task) && !isDone(task) && !isProject && task.action && !hasUnfinishedChildren;
+  const isStalled = !isPaused(tasks, task) && !isDone(task) && !isReady && !hasActiveChildren;
 
-  if (!isProject && task.action && !hasUnfinishedChildren) return ["ready"];
-  if (!hasActiveChildren) return ["stalled"];
-
-  return [];
+  return [isProject && "project", isStalled && "stalled", isReady && "ready"].filter(Boolean) as BadgeId[];
 }
 
 export type FilterId =

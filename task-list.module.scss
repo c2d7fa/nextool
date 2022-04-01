@@ -16,10 +16,11 @@ $project-hue: shared.$project-hue;
     overflow: auto;
   }
 
-  .badge {
+  .badges {
     margin-left: 1ex;
     display: inline-flex;
     align-items: center;
+    column-gap: 0.5ex;
   }
 
   &.done {
