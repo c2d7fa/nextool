@@ -36,15 +36,6 @@
 
   padding: 0 (shared.$padding-x * 0.5);
 
-  &.green {
-    border: 1px solid #00000040;
-    background: #b9daac;
-    color: #6c776b;
-  }
-
-  &.orange {
-    border: 1px solid #00000040;
-    background: #f5d197;
-    color: #72644b;
-  }
+  &.green { @include shared.badge-like(shared.$green-hue); }
+  &.orange { @include shared.badge-like(shared.$orange-hue); }
 }

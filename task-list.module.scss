@@ -1,5 +1,7 @@
 @use "./shared";
 
+$project-hue: 300;
+
 .task {
   display: inline-flex;
   align-items: center;
@@ -36,7 +38,7 @@
 
   &.project {
     .title {
-      color: #537e6f;
+      color: lch(35% 10 $project-hue);
     }
   }
 }
@@ -44,7 +46,7 @@
 .id {
   cursor: default;
 
-  color: #aaa;
+  color: #00000040;
   margin-left: 0.25em;
   font-size: 0.8em;
 
@@ -157,10 +159,14 @@
     }
 
     &.project {
-      background-color: #537e6f12;
+      $start: lch(96% 1.5 $project-hue);
+      $end: color-mix(in lch, $start, white 25%);
+      background: linear-gradient(to top, $start, $end);
 
       &:hover {
-        background-color: #537e6f1c;
+        $starthover: color-mix(in lch, $start, lch(80% 10 $project-hue) 10%);
+        $endhover: color-mix(in lch, $end, lch(80% 10 $project-hue) 10%);
+        background: linear-gradient(to top, $starthover, $endhover);
       }
     }
 

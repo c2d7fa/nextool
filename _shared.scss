@@ -1,5 +1,17 @@
 @import "./fonts.css";
 
+$branding-color: #db7fb8;
+$orange-hue: 70;
+$green-hue: 135;
+
+@mixin badge-like($hue) {
+  border: 1px solid lch(50% 10 $hue);
+  background: linear-gradient(to top, lch(87% 25 $hue), lch(90% 25 $hue));
+  color: lch(40% 10 $hue);
+  box-shadow: 0 2px 0px -1px lch(87% 25 $hue);
+  font-family: 'Roboto Condensed';
+}
+
 $border-radius: 3px;
 $padding-x: 0.6em;
 $padding-y: 0.3em;

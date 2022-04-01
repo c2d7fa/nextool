@@ -20,7 +20,7 @@
 
   .topBar {
     grid-area: top-bar;
-    background-color: #db7fb8;
+    background-color: shared.$branding-color;
     border-bottom: 1px solid #00000040;
   }
 
@@ -143,20 +143,18 @@
       place-items: center;
       place-content: center;
 
-      opacity: 0.7;
+      opacity: 0.8;
 
       margin-left: auto;
       font-weight: normal;
       font-size: 0.9em;
 
-      border: 1px solid #00000040;
-      background-color: #f5d197;
-      color: #72644b;
-
       border-radius: 1em;
       height: 1em;
       min-width: 1em;
       padding: 0 0.5ex;
+
+      @include shared.badge-like(shared.$orange-hue);
 
       .text {
         font-size: 0.9em;
