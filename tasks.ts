@@ -192,7 +192,7 @@ function badges(tasks: Tasks, task: Task): BadgeId[] {
   const hasUnfinishedChildren = task.children.some((child) => !isDone(child));
   const hasActiveChildren = task.children.some((child) => !isDone(child) && !isPaused(tasks, child));
 
-  if (isProject) return ["project"];
+  if (isProject && hasActiveChildren) return ["project"];
 
   if (!isProject && task.action && !hasUnfinishedChildren) return ["ready"];
   if (!hasActiveChildren) return ["stalled"];
