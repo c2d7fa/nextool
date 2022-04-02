@@ -97,7 +97,7 @@ export function add({tasks, filter}: {tasks: Tasks; filter: FilterId}, values: P
     },
   ];
 
-  return edit(result, id, {type: "moveToFilter", filter});
+  return edit({tasks: result, filter}, id, {type: "moveToFilter", filter});
 }
 
 export function find(tasks: Tasks, id: string): TaskData | null {
@@ -113,7 +113,11 @@ export type EditOperation =
   | {type: "moveToFilter"; filter: FilterId}
   | null;
 
-export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): Tasks {
+export function edit(
+  {tasks, filter}: {tasks: Tasks; filter: FilterId},
+  id: string,
+  ...operations: EditOperation[]
+): Tasks {
   function edit_(tasks: Tasks, operation: EditOperation): Tasks {
     if (operation === null) return tasks;
 
@@ -142,9 +146,13 @@ export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): 
       const archiveUpdate =
         filter !== "archive" ? ({type: "set", property: "archived", value: false} as const) : null;
 
-      return edit(tasks, id, update, archiveUpdate);
+      return edit({tasks, filter}, id, update, archiveUpdate);
     } else if (operation.type === "move") {
-      return IndentedList.moveItemInTree(tasks, {id}, operation);
+      return IndentedList.moveItemInSublistOfTree(
+        {tree: tasks, list: IndentedList.toList(filterTasks(tasks, filter))},
+        {id},
+        operation,
+      );
     } else {
       const unreachable: never = operation;
       return unreachable;

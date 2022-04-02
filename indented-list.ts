@@ -183,6 +183,18 @@ export function moveItemInTree<D>(tree: Tree<D>, source: Handle, location: Inden
   return moveNodeInTree(tree, from, to);
 }
 
+export function moveItemInSublistOfTree<D>(
+  {tree, list}: {tree: Tree<D>; list: IndentedList<D>},
+  source: Handle,
+  location: IndentedListInsertLocation,
+): Tree<D> {
+  const realIndentation = toList(tree).findIndex((item) => item.id === location.target)!;
+  const sublistIndentation = list.findIndex((item) => item.id === location.target)!;
+  const indentation = realIndentation - sublistIndentation + location.indentation;
+
+  return moveItemInTree(tree, source, {...location, indentation});
+}
+
 export function merge<D>(tree: Tree<D>, patches: (Handle & Partial<D>)[]): Tree<D> {
   return patches.reduce((result, patch) => updateNode(result, patch, (node) => ({...node, ...patch})), tree);
 }

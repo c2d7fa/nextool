@@ -594,6 +594,45 @@ describe("nesting tasks with drag and drop", () => {
   });
 });
 
+describe("drag and drop in filtered views", () => {
+  describe("example in finished view, when subtask and other top-level task are finished, but parent is not", () => {
+    const example = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Task 0"),
+      ...addTask("Task 1"),
+      ...addTask("Task 2"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      (view) => check(view, 1),
+      (view) => check(view, 2),
+      ...switchToFilter("done"),
+    ]);
+
+    describe("initially", () => {
+      test("the correct tasks are shown in the finished view", () => {
+        expect(view(example).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+          {title: "Task 1", indentation: 0},
+          {title: "Task 2", indentation: 0},
+        ]);
+      });
+    });
+
+    describe("after dragging top-level task into finished child task", () => {
+      const step1 = updateAll(example, [
+        ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+        ...switchToFilter("all"),
+      ]);
+
+      test("the correct tasks are shown in the all view", () => {
+        expect(view(step1).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+          {title: "Task 0", indentation: 0},
+          {title: "Task 1", indentation: 1},
+          {title: "Task 2", indentation: 2},
+        ]);
+      });
+    });
+  });
+});
+
 describe("a task that has an unfinished child task isn't stalled", () => {
   describe("when there is a parent with one child task", () => {
     const example = updateAll(empty, [
