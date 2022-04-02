@@ -93,6 +93,14 @@ function SideBar(props: {sections: App.SideBarSectionView[]; send: App.Send}) {
   );
 }
 
+function TopBarButton(props: {children: React.ReactNode; send: App.Send}) {
+  return (
+    <div className={style.topBarButtonContainer}>
+      <button className={style.topBarButton}>{props.children}</button>
+    </div>
+  );
+}
+
 function Main() {
   const [app, setApp] = React.useState<App.State>(loadState());
 
@@ -109,7 +117,10 @@ function Main() {
   return (
     <AppContext.Provider value={app}>
       <div className={style.outerContainer}>
-        <div className={style.topBar} />
+        <div className={style.topBar}>
+          <TopBarButton send={send}>Load</TopBarButton>
+          <TopBarButton send={send}>Save</TopBarButton>
+        </div>
         <SideBar sections={view_.sideBar} send={send} />
         <div className={style.innerContainer}>
           <div className={style.left}>
