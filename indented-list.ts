@@ -241,3 +241,16 @@ export function isDescendant<T extends {id: string}>(
   if (ancestorNode.children.find((child) => child.id === query.id)) return true;
   return ancestorNode.children.some((child) => isDescendant(tree, query, child));
 }
+
+export function anyAncestor<T extends {id: string}>(
+  tree: Tree<T>,
+  query: {id: string},
+  predicate: (ancestor: TreeNode<T>) => boolean,
+): boolean {
+  const node = findNode(tree, query);
+  if (!node) return false;
+  if (predicate(node)) return true;
+  const parent = findParent(tree, query);
+  if (!parent) return false;
+  return anyAncestor(tree, parent, predicate);
+}

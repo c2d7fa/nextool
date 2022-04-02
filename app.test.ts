@@ -1452,6 +1452,47 @@ describe("archiving tasks", () => {
       expect(sideBarActiveProjects(view(step2))).toEqual([]);
     });
   });
+
+  describe("children of archived tasks are also archived", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Task 1"),
+      ...addTask("Task 2"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+    ]);
+
+    describe("before archiving tasks", () => {
+      test("the tasks are shown in the all view", () => {
+        expect(view(step1).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+          {title: "Task 1", indentation: 0},
+          {title: "Task 2", indentation: 1},
+        ]);
+      });
+
+      const step1Archive = updateAll(step1, [...switchToFilter("archive")]);
+
+      test("the tasks are not shown in the archive view", () => {
+        expect(view(step1Archive).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([]);
+      });
+    });
+
+    const step2 = updateAll(step1, [archive(0)]);
+
+    describe("after archiving tasks", () => {
+      test("the tasks are not shown in the all view", () => {
+        expect(view(step2).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([]);
+      });
+
+      const step2Archive = updateAll(step2, [...switchToFilter("archive")]);
+
+      test("the tasks are shown in the archive view", () => {
+        expect(view(step2Archive).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+          {title: "Task 1", indentation: 0},
+          {title: "Task 2", indentation: 1},
+        ]);
+      });
+    });
+  });
 });
 
 describe("saving and loading files", () => {

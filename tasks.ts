@@ -169,10 +169,11 @@ function isDone(task: TaskData): boolean {
 }
 
 function isPaused(tasks: Tasks, task: Task): boolean {
-  if (task.status === "paused") return true;
-  const parent = IndentedList.findParent(tasks, task);
-  if (parent) return isPaused(tasks, parent);
-  return false;
+  return IndentedList.anyAncestor(tasks, task, (task) => task.status === "paused");
+}
+
+function isArchived(tasks: Tasks, task: TaskData): boolean {
+  return IndentedList.anyAncestor(tasks, task, (task) => task.archived);
 }
 
 export function isStalled(tasks: Tasks, task: {id: string}): boolean {
@@ -231,7 +232,7 @@ function taskProject(tasks: Tasks, task: Task): null | {id: string} {
 }
 
 function doesSubtaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
-  if (task.archived && filter !== "archive") return false;
+  if (isArchived(tasks, task) && filter !== "archive") return false;
   return true;
 }
 
