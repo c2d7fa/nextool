@@ -106,7 +106,10 @@ function TopBarButton(props: {children: React.ReactNode; event: App.Event; send:
 function execute(effects: App.Effect[]) {
   function execute_(effect: App.Effect) {
     if (effect.type === "fileDownload") {
-      console.warn("Unimplemented effect: fileDownload");
+      const downloadLinkElement = document.createElement("a");
+      downloadLinkElement.setAttribute("href", URL.createObjectURL(new Blob([effect.contents])));
+      downloadLinkElement.setAttribute("download", effect.name);
+      downloadLinkElement.click();
     } else if (effect.type === "fileUpload") {
       console.warn("Unimplemented effect: fileUpload");
     } else {
