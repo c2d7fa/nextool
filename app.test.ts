@@ -1469,7 +1469,7 @@ describe("saving and loading state", () => {
     });
 
     test("the tasks have the correct badges", () => {
-      expect(view(example).taskList.map(({badges}) => badges)).toEqual([["ready"], ["stalled"]]);
+      expect(view(example).taskList.map(({badges}) => badges)).toEqual([["ready"], []]);
     });
   });
 });
