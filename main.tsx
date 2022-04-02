@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOMClient from "react-dom/client";
 import * as App from "./app";
-import {loadTasks, saveTasks} from "./storage";
+import {loadState, saveTasks} from "./storage";
 import {TaskEditor} from "./task-editor";
 import {TextField, TextFieldButton, value as textFieldValue} from "./text-field";
 import * as Drag from "./drag";
@@ -93,18 +93,55 @@ function SideBar(props: {sections: App.SideBarSectionView[]; send: App.Send}) {
   );
 }
 
+function TopBarButton(props: {children: React.ReactNode; event: App.Event; send: App.Send}) {
+  return (
+    <div className={style.topBarButtonContainer}>
+      <button className={style.topBarButton} onClick={() => props.send(props.event)}>
+        {props.children}
+      </button>
+    </div>
+  );
+}
+
+function execute(effects: App.Effect[], send: App.Send) {
+  function execute_(effect: App.Effect) {
+    if (effect.type === "fileDownload") {
+      const downloadLinkElement = document.createElement("a");
+      downloadLinkElement.setAttribute("href", URL.createObjectURL(new Blob([effect.contents])));
+      downloadLinkElement.setAttribute("download", effect.name);
+      downloadLinkElement.click();
+    } else if (effect.type === "fileUpload") {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.onchange = (ev) => {
+        const file = (ev.target as HTMLInputElement).files![0];
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const contents = (ev.target as FileReader).result as string;
+          send({tag: "storage", type: "loadFile", name: file.name, contents});
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    } else {
+      const unreachable: never = effect;
+      return unreachable;
+    }
+  }
+
+  return effects.forEach(execute_);
+}
+
 function Main() {
-  const [app, setApp] = React.useState<App.State>(App.empty);
+  const [app, setApp] = React.useState<App.State>(loadState());
 
   const view_ = App.view(app);
-
-  React.useEffect(() => {
-    setApp((app) => ({...app, tasks: loadTasks()}));
-  }, []);
 
   const send = React.useCallback((ev: App.Event) => {
     setApp((app) => {
       const app_ = App.updateApp(app, ev);
+      const effects = App.effects(app, ev);
+      execute(effects, send);
       saveTasks(app_.tasks);
       return app_;
     });
@@ -113,7 +150,14 @@ function Main() {
   return (
     <AppContext.Provider value={app}>
       <div className={style.outerContainer}>
-        <div className={style.topBar} />
+        <div className={style.topBar}>
+          <TopBarButton send={send} event={{tag: "storage", type: "clickLoadButton"}}>
+            Load
+          </TopBarButton>
+          <TopBarButton send={send} event={{tag: "storage", type: "clickSaveButton"}}>
+            Save
+          </TopBarButton>
+        </div>
         <SideBar sections={view_.sideBar} send={send} />
         <div className={style.innerContainer}>
           <div className={style.left}>
