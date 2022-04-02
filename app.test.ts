@@ -1,4 +1,5 @@
 import {updateApp, State, view, Event, empty, DragId, DropId, View} from "./app";
+import {loadString, saveString} from "./storage";
 import {FilterId} from "./tasks";
 
 function updateAll(state: State, events: (Event | ((view: View) => Event[]))[]): State {
@@ -1450,6 +1451,25 @@ describe("archiving tasks", () => {
 
     test("after archiving, the project is removed from the sidebar", () => {
       expect(sideBarActiveProjects(view(step2))).toEqual([]);
+    });
+  });
+});
+
+describe("saving and loading state", () => {
+  describe("loading state saved from an older version", () => {
+    const exampleData = `[{"id":"0","title":"Task 1","done":false,"action":true},{"id":"1","title":"Task 2","done":true,"action":false}]`;
+    const example = updateAll(loadString(exampleData), [...switchToFilter("all")]);
+
+    test("two tasks are loaded", () => {
+      expect(view(example).taskList.length).toEqual(2);
+    });
+
+    test("their statuses are loaded correctly", () => {
+      expect(view(example).taskList.map(({done}) => done)).toEqual([false, true]);
+    });
+
+    test("the tasks have the correct badges", () => {
+      expect(view(example).taskList.map(({badges}) => badges)).toEqual([["ready"], ["stalled"]]);
     });
   });
 });

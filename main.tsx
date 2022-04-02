@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOMClient from "react-dom/client";
 import * as App from "./app";
-import {loadTasks, saveTasks} from "./storage";
+import {loadState, saveTasks} from "./storage";
 import {TaskEditor} from "./task-editor";
 import {TextField, TextFieldButton, value as textFieldValue} from "./text-field";
 import * as Drag from "./drag";
@@ -94,13 +94,9 @@ function SideBar(props: {sections: App.SideBarSectionView[]; send: App.Send}) {
 }
 
 function Main() {
-  const [app, setApp] = React.useState<App.State>(App.empty);
+  const [app, setApp] = React.useState<App.State>(loadState());
 
   const view_ = App.view(app);
-
-  React.useEffect(() => {
-    setApp((app) => ({...app, tasks: loadTasks()}));
-  }, []);
 
   const send = React.useCallback((ev: App.Event) => {
     setApp((app) => {
