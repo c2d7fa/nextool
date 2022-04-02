@@ -1,6 +1,8 @@
 import * as Tasks from "./tasks";
 import * as App from "./app";
 
+export type Event = {tag: "storage"; type: "clickSaveButton"} | {tag: "storage"; type: "clickLoadButton"};
+
 type TypeNames = {
   string: string;
   number: number;

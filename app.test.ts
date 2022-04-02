@@ -1,4 +1,4 @@
-import {updateApp, State, view, Event, empty, DragId, DropId, View} from "./app";
+import {updateApp, State, view, Event, empty, DragId, DropId, View, effects, Effect} from "./app";
 import {loadString, saveString} from "./storage";
 import {FilterId} from "./tasks";
 
@@ -1471,5 +1471,29 @@ describe("saving and loading state", () => {
     test("the tasks have the correct badges", () => {
       expect(view(example).taskList.map(({badges}) => badges)).toEqual([["ready"], []]);
     });
+  });
+});
+
+describe("saving and loading files", () => {
+  describe("saving and then loading a file gives the same result", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Task 1"),
+      ...addTask("Task 2"),
+      ...addTask("Task 3"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
+    ]);
+
+    const step1View = view(step1);
+
+    const step2 = updateAll(step1, [{tag: "storage", type: "clickSaveButton"}]);
+    const step2Effects = effects(step2, {tag: "storage", type: "clickSaveButton"});
+
+    test("clicking save button triggers a file download effect", () => {
+      expect(step2Effects[0]).toMatchObject({type: "fileDownload", name: "tasks.json"});
+    });
+
+    const fileContents = (step2Effects[0] as Effect & {type: "fileDownload"}).contents;
   });
 });

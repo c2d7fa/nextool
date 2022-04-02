@@ -93,12 +93,29 @@ function SideBar(props: {sections: App.SideBarSectionView[]; send: App.Send}) {
   );
 }
 
-function TopBarButton(props: {children: React.ReactNode; send: App.Send}) {
+function TopBarButton(props: {children: React.ReactNode; event: App.Event; send: App.Send}) {
   return (
     <div className={style.topBarButtonContainer}>
-      <button className={style.topBarButton}>{props.children}</button>
+      <button className={style.topBarButton} onClick={() => props.send(props.event)}>
+        {props.children}
+      </button>
     </div>
   );
+}
+
+function execute(effects: App.Effect[]) {
+  function execute_(effect: App.Effect) {
+    if (effect.type === "fileDownload") {
+      console.warn("Unimplemented effect: fileDownload");
+    } else if (effect.type === "fileUpload") {
+      console.warn("Unimplemented effect: fileUpload");
+    } else {
+      const unreachable: never = effect;
+      return unreachable;
+    }
+  }
+
+  return effects.forEach(execute_);
 }
 
 function Main() {
@@ -109,6 +126,8 @@ function Main() {
   const send = React.useCallback((ev: App.Event) => {
     setApp((app) => {
       const app_ = App.updateApp(app, ev);
+      const effects = App.effects(app, ev);
+      execute(effects);
       saveTasks(app_.tasks);
       return app_;
     });
@@ -118,8 +137,12 @@ function Main() {
     <AppContext.Provider value={app}>
       <div className={style.outerContainer}>
         <div className={style.topBar}>
-          <TopBarButton send={send}>Load</TopBarButton>
-          <TopBarButton send={send}>Save</TopBarButton>
+          <TopBarButton send={send} event={{tag: "storage", type: "clickLoadButton"}}>
+            Load
+          </TopBarButton>
+          <TopBarButton send={send} event={{tag: "storage", type: "clickSaveButton"}}>
+            Save
+          </TopBarButton>
         </div>
         <SideBar sections={view_.sideBar} send={send} />
         <div className={style.innerContainer}>
