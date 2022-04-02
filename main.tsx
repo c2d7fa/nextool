@@ -9,22 +9,10 @@ import {TaskList} from "./task-list";
 
 import * as style from "./main.module.scss";
 
-const AppContext = React.createContext<App.State>(null as any);
-
-function useApp(): App.State {
-  return React.useContext(AppContext);
-}
-
-function AddTask(props: {send(ev: App.Event): void}) {
-  const textFields = useApp().textFields;
+function AddTask(props: {view: App.View["addTask"]; send(ev: App.Event): void}) {
   return (
     <div className={style.newTask}>
-      <TextField
-        field="addTitle"
-        placeholder="New Task"
-        value={textFieldValue(textFields, "addTitle")}
-        send={props.send}
-      />
+      <TextField field="addTitle" placeholder="New Task" value={props.view.value} send={props.send} />
       <TextFieldButton send={props.send} field="addTitle">
         Add Task
       </TextFieldButton>
@@ -135,7 +123,7 @@ function execute(effects: App.Effect[], send: App.Send) {
 function Main() {
   const [app, setApp] = React.useState<App.State>(loadState());
 
-  const view_ = App.view(app);
+  const view = App.view(app);
 
   const send = (ev: App.Event) => {
     const effects = App.effects(app, ev);
@@ -149,28 +137,26 @@ function Main() {
   };
 
   return (
-    <AppContext.Provider value={app}>
-      <div className={style.outerContainer}>
-        <div className={style.topBar}>
-          <TopBarButton send={send} event={{tag: "storage", type: "clickLoadButton"}}>
-            Load
-          </TopBarButton>
-          <TopBarButton send={send} event={{tag: "storage", type: "clickSaveButton"}}>
-            Save
-          </TopBarButton>
+    <div className={style.outerContainer}>
+      <div className={style.topBar}>
+        <TopBarButton send={send} event={{tag: "storage", type: "clickLoadButton"}}>
+          Load
+        </TopBarButton>
+        <TopBarButton send={send} event={{tag: "storage", type: "clickSaveButton"}}>
+          Save
+        </TopBarButton>
+      </div>
+      <SideBar sections={view.sideBar} send={send} />
+      <div className={style.innerContainer}>
+        <div className={style.left}>
+          <TaskList view={view.taskList} send={send} />
+          <AddTask view={view.addTask} send={send} />
         </div>
-        <SideBar sections={view_.sideBar} send={send} />
-        <div className={style.innerContainer}>
-          <div className={style.left}>
-            <TaskList view={view_.taskList} send={send} />
-            <AddTask send={send} />
-          </div>
-          <div className={style.right}>
-            <TaskEditor view={view_.editor} send={send} />
-          </div>
+        <div className={style.right}>
+          <TaskEditor view={view.editor} send={send} />
         </div>
       </div>
-    </AppContext.Provider>
+    </div>
   );
 }
 

@@ -61,6 +61,7 @@ export type FilterView = {
 export type SideBarSectionView = {title: string; filters: FilterView[]};
 
 export type View = {
+  addTask: {value: string};
   sideBar: SideBarSectionView[];
   taskList: TaskListView;
   editor: TaskEditor.View;
@@ -74,6 +75,7 @@ export function view(app: State): View {
   );
 
   return {
+    addTask: {value: textFieldValue(app.textFields, "addTitle")},
     sideBar: [
       {
         title: "Actions",
