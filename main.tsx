@@ -137,15 +137,16 @@ function Main() {
 
   const view_ = App.view(app);
 
-  const send = React.useCallback((ev: App.Event) => {
+  const send = (ev: App.Event) => {
+    const effects = App.effects(app, ev);
+    execute(effects, send);
+
     setApp((app) => {
       const app_ = App.updateApp(app, ev);
-      const effects = App.effects(app, ev);
-      execute(effects, send);
       saveTasks(app_.tasks);
       return app_;
     });
-  }, []);
+  };
 
   return (
     <AppContext.Provider value={app}>
