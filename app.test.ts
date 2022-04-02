@@ -1475,6 +1475,37 @@ describe("saving and loading state", () => {
 });
 
 describe("saving and loading files", () => {
+  describe("loading a file from an empty state replaces the current state", () => {
+    const step1 = updateAll(empty, [{tag: "storage", type: "clickLoadButton"}]);
+    const step1e = effects(empty, {tag: "storage", type: "clickLoadButton"});
+
+    test("clicking load button triggers a file upload effect", () => {
+      expect(step1e).toEqual([{type: "fileUpload"}]);
+    });
+
+    const step2 = updateAll(step1, [
+      {
+        tag: "storage",
+        type: "loadFile",
+        name: "tasks.json",
+        contents: `[{"id":"0","title":"Task 1","done":false,"action":true},{"id":"1","title":"Task 2","done":true,"action":false}]`,
+      },
+      ...switchToFilter("all"),
+    ]);
+
+    test("two tasks are loaded", () => {
+      expect(view(step2).taskList.length).toEqual(2);
+    });
+
+    test("their statuses are loaded correctly", () => {
+      expect(view(step2).taskList.map(({done}) => done)).toEqual([false, true]);
+    });
+
+    test("the tasks have the correct badges", () => {
+      expect(view(step2).taskList.map(({badges}) => badges)).toEqual([["ready"], []]);
+    });
+  });
+
   describe("saving and then loading a file gives the same result", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
@@ -1485,8 +1516,6 @@ describe("saving and loading files", () => {
       ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
     ]);
 
-    const step1View = view(step1);
-
     const step2 = updateAll(step1, [{tag: "storage", type: "clickSaveButton"}]);
     const step2Effects = effects(step2, {tag: "storage", type: "clickSaveButton"});
 
@@ -1495,5 +1524,20 @@ describe("saving and loading files", () => {
     });
 
     const fileContents = (step2Effects[0] as Effect & {type: "fileDownload"}).contents;
+
+    const step3 = updateAll(step2, [{tag: "storage", type: "clickLoadButton"}]);
+    const step3Effects = effects(step3, {tag: "storage", type: "clickLoadButton"});
+
+    test("clicking load button triggers a file upload effect", () => {
+      expect(step3Effects[0]).toMatchObject({type: "fileUpload"});
+    });
+
+    const step4 = updateAll(step3, [
+      {tag: "storage", type: "loadFile", name: "tasks.json", contents: fileContents},
+    ]);
+
+    test("after uploading the original file, the view is the same", () => {
+      expect(view(step4)).toEqual(view(step1));
+    });
   });
 });

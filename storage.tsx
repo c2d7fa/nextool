@@ -1,7 +1,10 @@
 import * as Tasks from "./tasks";
 import * as App from "./app";
 
-export type Event = {tag: "storage"; type: "clickSaveButton"} | {tag: "storage"; type: "clickLoadButton"};
+export type Event =
+  | {tag: "storage"; type: "clickSaveButton"}
+  | {tag: "storage"; type: "clickLoadButton"}
+  | {tag: "storage"; type: "loadFile"; name: string; contents: string};
 
 type TypeNames = {
   string: string;

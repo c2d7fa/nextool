@@ -103,7 +103,7 @@ function TopBarButton(props: {children: React.ReactNode; event: App.Event; send:
   );
 }
 
-function execute(effects: App.Effect[]) {
+function execute(effects: App.Effect[], send: App.Send) {
   function execute_(effect: App.Effect) {
     if (effect.type === "fileDownload") {
       const downloadLinkElement = document.createElement("a");
@@ -111,7 +111,18 @@ function execute(effects: App.Effect[]) {
       downloadLinkElement.setAttribute("download", effect.name);
       downloadLinkElement.click();
     } else if (effect.type === "fileUpload") {
-      console.warn("Unimplemented effect: fileUpload");
+      const input = document.createElement("input");
+      input.type = "file";
+      input.onchange = (ev) => {
+        const file = (ev.target as HTMLInputElement).files![0];
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const contents = (ev.target as FileReader).result as string;
+          send({tag: "storage", type: "loadFile", name: file.name, contents});
+        };
+        reader.readAsText(file);
+      };
+      input.click();
     } else {
       const unreachable: never = effect;
       return unreachable;
@@ -130,7 +141,7 @@ function Main() {
     setApp((app) => {
       const app_ = App.updateApp(app, ev);
       const effects = App.effects(app, ev);
-      execute(effects);
+      execute(effects, send);
       saveTasks(app_.tasks);
       return app_;
     });

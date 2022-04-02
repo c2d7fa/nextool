@@ -171,6 +171,10 @@ export function effects(app: State, event: Event): Effect[] {
     ];
   }
 
+  if (event.tag === "storage" && event.type === "clickLoadButton") {
+    return [{type: "fileUpload"}];
+  }
+
   return [];
 }
 
@@ -240,6 +244,18 @@ export function updateApp(app: State, ev: Event): State {
     return {...app, editor: TaskEditor.load(app, ev.id)};
   }
 
+  function handleStorage(app: State, ev: Event) {
+    if (ev.tag !== "storage") return app;
+    if (ev.type === "loadFile") {
+      return Storage.loadString(ev.contents);
+    } else if (ev.type === "clickSaveButton" || ev.type === "clickLoadButton") {
+      return app;
+    } else {
+      const unreachable: never = ev;
+      return unreachable;
+    }
+  }
+
   return compose<State>([
     (app) => handleCheck(app, ev),
     (app) => handleEdit(app, ev),
@@ -248,5 +264,6 @@ export function updateApp(app: State, ev: Event): State {
     (app) => handleDrop(app, ev),
     (app) => handleDragState(app, ev),
     (app) => handleTextField(app, ev),
+    (app) => handleStorage(app, ev),
   ])(app);
 }
