@@ -166,7 +166,7 @@ export function effects(app: State, event: Event): Effect[] {
       {
         type: "fileDownload",
         name: "tasks.json",
-        contents: "[]",
+        contents: Storage.saveString(app.tasks),
       },
     ];
   }

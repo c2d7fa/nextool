@@ -1514,6 +1514,7 @@ describe("saving and loading files", () => {
 
     const step4 = updateAll(step3, [
       {tag: "storage", type: "loadFile", name: "tasks.json", contents: fileContents},
+      ...switchToFilter("all"),
     ]);
 
     test("after uploading the original file, the view is the same", () => {
