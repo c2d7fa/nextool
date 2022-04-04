@@ -118,14 +118,7 @@ export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): 
     if (operation === null) return tasks;
 
     if (operation.type === "set") {
-      return IndentedList.fromList(
-        IndentedList.toList(tasks).map((task) => {
-          if (task.id === id) {
-            return {...task, [operation.property]: operation.value};
-          }
-          return task;
-        }),
-      );
+      return IndentedList.merge(tasks, [{id, [operation.property]: operation.value}]);
     } else if (operation.type === "moveToFilter") {
       const filter = operation.filter;
 

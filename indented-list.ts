@@ -204,23 +204,6 @@ function takeWhile<T>(array: T[], predicate: (value: T, index: number) => boolea
   return array.slice(0, i);
 }
 
-export function fromList<T>(list: IndentedList<T>): Tree<T> {
-  function directChildren(list: IndentedList<T>, indentation: number): IndentedList<T> {
-    return takeWhile(list, (item) => indentation < item.indentation).filter(
-      (item) => item.indentation === indentation + 1,
-    );
-  }
-
-  function subtree(item: IndentedListItem<T>): TreeNode<T> {
-    return {
-      ...item,
-      children: directChildren(list.slice(list.indexOf(item) + 1), item.indentation).map(subtree),
-    };
-  }
-
-  return list.filter((item) => item.indentation === 0).map(subtree);
-}
-
 export function isDescendant<D>(tree: Tree<D>, query: Handle, ancestor: Handle): boolean {
   const ancestorNode = findNode(tree, ancestor);
   if (!ancestorNode) return false;
