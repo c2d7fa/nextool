@@ -13,6 +13,19 @@ function range(start: number, end: number): number[] {
   return Array.from(Array(end - start + 1), (_, i) => i + start);
 }
 
+function aboveInList<D>(tree: Tree<D>, query: Handle): (D & Handle) | null {
+  return toList(tree)[indexInList(tree, query) - 1] ?? null;
+}
+
+function convertToBelow<D>(
+  tree: Tree<D>,
+  location: IndentedListInsertLocation,
+): IndentedListInsertLocation & {side: "below"} {
+  if (location.target === null) return {side: "below", target: null, indentation: 0};
+  if (location.side === "below") return location as IndentedListInsertLocation & {side: "below"};
+  return {...location, side: "below", target: aboveInList(tree, location.target)};
+}
+
 function reposition<T>(list: T[], sourceIndex: number, target: {index: number; side: "above" | "below"}): T[] {
   function repositionBelow(list: T[], sourceIndex: number, targetIndex: number): T[] {
     return range(0, list.length - 1).map((i) => {
@@ -92,18 +105,9 @@ function listInsertLocationToTreeLocation<D>(
   location: IndentedListInsertLocation,
 ): TreeLocation | null {
   if (location.target === null) return {parent: null, index: 0};
+  if (location.side === "above") return listInsertLocationToTreeLocation(tree, convertToBelow(tree, location));
 
   const list = toList(tree);
-
-  if (location.side === "above") {
-    const targetItemIndex = list.findIndex((x) => x.id === location.target!.id);
-    const previousItem = list[targetItemIndex - 1] ?? null;
-    return listInsertLocationToTreeLocation(tree, {
-      target: previousItem,
-      side: "below",
-      indentation: location.indentation,
-    });
-  }
 
   const reversedList = list.reverse();
   const listAbove = reversedList.slice(reversedList.findIndex((x) => x.id === location.target!.id));
@@ -190,12 +194,11 @@ export function moveItemInSublistOfTree<D>(
   location: IndentedListInsertLocation,
 ): Tree<D> {
   if (location.target === null) return moveItemInTree(tree, source, {...location, indentation: 0});
+  if (location.side === "above")
+    return moveItemInSublistOfTree({tree, list}, source, convertToBelow(tree, location));
 
-  const asBelowTarget =
-    location.side === "below" ? location.target : toList(tree)[indexInList(tree, location.target) - 1] ?? null;
-
-  const realIndentation = toList(tree).find((item) => item.id === asBelowTarget?.id)?.indentation ?? 0;
-  const sublistIndentation = list.find((item) => item.id === asBelowTarget?.id)?.indentation ?? 0;
+  const realIndentation = toList(tree).find((item) => item.id === location.target?.id)?.indentation ?? 0;
+  const sublistIndentation = list.find((item) => item.id === location.target?.id)?.indentation ?? 0;
   const indentation = realIndentation - sublistIndentation + location.indentation;
 
   return moveItemInTree(tree, source, {...location, indentation});
