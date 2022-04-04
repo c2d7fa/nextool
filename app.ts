@@ -198,7 +198,7 @@ export function updateApp(app: State, ev: Event): State {
         tasks: edit(app, drag.id, {
           type: "move",
           side: drop.side,
-          target: drop.id,
+          target: {id: drop.id},
           indentation: drop.indentation,
         }),
       };

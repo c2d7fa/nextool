@@ -109,7 +109,7 @@ export type EditOperation =
   | {type: "set"; property: "status"; value: "active" | "paused" | "done"}
   | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action" | "archived"; value: boolean}
-  | {type: "move"; side: "above" | "below"; target: string; indentation: number}
+  | {type: "move"; side: "above" | "below"; target: {id: string}; indentation: number}
   | {type: "moveToFilter"; filter: FilterId}
   | null;
 
