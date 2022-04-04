@@ -630,6 +630,21 @@ describe("drag and drop in filtered views", () => {
         ]);
       });
     });
+
+    describe("after dragging child task into top-level task", () => {
+      const step1 = updateAll(example, [
+        ...dragAndDropNth(0, 1, {side: "below", indentation: 1}),
+        ...switchToFilter("all"),
+      ]);
+
+      test("the correct tasks are shown in the all view", () => {
+        expect(view(step1).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+          {title: "Task 0", indentation: 0},
+          {title: "Task 2", indentation: 0},
+          {title: "Task 1", indentation: 1},
+        ]);
+      });
+    });
   });
 });
 

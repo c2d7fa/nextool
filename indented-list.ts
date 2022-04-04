@@ -188,8 +188,8 @@ export function moveItemInSublistOfTree<D>(
   source: Handle,
   location: IndentedListInsertLocation,
 ): Tree<D> {
-  const realIndentation = toList(tree).findIndex((item) => item.id === location.target)!;
-  const sublistIndentation = list.findIndex((item) => item.id === location.target)!;
+  const realIndentation = toList(tree).find((item) => item.id === location.target)!.indentation;
+  const sublistIndentation = list.find((item) => item.id === location.target)!.indentation;
   const indentation = realIndentation - sublistIndentation + location.indentation;
 
   return moveItemInTree(tree, source, {...location, indentation});
