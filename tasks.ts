@@ -105,7 +105,6 @@ export function find(tasks: Tasks, id: string): TaskData | null {
 }
 
 export type EditOperation =
-  | {type: "delete"}
   | {type: "set"; property: "title"; value: string}
   | {type: "set"; property: "status"; value: "active" | "paused" | "done"}
   | {type: "set"; property: "type"; value: "task" | "project"}
@@ -118,9 +117,7 @@ export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): 
   function edit_(tasks: Tasks, operation: EditOperation): Tasks {
     if (operation === null) return tasks;
 
-    if (operation.type === "delete") {
-      return IndentedList.fromList(IndentedList.toList(tasks.filter((task) => task.id !== id)));
-    } else if (operation.type === "set") {
+    if (operation.type === "set") {
       return IndentedList.fromList(
         IndentedList.toList(tasks).map((task) => {
           if (task.id === id) {
