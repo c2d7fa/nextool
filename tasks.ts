@@ -292,6 +292,16 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     return {side: taskDrag.hovering.side, indentation: taskDrag.hovering.indentation};
   }
 
+  function dropTargetsNear(index: number): DropTarget[] {
+    return [
+      ...dropTargetsBelow(index - 1).map((dropTarget) => ({
+        ...dropTarget,
+        side: "above" as const,
+      })),
+      ...dropTargetsBelow(index),
+    ];
+  }
+
   function dropTargetsBelow(index: number): DropTarget[] {
     const source = taskDrag.dragging?.id;
     if (!source) return [];
@@ -351,12 +361,6 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     badges: badges(tasks, IndentedList.findNode(tasks, task)!),
     project: task.type === "project",
     dropIndicator: dropIndicator(task),
-    dropTargets: [
-      ...dropTargetsBelow(index - 1).map((dropTarget) => ({
-        ...dropTarget,
-        side: "above" as const,
-      })),
-      ...dropTargetsBelow(index),
-    ],
+    dropTargets: dropTargetsNear(index),
   }));
 }
