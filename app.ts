@@ -190,15 +190,15 @@ export function updateApp(app: State, ev: Event): State {
     const [drag, drop] = dropped_;
 
     if (drop.type === "filter") {
-      const app_ = {...app, tasks: edit(app.tasks, drag.id, {type: "moveToFilter", filter: drop.id})};
+      const app_ = {...app, tasks: edit(app, drag.id, {type: "moveToFilter", filter: drop.id})};
       return {...app_, editor: TaskEditor.reload(app_)};
     } else if (drop.type === "task") {
       return {
         ...app,
-        tasks: edit(app.tasks, drag.id, {
+        tasks: edit(app, drag.id, {
           type: "move",
           side: drop.side,
-          target: drop.id,
+          target: {id: drop.id},
           indentation: drop.indentation,
         }),
       };
@@ -230,14 +230,14 @@ export function updateApp(app: State, ev: Event): State {
 
   function handleEdit(app: State, ev: Event) {
     if (ev.tag !== "editor") return app;
-    const tasks = edit(app.tasks, ev.component.id.taskId, ...TaskEditor.editOperationsFor(app.editor, ev));
+    const tasks = edit(app, ev.component.id.taskId, ...TaskEditor.editOperationsFor(app.editor, ev));
     return {...app, editor: TaskEditor.load({tasks}, app.editor!.id), tasks};
   }
 
   function handleCheck(app: State, ev: Event) {
     if (ev.tag !== "check") return app;
     const value = Tasks.find(app.tasks, ev.id)?.status === "done" ? "active" : "done";
-    const tasks = edit(app.tasks, ev.id, {type: "set", property: "status", value});
+    const tasks = edit(app, ev.id, {type: "set", property: "status", value});
     return {...app, tasks, editor: TaskEditor.reload({...app, tasks})};
   }
 

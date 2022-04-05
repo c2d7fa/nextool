@@ -97,7 +97,7 @@ export function add({tasks, filter}: {tasks: Tasks; filter: FilterId}, values: P
     },
   ];
 
-  return edit(result, id, {type: "moveToFilter", filter});
+  return edit({tasks: result, filter}, id, {type: "moveToFilter", filter});
 }
 
 export function find(tasks: Tasks, id: string): TaskData | null {
@@ -105,30 +105,24 @@ export function find(tasks: Tasks, id: string): TaskData | null {
 }
 
 export type EditOperation =
-  | {type: "delete"}
   | {type: "set"; property: "title"; value: string}
   | {type: "set"; property: "status"; value: "active" | "paused" | "done"}
   | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action" | "archived"; value: boolean}
-  | {type: "move"; side: "above" | "below"; target: string; indentation: number}
+  | {type: "move"; side: "above" | "below"; target: {id: string}; indentation: number}
   | {type: "moveToFilter"; filter: FilterId}
   | null;
 
-export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): Tasks {
+export function edit(
+  {tasks, filter}: {tasks: Tasks; filter: FilterId},
+  id: string,
+  ...operations: EditOperation[]
+): Tasks {
   function edit_(tasks: Tasks, operation: EditOperation): Tasks {
     if (operation === null) return tasks;
 
-    if (operation.type === "delete") {
-      return IndentedList.fromList(IndentedList.toList(tasks.filter((task) => task.id !== id)));
-    } else if (operation.type === "set") {
-      return IndentedList.fromList(
-        IndentedList.toList(tasks).map((task) => {
-          if (task.id === id) {
-            return {...task, [operation.property]: operation.value};
-          }
-          return task;
-        }),
-      );
+    if (operation.type === "set") {
+      return IndentedList.merge(tasks, [{id, [operation.property]: operation.value}]);
     } else if (operation.type === "moveToFilter") {
       const filter = operation.filter;
 
@@ -152,9 +146,13 @@ export function edit(tasks: Tasks, id: string, ...operations: EditOperation[]): 
       const archiveUpdate =
         filter !== "archive" ? ({type: "set", property: "archived", value: false} as const) : null;
 
-      return edit(tasks, id, update, archiveUpdate);
+      return edit({tasks, filter}, id, update, archiveUpdate);
     } else if (operation.type === "move") {
-      return IndentedList.moveItemInTree(tasks, {id}, operation);
+      return IndentedList.moveItemInSublistOfTree(
+        {tree: tasks, list: IndentedList.toList(filterTasks(tasks, filter))},
+        {id},
+        operation,
+      );
     } else {
       const unreachable: never = operation;
       return unreachable;
@@ -287,6 +285,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
   const {tasks, filter, taskDrag} = args;
 
   const filtered = filterTasks(tasks, filter);
+  const list = IndentedList.toList(filtered);
 
   function dropIndicator(task: TaskData) {
     if (taskDrag.hovering?.type !== "task") return null;
@@ -294,48 +293,26 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     return {side: taskDrag.hovering.side, indentation: taskDrag.hovering.indentation};
   }
 
-  function dropTargetsBelow(tasks_: Task[], index: number): DropTarget[] {
-    function dropTargetsBetween(lower: number, upper: number): DropTarget[] {
-      const result: DropTarget[] = [];
-      for (let i = lower; i < upper; ++i) result.push({width: 1, indentation: i, side: "below"});
-      return [...result, {width: "full", indentation: upper, side: "below"}];
+  function dropTargetsNear(index: number): DropTarget[] {
+    const source = taskDrag.dragging?.id;
+    if (!source) return [];
+
+    const locations = IndentedList.validInsertLocationsNear({list, tree: tasks}, source, index);
+
+    function isRightmost(location: IndentedList.IndentedListInsertLocation): boolean {
+      const locationsInGroup = locations.filter((l) => l.side === location.side);
+      const highestIndentation = Math.max(...locationsInGroup.map((l) => l.indentation));
+      return location.indentation === highestIndentation;
     }
 
-    if (index === -1) return [{width: "full", indentation: 0, side: "below"}];
-
-    const tasks = IndentedList.toList(tasks_);
-    const task = tasks[index];
-
-    const dragging = taskDrag.dragging!.id;
-    const draggingIndex = tasks.findIndex((task) => task.id === dragging.id);
-
-    const preceedingTask = tasks[index - 1];
-    const preceedingTaskIndentation = preceedingTask?.indentation ?? -1;
-
-    const followingTasks = tasks.slice(index + 1);
-    const followingNonDescendentsOfDragging = followingTasks.filter(
-      (task) => !IndentedList.isDescendant(tasks_, task, dragging),
-    );
-
-    const followingTask = tasks[index + 1];
-    const followingIndentation = followingNonDescendentsOfDragging[0]?.indentation ?? 0;
-
-    if (followingTask?.id === dragging.id) return dropTargetsBelow(tasks_, index + 1);
-
-    const isDragging = task.id === dragging.id;
-
-    return dropTargetsBetween(
-      followingIndentation,
-      IndentedList.isDescendant(tasks_, task, dragging)
-        ? tasks[draggingIndex].indentation
-        : Math.max(
-            isDragging ? preceedingTaskIndentation : 0,
-            isDragging ? task.indentation - 1 : task.indentation,
-          ) + 1,
-    );
+    return locations.map((location) => ({
+      width: isRightmost(location) ? "full" : 1,
+      indentation: location.indentation,
+      side: location.side,
+    }));
   }
 
-  return IndentedList.toList(filtered).map((task, index) => ({
+  return list.map((task, index) => ({
     id: task.id,
     title: task.title,
     indentation: task.indentation,
@@ -344,14 +321,6 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     badges: badges(tasks, IndentedList.findNode(tasks, task)!),
     project: task.type === "project",
     dropIndicator: dropIndicator(task),
-    dropTargets: taskDrag.dragging
-      ? [
-          ...dropTargetsBelow(filtered, index - 1).map((dropTarget) => ({
-            ...dropTarget,
-            side: "above" as const,
-          })),
-          ...dropTargetsBelow(filtered, index),
-        ]
-      : [],
+    dropTargets: dropTargetsNear(index),
   }));
 }
