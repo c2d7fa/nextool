@@ -225,6 +225,57 @@ function takeWhile<T>(array: T[], predicate: (value: T, index: number) => boolea
   return array.slice(0, i);
 }
 
+export function validInsertLocationsNear<D>(
+  {tree, list}: {tree: Tree<D>; list: IndentedList<D>},
+  source: Handle,
+  targetIndex: number,
+): Omit<IndentedListInsertLocation, "target">[] {
+  function locationsBelow(
+    list: IndentedList<D>,
+    source: {id: string},
+    targetIndex: number,
+  ): Omit<IndentedListInsertLocation, "target">[] {
+    if (targetIndex === -1) return [{indentation: 0, side: "below"}];
+
+    const item = list[targetIndex];
+
+    const sourceIndex = list.findIndex((item) => item.id === source.id);
+
+    const preceedingItem = list[targetIndex - 1];
+    const preceedingItemIndentation = preceedingItem?.indentation ?? -1;
+
+    const followingItems = list.slice(targetIndex + 1);
+    const followingNonDescendentsOfSource = followingItems.filter((item) => !isDescendant(tree, item, source));
+
+    const followingItem = list[targetIndex + 1];
+    const followingIndentation = followingNonDescendentsOfSource[0]?.indentation ?? 0;
+
+    if (followingItem?.id === source.id) return locationsBelow(list, source, targetIndex + 1);
+
+    const isSource = item.id === source.id;
+
+    function range(start: number, end: number): number[] {
+      return Array.from(Array(end - start + 1), (_, i) => i + start);
+    }
+
+    return range(
+      followingIndentation,
+      isDescendant(tree, item, source)
+        ? list[sourceIndex].indentation
+        : Math.max(isSource ? preceedingItemIndentation : 0, isSource ? item.indentation - 1 : item.indentation) +
+            1,
+    ).map((indentation) => ({indentation, side: "below" as const}));
+  }
+
+  return [
+    ...locationsBelow(list, source, targetIndex - 1).map((location) => ({
+      ...location,
+      side: "above" as const,
+    })),
+    ...locationsBelow(list, source, targetIndex),
+  ];
+}
+
 export function isDescendant<D>(tree: Tree<D>, query: Handle, ancestor: Handle): boolean {
   const ancestorNode = findNode(tree, ancestor);
   if (!ancestorNode) return false;

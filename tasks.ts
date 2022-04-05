@@ -293,63 +293,22 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
   }
 
   function dropTargetsNear(index: number): DropTarget[] {
-    return [
-      ...dropTargetsBelow(index - 1).map((dropTarget) => ({
-        ...dropTarget,
-        side: "above" as const,
-      })),
-      ...dropTargetsBelow(index),
-    ];
-  }
-
-  function dropTargetsBelow(index: number): DropTarget[] {
     const source = taskDrag.dragging?.id;
     if (!source) return [];
-    const locations = locationsBelow(source, index);
+    const locations = IndentedList.validInsertLocationsNear(
+      {list: IndentedList.toList(filtered), tree: filtered},
+      source,
+      index,
+    );
     return locations.map((location) => ({
-      width: Math.max(...locations.map((l) => l.indentation)) > location.indentation ? 1 : "full",
+      width:
+        Math.max(...locations.filter((l) => l.side === location.side).map((l) => l.indentation)) >
+        location.indentation
+          ? 1
+          : "full",
       indentation: location.indentation,
       side: location.side,
     }));
-  }
-
-  function locationsBelow(
-    source: {id: string},
-    targetIndex: number,
-  ): Omit<IndentedList.IndentedListInsertLocation, "target">[] {
-    if (targetIndex === -1) return [{indentation: 0, side: "below"}];
-
-    const tasks = IndentedList.toList(filtered);
-    const task = tasks[targetIndex];
-
-    const sourceIndex = tasks.findIndex((task) => task.id === source.id);
-
-    const preceedingTask = tasks[targetIndex - 1];
-    const preceedingTaskIndentation = preceedingTask?.indentation ?? -1;
-
-    const followingTasks = tasks.slice(targetIndex + 1);
-    const followingNonDescendentsOfSource = followingTasks.filter(
-      (task) => !IndentedList.isDescendant(filtered, task, source),
-    );
-
-    const followingTask = tasks[targetIndex + 1];
-    const followingIndentation = followingNonDescendentsOfSource[0]?.indentation ?? 0;
-
-    if (followingTask?.id === source.id) return dropTargetsBelow(targetIndex + 1);
-
-    const isSource = task.id === source.id;
-
-    function range(start: number, end: number): number[] {
-      return Array.from(Array(end - start + 1), (_, i) => i + start);
-    }
-
-    return range(
-      followingIndentation,
-      IndentedList.isDescendant(filtered, task, source)
-        ? tasks[sourceIndex].indentation
-        : Math.max(isSource ? preceedingTaskIndentation : 0, isSource ? task.indentation - 1 : task.indentation) +
-            1,
-    ).map((indentation) => ({indentation, side: "below" as const}));
   }
 
   return IndentedList.toList(filtered).map((task, index) => ({
