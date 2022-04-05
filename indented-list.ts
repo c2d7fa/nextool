@@ -229,7 +229,7 @@ export function validInsertLocationsNear<D>(
   {tree, list}: {tree: Tree<D>; list: IndentedList<D>},
   source: Handle,
   targetIndex: number,
-): Omit<IndentedListInsertLocation, "target">[] {
+): IndentedListInsertLocation[] {
   function locationsBelow(
     list: IndentedList<D>,
     source: {id: string},
@@ -273,7 +273,7 @@ export function validInsertLocationsNear<D>(
       side: "above" as const,
     })),
     ...locationsBelow(list, source, targetIndex),
-  ];
+  ].map((location) => ({...location, target: source}));
 }
 
 export function isDescendant<D>(tree: Tree<D>, query: Handle, ancestor: Handle): boolean {

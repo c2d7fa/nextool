@@ -285,6 +285,7 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
   const {tasks, filter, taskDrag} = args;
 
   const filtered = filterTasks(tasks, filter);
+  const list = IndentedList.toList(filtered);
 
   function dropIndicator(task: TaskData) {
     if (taskDrag.hovering?.type !== "task") return null;
@@ -295,23 +296,23 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
   function dropTargetsNear(index: number): DropTarget[] {
     const source = taskDrag.dragging?.id;
     if (!source) return [];
-    const locations = IndentedList.validInsertLocationsNear(
-      {list: IndentedList.toList(filtered), tree: filtered},
-      source,
-      index,
-    );
+
+    const locations = IndentedList.validInsertLocationsNear({list, tree: tasks}, source, index);
+
+    function isRightmost(location: IndentedList.IndentedListInsertLocation): boolean {
+      const locationsInGroup = locations.filter((l) => l.side === location.side);
+      const highestIndentation = Math.max(...locationsInGroup.map((l) => l.indentation));
+      return location.indentation === highestIndentation;
+    }
+
     return locations.map((location) => ({
-      width:
-        Math.max(...locations.filter((l) => l.side === location.side).map((l) => l.indentation)) >
-        location.indentation
-          ? 1
-          : "full",
+      width: isRightmost(location) ? "full" : 1,
       indentation: location.indentation,
       side: location.side,
     }));
   }
 
-  return IndentedList.toList(filtered).map((task, index) => ({
+  return list.map((task, index) => ({
     id: task.id,
     title: task.title,
     indentation: task.indentation,
