@@ -292,16 +292,19 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     return {side: taskDrag.hovering.side, indentation: taskDrag.hovering.indentation};
   }
 
-  function dropTargetsBelow(tasks_: Task[], index: number): DropTarget[] {
-    function dropTargetsBetween(lower: number, upper: number): DropTarget[] {
-      const result: DropTarget[] = [];
-      for (let i = lower; i < upper; ++i) result.push({width: 1, indentation: i, side: "below"});
-      return [...result, {width: "full", indentation: upper, side: "below"}];
-    }
+  function dropTargetsBelow(index: number): DropTarget[] {
+    const locations = locationsBelow(index);
+    return locations.map((location) => ({
+      width: Math.max(...locations.map((l) => l.indentation)) > location.indentation ? 1 : "full",
+      indentation: location.indentation,
+      side: location.side,
+    }));
+  }
 
-    if (index === -1) return [{width: "full", indentation: 0, side: "below"}];
+  function locationsBelow(index: number): Omit<IndentedList.IndentedListInsertLocation, "target">[] {
+    if (index === -1) return [{indentation: 0, side: "below"}];
 
-    const tasks = IndentedList.toList(tasks_);
+    const tasks = IndentedList.toList(filtered);
     const task = tasks[index];
 
     const dragging = taskDrag.dragging!.id;
@@ -312,25 +315,29 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
 
     const followingTasks = tasks.slice(index + 1);
     const followingNonDescendentsOfDragging = followingTasks.filter(
-      (task) => !IndentedList.isDescendant(tasks_, task, dragging),
+      (task) => !IndentedList.isDescendant(filtered, task, dragging),
     );
 
     const followingTask = tasks[index + 1];
     const followingIndentation = followingNonDescendentsOfDragging[0]?.indentation ?? 0;
 
-    if (followingTask?.id === dragging.id) return dropTargetsBelow(tasks_, index + 1);
+    if (followingTask?.id === dragging.id) return dropTargetsBelow(index + 1);
 
     const isDragging = task.id === dragging.id;
 
-    return dropTargetsBetween(
+    function range(start: number, end: number): number[] {
+      return Array.from(Array(end - start + 1), (_, i) => i + start);
+    }
+
+    return range(
       followingIndentation,
-      IndentedList.isDescendant(tasks_, task, dragging)
+      IndentedList.isDescendant(filtered, task, dragging)
         ? tasks[draggingIndex].indentation
         : Math.max(
             isDragging ? preceedingTaskIndentation : 0,
             isDragging ? task.indentation - 1 : task.indentation,
           ) + 1,
-    );
+    ).map((indentation) => ({indentation, side: "below" as const}));
   }
 
   return IndentedList.toList(filtered).map((task, index) => ({
@@ -344,11 +351,11 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     dropIndicator: dropIndicator(task),
     dropTargets: taskDrag.dragging
       ? [
-          ...dropTargetsBelow(filtered, index - 1).map((dropTarget) => ({
+          ...dropTargetsBelow(index - 1).map((dropTarget) => ({
             ...dropTarget,
             side: "above" as const,
           })),
-          ...dropTargetsBelow(filtered, index),
+          ...dropTargetsBelow(index),
         ]
       : [],
   }));
