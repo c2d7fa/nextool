@@ -43,7 +43,9 @@ function viewed(state: State | View): View {
 }
 
 function nthTask(view: View | State, n: number) {
-  return viewed(view).taskList[n];
+  const result = viewed(view).taskList[n];
+  if (!result) throw "no such task";
+  return result;
 }
 
 function check(view: View | State, n: number): Event[] {
@@ -145,7 +147,7 @@ describe("adding tasks in filter", () => {
       ...addTask("Outside project"),
       openNth(0),
       setComponentValue("Type", "project"),
-      (view) => switchToFilter(sideBarActiveProjects(view)[0].filter),
+      (view) => switchToFilter(sideBarActiveProjects(view)[0]?.filter!),
     ]);
 
     describe("before adding any tasks", () => {
@@ -1432,7 +1434,7 @@ describe("projects", () => {
       });
     });
 
-    const projectFilter = sideBarActiveProjects(view(step1))[0].filter;
+    const projectFilter = sideBarActiveProjects(view(step1))[0]?.filter!;
     const step2 = updateAll(step1, [...switchToFilter(projectFilter)]);
 
     describe("after switching to the project filter", () => {

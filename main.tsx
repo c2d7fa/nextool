@@ -102,7 +102,7 @@ function execute(effects: App.Effect[], send: App.Send) {
       const input = document.createElement("input");
       input.type = "file";
       input.onchange = (ev) => {
-        const file = (ev.target as HTMLInputElement).files![0];
+        const file = (ev.target as HTMLInputElement).files![0]!;
         const reader = new FileReader();
         reader.onload = (ev) => {
           const contents = (ev.target as FileReader).result as string;

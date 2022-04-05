@@ -34,14 +34,14 @@ function reposition<T>(list: T[], sourceIndex: number, target: {index: number; s
       const adjustedTargetIndex = isUpwards ? targetIndex + 1 : targetIndex;
       const adjustedSourceIndex = isUpwards ? sourceIndex + 1 : sourceIndex;
 
-      if (i === adjustedTargetIndex) return list[sourceIndex];
+      if (i === adjustedTargetIndex) return list[sourceIndex]!;
 
       const isRemoved = i >= adjustedSourceIndex;
       const isInserted = i >= adjustedTargetIndex;
 
       const adjustment = (isRemoved ? +1 : 0) + (isInserted ? -1 : 0);
 
-      return list[i + adjustment];
+      return list[i + adjustment]!;
     });
   }
 
@@ -62,7 +62,7 @@ export function filterNodes<D>(tree: Tree<D>, pred: (node: TreeNode<D>) => boole
 
 export function findNode<D>(tree: Tree<D>, query: Handle): TreeNode<D> | null {
   const matching = filterNodes(tree, (node) => node.id === query.id);
-  return matching.length === 0 ? null : matching[0];
+  return matching[0] ?? null;
 }
 
 export function updateNode<D>(tree: Tree<D>, query: Handle, update: (x: TreeNode<D>) => TreeNode<D>): Tree<D> {
@@ -141,6 +141,8 @@ function moveNodeInTree<D>(tree: Tree<D>, from: TreeLocation, to: TreeLocation):
   }
 
   const fromNode = from.parent === null ? tree[from.index] : findNode(tree, from.parent)!.children[from.index];
+
+  if (!fromNode) throw "error";
 
   const removed = updateChildren(tree, from.parent ?? null, (children) =>
     children.filter((_, index) => index !== from.index),
@@ -221,7 +223,7 @@ export function toList<D>(roots: Tree<D>, indentation?: number): IndentedList<D>
 
 function takeWhile<T>(array: T[], predicate: (value: T, index: number) => boolean): T[] {
   let i = 0;
-  while (i < array.length && predicate(array[i], i)) i++;
+  while (i < array.length && predicate(array[i]!, i)) i++;
   return array.slice(0, i);
 }
 
@@ -241,6 +243,7 @@ export function validInsertLocationsNear<D>(
     if (isTargetDirectlyAboveSource) return locationsBelow(list, source, targetIndex + 1);
 
     const targetItem = list[targetIndex];
+    if (!targetItem) throw "error";
 
     const sourceItem = list.find((item) => item.id === source.id)!;
 
