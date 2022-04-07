@@ -9,7 +9,8 @@ type StateSection = StateGroup[];
 type StateGroup = {title: string; components: StateComponent[]};
 type StateComponent =
   | {type: "text"; value: string; property: "title"}
-  | {type: "picker"; options: {value: string; label: string; active: boolean}[]; property: string};
+  | {type: "picker"; options: {value: string; label: string; active: boolean}[]; property: string}
+  | {type: "date"; property: string; value: string};
 
 export type State = null | {
   id: string;
@@ -25,6 +26,11 @@ type ViewComponent =
   | {
       type: "picker";
       options: {value: string; label: string; active: boolean}[];
+      id: {property: string; taskId: string};
+    }
+  | {
+      type: "date";
+      value: string;
       id: {property: string; taskId: string};
     };
 
@@ -150,6 +156,7 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
         },
         ...(task.type === "task" ? [actionable] : []),
       ],
+      [{title: "Planned", components: [{type: "date", property: "planned", value: "todo"}]}],
     ],
   };
 }
@@ -214,9 +221,14 @@ function PickerComponent(props: {view: ViewComponent & {type: "picker"}; send: S
   );
 }
 
+function DateComponent(props: {view: ViewComponent & {type: "date"}; send: Send}) {
+  return <code>{props.view.value}</code>;
+}
+
 function Component(props: {view: ViewComponent; send: Send}) {
   if (props.view.type === "text") return <TextComponent view={props.view} send={props.send} />;
   else if (props.view.type === "picker") return <PickerComponent view={props.view} send={props.send} />;
+  else if (props.view.type === "date") return <DateComponent view={props.view} send={props.send} />;
   else return <div>Unknown component</div>;
 }
 
