@@ -222,7 +222,7 @@ function PickerComponent(props: {view: ViewComponent & {type: "picker"}; send: S
 }
 
 function DateComponent(props: {view: ViewComponent & {type: "date"}; send: Send}) {
-  return <code>{props.view.value}</code>;
+  return <input className={style.date} type="date" />;
 }
 
 function Component(props: {view: ViewComponent; send: Send}) {

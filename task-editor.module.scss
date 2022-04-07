@@ -94,3 +94,20 @@
     }
   }
 }
+
+.date {
+  @include shared.reset-input;
+  font-family: "Roboto", sans-serif;
+
+  @include shared.input-padding;
+  @include shared.input-color;
+  @include shared.input-shadow(3px, inset);
+  @include shared.input-border;
+  @include shared.input-hover;
+
+  font-size: 0.9em;
+
+  &::-webkit-calendar-picker-indicator {
+    opacity: 0.5;
+  }
+}
