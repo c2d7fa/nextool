@@ -189,7 +189,7 @@ function badges(tasks: Tasks, task: Task): BadgeId[] {
   }
 
   function isInactive(task: Task): boolean {
-    return isPaused(tasks, task) || isDone(task);
+    return isPaused(tasks, task) || isDone(task) || isArchived(tasks, task);
   }
 
   function isReady(task: Task): boolean {

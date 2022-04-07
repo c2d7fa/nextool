@@ -1564,6 +1564,25 @@ describe("archiving tasks", () => {
       });
     });
   });
+
+  describe("when child task is archived, the parent becomes stalled again", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Task 1"),
+      ...addTask("Task 2"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+    ]);
+
+    test("initially, the child task is stalled, and the parent is not", () => {
+      expect(view(step1).taskList.map(({badges}) => ({badges}))).toEqual([{badges: []}, {badges: ["stalled"]}]);
+    });
+
+    const step2 = updateAll(step1, [archive(1)]);
+
+    test("after archiving the child task, the parent becomes stalled", () => {
+      expect(view(step2).taskList.map(({badges}) => ({badges}))).toEqual([{badges: ["stalled"]}]);
+    });
+  });
 });
 
 describe("saving and loading files", () => {
