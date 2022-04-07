@@ -22,7 +22,7 @@ export const empty: State = null;
 type ViewSection = ViewGroup[];
 type ViewGroup = {title: string; components: ViewComponent[]};
 type ViewComponent =
-  | {type: "text"; value: string; property: "title"; id: {property: string; taskId: string}}
+  | {type: "text"; value: string; id: {property: string; taskId: string}}
   | {
       type: "picker";
       options: {value: string; label: string; active: boolean}[];
