@@ -26,10 +26,11 @@ export function UnnamedTextField(props: {
   value: string;
   placeholder?: string;
   send(ev: {type: "edit"; value: string} | {type: "submit"}): void;
+  color?: "magenta";
 }) {
   return (
     <input
-      className={styles.textField}
+      className={[styles.textField, props.color ? styles[props.color] : ""].join(" ")}
       placeholder={props.placeholder}
       type="text"
       value={props.value}
@@ -50,9 +51,11 @@ export function TextField<Id extends string>(props: {
   value: string;
   placeholder?: string;
   send: (ev: TextFieldEvent<Id>) => void;
+  color?: "magenta";
 }) {
   return (
     <UnnamedTextField
+      color={props.color}
       value={props.value}
       placeholder={props.placeholder}
       send={(ev) => {
@@ -66,9 +69,10 @@ export function TextFieldButton<Id extends string>(props: {
   field: Id;
   children: React.ReactNode;
   send: (ev: TextFieldEvent<Id>) => void;
+  color?: "magenta";
 }) {
   return (
-    <Button onClick={() => props.send({tag: "textField", type: "submit", field: props.field})}>
+    <Button onClick={() => props.send({tag: "textField", type: "submit", field: props.field})} color={props.color}>
       {props.children}
     </Button>
   );

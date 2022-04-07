@@ -36,6 +36,7 @@ $padding-y: 0.3em;
 
 @mixin input-color {
   color: #555;
+  &::placeholder { color: #ccc; }
 }
 
 @mixin input-padding($multiplier: 1) {
@@ -105,5 +106,31 @@ $padding-y: 0.3em;
 
   &:hover {
     border-color: lch(30% 30 $hue);
+  }
+}
+
+@mixin text-field-color($hue) {
+  border: 1px solid lch(55% 30 $hue);
+  background: lch(84% 30 $hue);
+  color: lch(40% 30 $hue);
+  box-shadow: 0 3px 3px -3px lch(60% 30 $hue) inset;
+
+  &::placeholder {
+    color: lch(65% 30 $hue);
+  }
+
+  &:hover {
+    border-color: lch(30% 30 $hue);
+  }
+
+  &:focus {
+    border-color: lch(30% 10 $hue);
+    background: lch(94% 10 $hue);
+
+    color: lch(40% 10 $hue);
+    
+    &::placeholder {
+      color: lch(80% 10 $hue);
+    }
   }
 }

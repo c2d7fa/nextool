@@ -23,28 +23,25 @@
     background-color: shared.$branding-color;
     border-bottom: 1px solid #00000040;
 
+    display: grid;
+    grid: "left middle right" auto / 18em 1fr 18em;
+
     padding: 0.5em 1em;
 
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
+    .middle {
+      grid-area: middle;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
+      column-gap: 0.25em;
+    }
 
-    column-gap: 0.25em;
-
-    .topBarButtonContainer {
-      @include shared.button-background-container;
-
-      .topBarButton {
-        @include shared.reset-button;
-        @include shared.button-text;
-        @include shared.button-press-transform;
-        @include shared.button-color(shared.$branding-hue);
-  
-        padding: 3px 6px;
-        border-radius: 3px;
-  
-        min-width: 4em;
-      }
+    .right {
+      grid-area: right;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      column-gap: 0.25em;
     }
   }
 
@@ -193,9 +190,4 @@
       opacity: 1;
     }
   }
-}
-
-.newTask {
-  display: flex;
-  column-gap: 0.5em;
 }

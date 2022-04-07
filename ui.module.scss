@@ -15,10 +15,11 @@
     @include shared.button-text;
     @include shared.button-press-transform;
 
-    @include shared.button-background-grey;
-    @include shared.button-border-grey;
+    min-width: 4em;
 
-    color: #666;
+    &.magenta {
+      @include shared.button-color(shared.$branding-hue);
+    }
   }
 }
 

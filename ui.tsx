@@ -2,8 +2,8 @@ import * as React from "react";
 
 import * as styles from "./ui.module.scss";
 
-export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  const className = [styles.button, props.className].join(" ");
+export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement> & {color?: "magenta"}) {
+  const className = [styles.button, props.className, props.color ? styles[props.color] : ""].join(" ");
   return (
     <div className={styles.buttonContainer}>
       <button {...props} className={className} />

@@ -14,21 +14,24 @@
   @include reset-input;
   font-family: "Roboto", sans-serif;
 
-  background-color: #fdfdfd;
   @include shared.input-padding;
   @include shared.input-color;
   @include shared.input-shadow(3px, inset);
   @include shared.input-border;
   @include shared.input-hover;
 
-  color: #666;
-  font-size: 0.95em;
+  max-width: 24em;
+  width: auto;
+
+  flex: 1;
+
+  font-size: 0.9em;
 
   &:focus {
     background-color: #fafafa;
   }
 
-  &::placeholder {
-    color: #b8b8b8;
+  &.magenta {
+    @include shared.text-field-color(shared.$branding-hue);
   }
 }

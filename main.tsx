@@ -8,15 +8,22 @@ import * as Drag from "./drag";
 import {TaskList} from "./task-list";
 
 import * as style from "./main.module.scss";
+import {Button} from "./ui";
 
 function AddTask(props: {view: App.View["addTask"]; send(ev: App.Event): void}) {
   return (
-    <div className={style.newTask}>
-      <TextField field="addTitle" placeholder="New Task" value={props.view.value} send={props.send} />
-      <TextFieldButton send={props.send} field="addTitle">
+    <>
+      <TextField
+        field="addTitle"
+        placeholder="New Task"
+        value={props.view.value}
+        send={props.send}
+        color="magenta"
+      />
+      <TextFieldButton color="magenta" send={props.send} field="addTitle">
         Add Task
       </TextFieldButton>
-    </div>
+    </>
   );
 }
 
@@ -83,11 +90,9 @@ function SideBar(props: {sections: App.SideBarSectionView[]; send: App.Send}) {
 
 function TopBarButton(props: {children: React.ReactNode; event: App.Event; send: App.Send}) {
   return (
-    <div className={style.topBarButtonContainer}>
-      <button className={style.topBarButton} onClick={() => props.send(props.event)}>
-        {props.children}
-      </button>
-    </div>
+    <Button color="magenta" onClick={() => props.send(props.event)}>
+      {props.children}
+    </Button>
   );
 }
 
@@ -139,18 +144,22 @@ function Main() {
   return (
     <div className={style.outerContainer}>
       <div className={style.topBar}>
-        <TopBarButton send={send} event={{tag: "storage", type: "clickLoadButton"}}>
-          Load
-        </TopBarButton>
-        <TopBarButton send={send} event={{tag: "storage", type: "clickSaveButton"}}>
-          Save
-        </TopBarButton>
+        <div className={style.middle}>
+          <AddTask view={view.addTask} send={send} />
+        </div>
+        <div className={style.right}>
+          <TopBarButton send={send} event={{tag: "storage", type: "clickLoadButton"}}>
+            Load
+          </TopBarButton>
+          <TopBarButton send={send} event={{tag: "storage", type: "clickSaveButton"}}>
+            Save
+          </TopBarButton>
+        </div>
       </div>
       <SideBar sections={view.sideBar} send={send} />
       <div className={style.innerContainer}>
         <div className={style.left}>
           <TaskList view={view.taskList} send={send} />
-          <AddTask view={view.addTask} send={send} />
         </div>
         <div className={style.right}>
           <TaskEditor view={view.editor} send={send} />
