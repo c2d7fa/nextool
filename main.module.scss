@@ -32,41 +32,18 @@
     column-gap: 0.25em;
 
     .topBarButtonContainer {
-      background-color: #00000010;
-      border-radius: 3px;
+      @include shared.button-background-container;
 
       .topBarButton {
         @include shared.reset-button;
-        cursor: default;
+        @include shared.button-text;
+        @include shared.button-press-transform;
+        @include shared.button-color(shared.$branding-hue);
   
-        $hue: shared.$branding-hue;
-  
-        font-family: 'Roboto';
         padding: 3px 6px;
         border-radius: 3px;
-        font-size: 0.9em;
   
-        text-align: center;
         min-width: 4em;
-  
-        border: 1px solid lch(55% 30 $hue);
-        background: linear-gradient(
-          to bottom,
-          lch(82% 30 $hue),
-          lch(78% 30 $hue)
-        );
-        color: lch(40% 30 $hue);
-        box-shadow: 0 3px 3px -3px lch(60% 30 $hue);
-  
-        &:hover {
-          border-color: lch(30% 30 $hue);
-        }
-  
-        transition: transform 100ms ease-out;
-  
-        &:active {
-          transform: translateY(2px);
-        }
       }
     }
   }
@@ -141,7 +118,6 @@
     display: flex;
     align-items: center;
 
-    cursor: default;
     text-align: left;
 
     color: #888;

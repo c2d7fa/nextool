@@ -4,7 +4,11 @@ import * as styles from "./ui.module.scss";
 
 export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const className = [styles.button, props.className].join(" ");
-  return <button {...props} className={className} />;
+  return (
+    <div className={styles.buttonContainer}>
+      <button {...props} className={className} />
+    </div>
+  );
 }
 
 export function Badge(props: {color: "green" | "orange" | "project"; children: React.ReactNode}) {

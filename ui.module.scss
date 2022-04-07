@@ -1,38 +1,30 @@
 @use "./shared";
 
-.button {
-  @include shared.reset-button;
-  font-family: "Roboto", sans-serif;  
-  cursor: default;
+.buttonContainer {
+  @include shared.button-background-container;
 
-  background: linear-gradient(to top, #f0f0f0, #f4f4f4);
-  @include shared.input-padding;
-  @include shared.input-color;
-  @include shared.input-shadow;
-  @include shared.input-border;
-  @include shared.input-hover;
+  .button {
+    @include shared.reset-button;
 
-  transition: transform 50ms ease-out;
+    @include shared.input-padding;
+    @include shared.input-color;
+    @include shared.input-shadow;
+    @include shared.input-border;
+    @include shared.input-hover;
 
-  font-size: 0.9em;
-  color: #707070;
+    @include shared.button-text;
+    @include shared.button-press-transform;
 
-  &:hover {
+    @include shared.button-background-grey;
+    @include shared.button-border-grey;
+
     color: #666;
-  }
-
-  &:active {
-    box-shadow: none;
-    transform: translateY(3px);
-    background: linear-gradient(to top, #ededed, #f0f0f0);
   }
 }
 
 .badge {
-  font-family: "Roboto", sans-serif;
   font-size: 0.75em;
   border-radius: 3px;
-  box-sizing: border-box;
 
   padding: 0 (shared.$padding-x * 0.5);
 
