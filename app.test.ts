@@ -1723,5 +1723,11 @@ describe("planning", () => {
     test("the task has the 'today' property set in the task list", () => {
       expect(view(step1).taskList.map(({today}) => today)).toEqual([true]);
     });
+
+    const step2 = updateAll(step1, [setComponentValue("Planned", "")]);
+
+    test("clearing the date removes the today badge", () => {
+      expect(view(step2).taskList.map(({badges}) => badges)).toEqual([["stalled"]]);
+    });
   });
 });

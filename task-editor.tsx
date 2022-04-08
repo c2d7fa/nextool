@@ -100,6 +100,7 @@ export function editOperationsFor(state: State, ev: Event): EditOperation[] {
     if (ev.value === "project") return [{type: "set", property: "type", value: "project"}];
     else return [];
   } else if (ev.component.id.property === "planned") {
+    if (ev.value === "") return [{type: "set", property: "planned", value: null}];
     const date = DateFnsTz.zonedTimeToUtc(DateFns.parse(ev.value, "yyyy-MM-dd", 0), "UTC");
     if (!DateFns.isValid(date)) return [];
     return [{type: "set", property: "planned", value: date}];
