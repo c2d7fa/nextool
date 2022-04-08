@@ -22,6 +22,8 @@ function BadgeFor(props: {type: BadgeId}) {
     return <Badge color="orange">Stalled</Badge>;
   } else if (props.type === "project") {
     return <Badge color="project">Project</Badge>;
+  } else if (props.type === "today") {
+    return <Badge color="red">Today</Badge>;
   } else {
     const unreachable: never = props.type;
     return unreachable;
@@ -81,7 +83,11 @@ function TaskRow(props: {task: TaskListView[number]; send: Send}) {
   return (
     <Drag.Draggable id={{type: "task" as const, id: props.task.id}} send={props.send}>
       <div
-        className={[style.taskRow, props.task.project ? style.project : ""].join(" ")}
+        className={[
+          style.taskRow,
+          props.task.project ? style.project : "",
+          props.task.today ? style.today : "",
+        ].join(" ")}
         onClick={() => props.send({tag: "selectEditingTask", id: props.task.id})}
       >
         <span className={style.indentationColumn} style={{width: `${2 * props.task.indentation}em`}} />

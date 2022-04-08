@@ -1,5 +1,9 @@
-import {updateApp, State, view, Event, empty, DragId, DropId, View, effects, Effect} from "./app";
+import {updateApp, State, view as viewApp, Event, empty, DragId, DropId, View, effects, Effect} from "./app";
 import {FilterId} from "./tasks";
+
+function view(state: State): View {
+  return viewApp(state, {today: new Date("2020-03-15")});
+}
 
 function updateAll(state: State, events: (Event | ((view: View) => Event[]))[]): State {
   return events.reduce(
@@ -1650,6 +1654,80 @@ describe("saving and loading files", () => {
 
     test("after uploading the original file, the view is the same", () => {
       expect(view(step4)).toEqual(view(step1));
+    });
+  });
+});
+
+describe("planning", () => {
+  describe("planned date is saved", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the planned date is not set", () => {
+        expect(componentTitled(view(step1), "Planned")).toMatchObject({type: "date", value: ""});
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Planned", "2020-01-01")]);
+
+    describe("after setting planned date", () => {
+      test("the planned date is set in the editor", () => {
+        expect(componentTitled(view(step2), "Planned")).toMatchObject({type: "date", value: "2020-01-01"});
+      });
+    });
+
+    const savedEffects = effects(step2, {tag: "storage", type: "clickSaveButton"});
+    const savedContents = (savedEffects[0] as Effect & {type: "fileDownload"}).contents;
+
+    const loaded = updateAll(empty, [
+      {tag: "storage", type: "loadFile", name: "tasks.json", contents: savedContents},
+      ...switchToFilter("all"),
+      openNth(0),
+    ]);
+
+    describe("after loading the file", () => {
+      test("the planned date is still set in the editor", () => {
+        expect(componentTitled(view(loaded), "Planned")).toMatchObject({type: "date", value: "2020-01-01"});
+      });
+    });
+  });
+
+  describe("attempting to set invalid planned date", () => {
+    ["", "invalid", "2020"].forEach((value) => {
+      describe(`trying to set date to '${value}'`, () => {
+        const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1"), openNth(0)]);
+
+        const step2 = updateAll(step1, [setComponentValue("Planned", value)]);
+
+        describe("after setting planned date", () => {
+          test("the planned date is not set in the editor", () => {
+            expect(componentTitled(view(step2), "Planned")).toMatchObject({type: "date", value: ""});
+          });
+        });
+      });
+    });
+  });
+
+  describe("tasks planned today have today badge", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Task 1"),
+      openNth(0),
+      setComponentValue("Planned", "2020-03-15"),
+    ]);
+
+    test("the task has the today badge", () => {
+      expect(view(step1).taskList.map(({badges}) => badges)).toEqual([["today", "stalled"]]);
+    });
+
+    test("the task has the 'today' property set in the task list", () => {
+      expect(view(step1).taskList.map(({today}) => today)).toEqual([true]);
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Planned", "")]);
+
+    test("clearing the date removes the today badge", () => {
+      expect(view(step2).taskList.map(({badges}) => badges)).toEqual([["stalled"]]);
     });
   });
 });

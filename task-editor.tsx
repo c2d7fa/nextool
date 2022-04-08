@@ -1,6 +1,9 @@
 import * as React from "react";
 import * as style from "./task-editor.module.scss";
 
+import * as DateFns from "date-fns";
+import * as DateFnsTz from "date-fns-tz";
+
 import {Tasks, find, EditOperation} from "./tasks";
 import {Send} from "./app";
 import {UnnamedTextField} from "./text-field";
@@ -9,7 +12,8 @@ type StateSection = StateGroup[];
 type StateGroup = {title: string; components: StateComponent[]};
 type StateComponent =
   | {type: "text"; value: string; property: "title"}
-  | {type: "picker"; options: {value: string; label: string; active: boolean}[]; property: string};
+  | {type: "picker"; options: {value: string; label: string; active: boolean}[]; property: string}
+  | {type: "date"; property: string; value: string};
 
 export type State = null | {
   id: string;
@@ -21,10 +25,15 @@ export const empty: State = null;
 type ViewSection = ViewGroup[];
 type ViewGroup = {title: string; components: ViewComponent[]};
 type ViewComponent =
-  | {type: "text"; value: string; property: "title"; id: {property: string; taskId: string}}
+  | {type: "text"; value: string; id: {property: string; taskId: string}}
   | {
       type: "picker";
       options: {value: string; label: string; active: boolean}[];
+      id: {property: string; taskId: string};
+    }
+  | {
+      type: "date";
+      value: string;
       id: {property: string; taskId: string};
     };
 
@@ -90,6 +99,11 @@ export function editOperationsFor(state: State, ev: Event): EditOperation[] {
     if (ev.value === "task") return [{type: "set", property: "type", value: "task"}];
     if (ev.value === "project") return [{type: "set", property: "type", value: "project"}];
     else return [];
+  } else if (ev.component.id.property === "planned") {
+    if (ev.value === "") return [{type: "set", property: "planned", value: null}];
+    const date = DateFnsTz.zonedTimeToUtc(DateFns.parse(ev.value, "yyyy-MM-dd", 0), "UTC");
+    if (!DateFns.isValid(date)) return [];
+    return [{type: "set", property: "planned", value: date}];
   } else return [];
 }
 
@@ -149,6 +163,18 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
           ],
         },
         ...(task.type === "task" ? [actionable] : []),
+      ],
+      [
+        {
+          title: "Planned",
+          components: [
+            {
+              type: "date",
+              property: "planned",
+              value: task.planned ? DateFns.format(task.planned, "yyyy-MM-dd") : "",
+            },
+          ],
+        },
       ],
     ],
   };
@@ -214,9 +240,28 @@ function PickerComponent(props: {view: ViewComponent & {type: "picker"}; send: S
   );
 }
 
+function DateComponent(props: {view: ViewComponent & {type: "date"}; send: Send}) {
+  return (
+    <input
+      className={style.date}
+      type="date"
+      value={props.view.value}
+      onChange={(ev) => {
+        props.send({
+          tag: "editor",
+          type: "component",
+          component: {id: props.view.id},
+          value: ev.target.value,
+        });
+      }}
+    />
+  );
+}
+
 function Component(props: {view: ViewComponent; send: Send}) {
   if (props.view.type === "text") return <TextComponent view={props.view} send={props.send} />;
   else if (props.view.type === "picker") return <PickerComponent view={props.view} send={props.send} />;
+  else if (props.view.type === "date") return <DateComponent view={props.view} send={props.send} />;
   else return <div>Unknown component</div>;
 }
 

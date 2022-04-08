@@ -4,6 +4,7 @@
     "jsx": "react",
     "target": "es2016",
     "esModuleInterop": true,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "moduleResolution": "node"
   }
 }

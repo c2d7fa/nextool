@@ -1,6 +1,7 @@
 @import "./fonts.css";
 
 $branding-hue: 350;
+$red-hue: 30;
 $orange-hue: 70;
 $green-hue: 135;
 $project-hue: 300;
@@ -133,4 +134,14 @@ $padding-y: 0.3em;
       color: lch(80% 10 $hue);
     }
   }
+}
+
+@mixin reset-input {
+  outline: none;
+  border: none;
+  box-shadow: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
 }

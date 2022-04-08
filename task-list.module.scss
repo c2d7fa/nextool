@@ -163,11 +163,29 @@ $project-hue: shared.$project-hue;
 
       &:hover {
         background: linear-gradient(
+          45deg,
+          color-mix(in lch, lch(80% 30 $project-hue) 10%, color-mix(in lch, lch(95% 5 $project-hue), red 5%)),
+          color-mix(in lch, lch(80% 30 $project-hue) 10%, lch(97% 5 $project-hue)) 1em,
+          color-mix(in lch, lch(80% 30 $project-hue) 10%, white) 10em
+        );
+      }
+    }
+
+    &.today {
+      background: linear-gradient(
         45deg,
-        color-mix(in lch, lch(80% 30 $project-hue) 10%, color-mix(in lch, lch(95% 5 $project-hue), red 5%)),
-        color-mix(in lch, lch(80% 30 $project-hue) 10%, lch(97% 5 $project-hue)) 1em,
-        color-mix(in lch, lch(80% 30 $project-hue) 10%, white) 10em
+        lch(89% 20 shared.$red-hue),
+        lch(95% 20 shared.$red-hue) 1em,
+        white 10em
       );
+
+      &:hover {
+        background: linear-gradient(
+          45deg,
+          color-mix(in lch, lch(80% 30 shared.$red-hue) 10%, color-mix(in lch, lch(95% 5 shared.$red-hue), red 5%)),
+          color-mix(in lch, lch(80% 30 shared.$red-hue) 10%, lch(97% 5 shared.$red-hue)) 1em,
+          color-mix(in lch, lch(80% 30 shared.$red-hue) 10%, white) 10em
+        );
       }
     }
 

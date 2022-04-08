@@ -78,7 +78,18 @@ function convertTasks(data: unknown): Tasks.Tasks | null {
       }
     })();
 
-    return {id: data.id, title: data.title, children, status, type, archived, action};
+    const planned: Date | null = (() => {
+      if (has(data, "planned", "string")) {
+        if (data.planned === "") return null;
+        const date = new Date(data.planned);
+        if (isNaN(date.getTime())) return null;
+        return date;
+      } else {
+        return null;
+      }
+    })();
+
+    return {id: data.id, title: data.title, children, status, type, archived, action, planned};
   }
 
   if (typeof data !== "object" || !(data instanceof Array)) return null;
@@ -95,8 +106,10 @@ function convertTasks(data: unknown): Tasks.Tasks | null {
 }
 
 export function loadString(data: string | null): App.State {
+  const exampleData = `[{"id":"0","title":"Task 1","status":"active","action":true,"type":"task","archived":false,"planned":"","children":[{"id":"1","title":"Task 2","status":"done","action":true,"children":[],"type":"task","archived":false,"planned":""}]},{"id":"5","title":"Project1","status":"active","action":false,"archived":false,"planned":"","children":[{"id":"2","title":"Task 3","status":"active","action":true,"type":"task","archived":false,"planned":"","children":[{"id":"3","title":"Task 4","status":"paused","action":false,"children":[],"type":"task","archived":false,"planned":""}]},{"id":"4","title":"Task 5","status":"active","action":true,"children":[],"type":"task","archived":false,"planned":""}],"type":"project"},{"id":"6","title":"Project2","status":"active","action":false,"children":[],"type":"project","archived":false,"planned":""}]`;
+
   try {
-    const tasks = data ? convertTasks(JSON.parse(data)) : Tasks.empty;
+    const tasks = convertTasks(JSON.parse(data ? data : exampleData));
     if (tasks === null) return App.empty;
     return {...App.empty, tasks};
   } catch (e) {

@@ -1,3 +1,4 @@
+import {isSameDay} from "date-fns";
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
 import * as IndentedList from "./indented-list";
@@ -9,55 +10,11 @@ type TaskData = {
   type: "task" | "project";
   archived: boolean;
   action: boolean;
+  planned: Date | null;
 };
 
 type Task = IndentedList.TreeNode<TaskData>;
 export type Tasks = IndentedList.Tree<TaskData>;
-
-export const empty: Tasks = [
-  {
-    id: "0",
-    title: "Task 1",
-    status: "active",
-    action: true,
-    type: "task",
-    archived: false,
-    children: [
-      {id: "1", title: "Task 2", status: "done", action: true, children: [], type: "task", archived: false},
-    ],
-  },
-  {
-    id: "5",
-    title: "Project 1",
-    status: "active",
-    action: false,
-    archived: false,
-    children: [
-      {
-        id: "2",
-        title: "Task 3",
-        status: "active",
-        action: true,
-        type: "task",
-        archived: false,
-        children: [
-          {id: "3", title: "Task 4", status: "paused", action: false, children: [], type: "task", archived: false},
-        ],
-      },
-      {id: "4", title: "Task 5", status: "active", action: true, children: [], type: "task", archived: false},
-    ],
-    type: "project",
-  },
-  {
-    id: "6",
-    title: "Project 2",
-    status: "active",
-    action: false,
-    children: [],
-    type: "project",
-    archived: false,
-  },
-];
 
 type DropTarget = {width: number | "full"; indentation: number; side: "above" | "below"};
 
@@ -68,6 +25,7 @@ export type TaskListView = {
   done: boolean;
   paused: boolean;
   project: boolean;
+  today: boolean;
   badges: BadgeId[];
   dropIndicator: null | {side: "above" | "below"; indentation: number};
   dropTargets: DropTarget[];
@@ -94,6 +52,7 @@ export function add({tasks, filter}: {tasks: Tasks; filter: FilterId}, values: P
       type: "task",
       archived: false,
       children: [],
+      planned: null,
     },
   ];
 
@@ -109,6 +68,7 @@ export type EditOperation =
   | {type: "set"; property: "status"; value: "active" | "paused" | "done"}
   | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action" | "archived"; value: boolean}
+  | {type: "set"; property: "planned"; value: Date | null}
   | {type: "move"; side: "above" | "below"; target: {id: string}; indentation: number}
   | {type: "moveToFilter"; filter: FilterId}
   | null;
@@ -181,9 +141,13 @@ export function isStalled(tasks: Tasks, task: {id: string}): boolean {
   return badges(tasks, task_).includes("stalled");
 }
 
-export type BadgeId = "ready" | "stalled" | "project";
+function isToday(tasks: Tasks, task: Task, today: Date) {
+  return (task.planned && isSameDay(task.planned, today)) ?? false;
+}
 
-function badges(tasks: Tasks, task: Task): BadgeId[] {
+export type BadgeId = "ready" | "stalled" | "project" | "today";
+
+function badges(tasks: Tasks, task: Task, args?: {today: Date}): BadgeId[] {
   function isProject(task: Task): boolean {
     return task.type === "project";
   }
@@ -208,9 +172,12 @@ function badges(tasks: Tasks, task: Task): BadgeId[] {
 
   const isStalled = isStalledTask(task) || (isProject(task) && !isInactive(task) && !hasReadyDescendants(task));
 
-  return [isProject(task) && "project", isStalled && "stalled", isReady(task) && "ready"].filter(
-    Boolean,
-  ) as BadgeId[];
+  return [
+    isProject(task) && "project",
+    args?.today && isToday(tasks, task, args.today) && "today",
+    isStalled && "stalled",
+    isReady(task) && "ready",
+  ].filter(Boolean) as BadgeId[];
 }
 
 export type FilterId =
@@ -281,7 +248,12 @@ export function countStalledTasks(tasks: Tasks): number {
   return filterTasks(tasks, "stalled").length;
 }
 
-export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<DragId, DropId>}): TaskListView {
+export function view(args: {
+  tasks: Tasks;
+  filter: FilterId;
+  taskDrag: DragState<DragId, DropId>;
+  today: Date;
+}): TaskListView {
   const {tasks, filter, taskDrag} = args;
 
   const filtered = filterTasks(tasks, filter);
@@ -318,8 +290,9 @@ export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<
     indentation: task.indentation,
     done: isDone(task),
     paused: isPaused(tasks, IndentedList.findNode(tasks, task)!),
-    badges: badges(tasks, IndentedList.findNode(tasks, task)!),
+    badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
     project: task.type === "project",
+    today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
     dropIndicator: dropIndicator(task),
     dropTargets: dropTargetsNear(index),
   }));
