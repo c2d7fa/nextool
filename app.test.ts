@@ -1687,4 +1687,20 @@ describe("planning", () => {
       });
     });
   });
+
+  describe("attempting to set invalid planned date", () => {
+    ["", "invalid", "2020"].forEach((value) => {
+      describe(`trying to set date to '${value}'`, () => {
+        const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1"), openNth(0)]);
+
+        const step2 = updateAll(step1, [setComponentValue("Planned", value)]);
+
+        describe("after setting planned date", () => {
+          test("the planned date is not set in the editor", () => {
+            expect(componentTitled(view(step2), "Planned")).toMatchObject({type: "date", value: ""});
+          });
+        });
+      });
+    });
+  });
 });

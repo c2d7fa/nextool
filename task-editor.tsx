@@ -1,6 +1,8 @@
 import * as React from "react";
 import * as style from "./task-editor.module.scss";
 
+import * as DateFns from "date-fns";
+
 import {Tasks, find, EditOperation} from "./tasks";
 import {Send} from "./app";
 import {UnnamedTextField} from "./text-field";
@@ -97,7 +99,9 @@ export function editOperationsFor(state: State, ev: Event): EditOperation[] {
     if (ev.value === "project") return [{type: "set", property: "type", value: "project"}];
     else return [];
   } else if (ev.component.id.property === "planned") {
-    return [{type: "set", property: "planned", value: ev.value}];
+    const date = DateFns.parse(ev.value, "yyyy-MM-dd", new Date());
+    if (!DateFns.isValid(date)) return [];
+    return [{type: "set", property: "planned", value: date}];
   } else return [];
 }
 
@@ -158,7 +162,18 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
         },
         ...(task.type === "task" ? [actionable] : []),
       ],
-      [{title: "Planned", components: [{type: "date", property: "planned", value: task.planned}]}],
+      [
+        {
+          title: "Planned",
+          components: [
+            {
+              type: "date",
+              property: "planned",
+              value: task.planned ? DateFns.format(task.planned, "yyyy-MM-dd") : "",
+            },
+          ],
+        },
+      ],
     ],
   };
 }

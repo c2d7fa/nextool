@@ -9,7 +9,7 @@ type TaskData = {
   type: "task" | "project";
   archived: boolean;
   action: boolean;
-  planned: string;
+  planned: Date | null;
 };
 
 type Task = IndentedList.TreeNode<TaskData>;
@@ -50,7 +50,7 @@ export function add({tasks, filter}: {tasks: Tasks; filter: FilterId}, values: P
       type: "task",
       archived: false,
       children: [],
-      planned: "",
+      planned: null,
     },
   ];
 
@@ -66,7 +66,7 @@ export type EditOperation =
   | {type: "set"; property: "status"; value: "active" | "paused" | "done"}
   | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action" | "archived"; value: boolean}
-  | {type: "set"; property: "planned"; value: string}
+  | {type: "set"; property: "planned"; value: Date | null}
   | {type: "move"; side: "above" | "below"; target: {id: string}; indentation: number}
   | {type: "moveToFilter"; filter: FilterId}
   | null;

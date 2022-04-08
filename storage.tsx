@@ -78,11 +78,14 @@ function convertTasks(data: unknown): Tasks.Tasks | null {
       }
     })();
 
-    const planned: string = (() => {
+    const planned: Date | null = (() => {
       if (has(data, "planned", "string")) {
-        return data.planned;
+        if (data.planned === "") return null;
+        const date = new Date(data.planned);
+        if (isNaN(date.getTime())) return null;
+        return date;
       } else {
-        return "";
+        return null;
       }
     })();
 
