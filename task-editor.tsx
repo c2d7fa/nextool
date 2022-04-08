@@ -228,6 +228,7 @@ function DateComponent(props: {view: ViewComponent & {type: "date"}; send: Send}
     <input
       className={style.date}
       type="date"
+      value={props.view.value}
       onChange={(ev) => {
         props.send({
           tag: "editor",
