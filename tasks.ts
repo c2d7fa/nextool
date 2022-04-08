@@ -25,6 +25,7 @@ export type TaskListView = {
   done: boolean;
   paused: boolean;
   project: boolean;
+  today: boolean;
   badges: BadgeId[];
   dropIndicator: null | {side: "above" | "below"; indentation: number};
   dropTargets: DropTarget[];
@@ -140,6 +141,10 @@ export function isStalled(tasks: Tasks, task: {id: string}): boolean {
   return badges(tasks, task_).includes("stalled");
 }
 
+function isToday(tasks: Tasks, task: Task, today: Date) {
+  return (task.planned && isSameDay(task.planned, today)) ?? false;
+}
+
 export type BadgeId = "ready" | "stalled" | "project" | "today";
 
 function badges(tasks: Tasks, task: Task, args?: {today: Date}): BadgeId[] {
@@ -163,10 +168,6 @@ function badges(tasks: Tasks, task: Task, args?: {today: Date}): BadgeId[] {
 
   function hasReadyDescendants(task: Task): boolean {
     return task.children.some((child) => isReady(child) || hasReadyDescendants(child));
-  }
-
-  function isToday(tasks: Tasks, task: Task, today: Date) {
-    return task.planned && isSameDay(task.planned, today);
   }
 
   const isStalled = isStalledTask(task) || (isProject(task) && !isInactive(task) && !hasReadyDescendants(task));
@@ -291,6 +292,7 @@ export function view(args: {
     paused: isPaused(tasks, IndentedList.findNode(tasks, task)!),
     badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
     project: task.type === "project",
+    today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
     dropIndicator: dropIndicator(task),
     dropTargets: dropTargetsNear(index),
   }));

@@ -1719,5 +1719,9 @@ describe("planning", () => {
     test("the task has the today badge", () => {
       expect(view(step1).taskList.map(({badges}) => badges)).toEqual([["today", "stalled"]]);
     });
+
+    test("the task has the 'today' property set in the task list", () => {
+      expect(view(step1).taskList.map(({today}) => today)).toEqual([true]);
+    });
   });
 });
