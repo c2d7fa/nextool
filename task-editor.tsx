@@ -2,6 +2,7 @@ import * as React from "react";
 import * as style from "./task-editor.module.scss";
 
 import * as DateFns from "date-fns";
+import * as DateFnsTz from "date-fns-tz";
 
 import {Tasks, find, EditOperation} from "./tasks";
 import {Send} from "./app";
@@ -99,7 +100,7 @@ export function editOperationsFor(state: State, ev: Event): EditOperation[] {
     if (ev.value === "project") return [{type: "set", property: "type", value: "project"}];
     else return [];
   } else if (ev.component.id.property === "planned") {
-    const date = DateFns.parse(ev.value, "yyyy-MM-dd", new Date());
+    const date = DateFnsTz.zonedTimeToUtc(DateFns.parse(ev.value, "yyyy-MM-dd", 0), "UTC");
     if (!DateFns.isValid(date)) return [];
     return [{type: "set", property: "planned", value: date}];
   } else return [];
