@@ -22,6 +22,8 @@ function BadgeFor(props: {type: BadgeId}) {
     return <Badge color="orange">Stalled</Badge>;
   } else if (props.type === "project") {
     return <Badge color="project">Project</Badge>;
+  } else if (props.type === "today") {
+    return <Badge color="red">Today</Badge>;
   } else {
     const unreachable: never = props.type;
     return unreachable;

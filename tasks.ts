@@ -1,3 +1,4 @@
+import {isSameDay} from "date-fns";
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
 import * as IndentedList from "./indented-list";
@@ -139,9 +140,9 @@ export function isStalled(tasks: Tasks, task: {id: string}): boolean {
   return badges(tasks, task_).includes("stalled");
 }
 
-export type BadgeId = "ready" | "stalled" | "project";
+export type BadgeId = "ready" | "stalled" | "project" | "today";
 
-function badges(tasks: Tasks, task: Task): BadgeId[] {
+function badges(tasks: Tasks, task: Task, args?: {today: Date}): BadgeId[] {
   function isProject(task: Task): boolean {
     return task.type === "project";
   }
@@ -164,11 +165,18 @@ function badges(tasks: Tasks, task: Task): BadgeId[] {
     return task.children.some((child) => isReady(child) || hasReadyDescendants(child));
   }
 
+  function isToday(tasks: Tasks, task: Task, today: Date) {
+    return task.planned && isSameDay(task.planned, today);
+  }
+
   const isStalled = isStalledTask(task) || (isProject(task) && !isInactive(task) && !hasReadyDescendants(task));
 
-  return [isProject(task) && "project", isStalled && "stalled", isReady(task) && "ready"].filter(
-    Boolean,
-  ) as BadgeId[];
+  return [
+    isProject(task) && "project",
+    args?.today && isToday(tasks, task, args.today) && "today",
+    isStalled && "stalled",
+    isReady(task) && "ready",
+  ].filter(Boolean) as BadgeId[];
 }
 
 export type FilterId =
@@ -281,7 +289,7 @@ export function view(args: {
     indentation: task.indentation,
     done: isDone(task),
     paused: isPaused(tasks, IndentedList.findNode(tasks, task)!),
-    badges: badges(tasks, IndentedList.findNode(tasks, task)!),
+    badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
     project: task.type === "project",
     dropIndicator: dropIndicator(task),
     dropTargets: dropTargetsNear(index),

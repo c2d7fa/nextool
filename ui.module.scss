@@ -32,4 +32,5 @@
   &.green { @include shared.badge-like(shared.$green-hue); }
   &.orange { @include shared.badge-like(shared.$orange-hue); }
   &.project { @include shared.badge-like(shared.$project-hue); }
+  &.red { @include shared.badge-like(shared.$red-hue); }
 }

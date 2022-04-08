@@ -1707,4 +1707,17 @@ describe("planning", () => {
       });
     });
   });
+
+  describe("tasks planned today have today badge", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Task 1"),
+      openNth(0),
+      setComponentValue("Planned", "2020-03-15"),
+    ]);
+
+    test("the task has the today badge", () => {
+      expect(view(step1).taskList.map(({badges}) => badges)).toEqual([["today", "stalled"]]);
+    });
+  });
 });
