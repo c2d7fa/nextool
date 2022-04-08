@@ -67,7 +67,7 @@ export type View = {
   editor: TaskEditor.View;
 };
 
-export function view(app: State): View {
+export function view(app: State, {today}: {today: Date}): View {
   const stalledTasks = Tasks.countStalledTasks(app.tasks);
 
   const activeProjects = Tasks.projects(app.tasks).filter(
@@ -149,7 +149,7 @@ export function view(app: State): View {
         ],
       },
     ],
-    taskList: Tasks.view(app),
+    taskList: Tasks.view({...app, today}),
     editor: TaskEditor.view(app.editor),
   };
 }

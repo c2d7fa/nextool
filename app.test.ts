@@ -1,5 +1,9 @@
-import {updateApp, State, view, Event, empty, DragId, DropId, View, effects, Effect} from "./app";
+import {updateApp, State, view as viewApp, Event, empty, DragId, DropId, View, effects, Effect} from "./app";
 import {FilterId} from "./tasks";
+
+function view(state: State): View {
+  return viewApp(state, {today: new Date("2020-03-15")});
+}
 
 function updateAll(state: State, events: (Event | ((view: View) => Event[]))[]): State {
   return events.reduce(

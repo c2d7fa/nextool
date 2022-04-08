@@ -239,7 +239,12 @@ export function countStalledTasks(tasks: Tasks): number {
   return filterTasks(tasks, "stalled").length;
 }
 
-export function view(args: {tasks: Tasks; filter: FilterId; taskDrag: DragState<DragId, DropId>}): TaskListView {
+export function view(args: {
+  tasks: Tasks;
+  filter: FilterId;
+  taskDrag: DragState<DragId, DropId>;
+  today: Date;
+}): TaskListView {
   const {tasks, filter, taskDrag} = args;
 
   const filtered = filterTasks(tasks, filter);
