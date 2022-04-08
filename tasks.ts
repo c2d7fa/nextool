@@ -9,6 +9,7 @@ type TaskData = {
   type: "task" | "project";
   archived: boolean;
   action: boolean;
+  planned: string;
 };
 
 type Task = IndentedList.TreeNode<TaskData>;
@@ -22,8 +23,18 @@ export const empty: Tasks = [
     action: true,
     type: "task",
     archived: false,
+    planned: "",
     children: [
-      {id: "1", title: "Task 2", status: "done", action: true, children: [], type: "task", archived: false},
+      {
+        id: "1",
+        title: "Task 2",
+        status: "done",
+        action: true,
+        children: [],
+        type: "task",
+        archived: false,
+        planned: "",
+      },
     ],
   },
   {
@@ -32,6 +43,7 @@ export const empty: Tasks = [
     status: "active",
     action: false,
     archived: false,
+    planned: "",
     children: [
       {
         id: "2",
@@ -40,11 +52,30 @@ export const empty: Tasks = [
         action: true,
         type: "task",
         archived: false,
+        planned: "",
         children: [
-          {id: "3", title: "Task 4", status: "paused", action: false, children: [], type: "task", archived: false},
+          {
+            id: "3",
+            title: "Task 4",
+            status: "paused",
+            action: false,
+            children: [],
+            type: "task",
+            archived: false,
+            planned: "",
+          },
         ],
       },
-      {id: "4", title: "Task 5", status: "active", action: true, children: [], type: "task", archived: false},
+      {
+        id: "4",
+        title: "Task 5",
+        status: "active",
+        action: true,
+        children: [],
+        type: "task",
+        archived: false,
+        planned: "",
+      },
     ],
     type: "project",
   },
@@ -56,6 +87,7 @@ export const empty: Tasks = [
     children: [],
     type: "project",
     archived: false,
+    planned: "",
   },
 ];
 
@@ -94,6 +126,7 @@ export function add({tasks, filter}: {tasks: Tasks; filter: FilterId}, values: P
       type: "task",
       archived: false,
       children: [],
+      planned: "",
     },
   ];
 
@@ -109,6 +142,7 @@ export type EditOperation =
   | {type: "set"; property: "status"; value: "active" | "paused" | "done"}
   | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action" | "archived"; value: boolean}
+  | {type: "set"; property: "planned"; value: string}
   | {type: "move"; side: "above" | "below"; target: {id: string}; indentation: number}
   | {type: "moveToFilter"; filter: FilterId}
   | null;

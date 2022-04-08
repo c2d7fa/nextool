@@ -96,6 +96,8 @@ export function editOperationsFor(state: State, ev: Event): EditOperation[] {
     if (ev.value === "task") return [{type: "set", property: "type", value: "task"}];
     if (ev.value === "project") return [{type: "set", property: "type", value: "project"}];
     else return [];
+  } else if (ev.component.id.property === "planned") {
+    return [{type: "set", property: "planned", value: ev.value}];
   } else return [];
 }
 
@@ -156,7 +158,7 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
         },
         ...(task.type === "task" ? [actionable] : []),
       ],
-      [{title: "Planned", components: [{type: "date", property: "planned", value: "todo"}]}],
+      [{title: "Planned", components: [{type: "date", property: "planned", value: task.planned}]}],
     ],
   };
 }
@@ -222,7 +224,20 @@ function PickerComponent(props: {view: ViewComponent & {type: "picker"}; send: S
 }
 
 function DateComponent(props: {view: ViewComponent & {type: "date"}; send: Send}) {
-  return <input className={style.date} type="date" />;
+  return (
+    <input
+      className={style.date}
+      type="date"
+      onChange={(ev) => {
+        props.send({
+          tag: "editor",
+          type: "component",
+          component: {id: props.view.id},
+          value: ev.target.value,
+        });
+      }}
+    />
+  );
 }
 
 function Component(props: {view: ViewComponent; send: Send}) {

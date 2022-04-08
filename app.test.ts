@@ -1653,3 +1653,38 @@ describe("saving and loading files", () => {
     });
   });
 });
+
+describe("planning", () => {
+  describe("planned date is saved", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the planned date is not set", () => {
+        expect(componentTitled(view(step1), "Planned")).toMatchObject({type: "date", value: ""});
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Planned", "2020-01-01")]);
+
+    describe("after setting planned date", () => {
+      test("the planned date is set in the editor", () => {
+        expect(componentTitled(view(step2), "Planned")).toMatchObject({type: "date", value: "2020-01-01"});
+      });
+    });
+
+    const savedEffects = effects(step2, {tag: "storage", type: "clickSaveButton"});
+    const savedContents = (savedEffects[0] as Effect & {type: "fileDownload"}).contents;
+
+    const loaded = updateAll(empty, [
+      {tag: "storage", type: "loadFile", name: "tasks.json", contents: savedContents},
+      ...switchToFilter("all"),
+      openNth(0),
+    ]);
+
+    describe("after loading the file", () => {
+      test("the planned date is still set in the editor", () => {
+        expect(componentTitled(view(loaded), "Planned")).toMatchObject({type: "date", value: "2020-01-01"});
+      });
+    });
+  });
+});

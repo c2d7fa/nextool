@@ -78,7 +78,15 @@ function convertTasks(data: unknown): Tasks.Tasks | null {
       }
     })();
 
-    return {id: data.id, title: data.title, children, status, type, archived, action};
+    const planned: string = (() => {
+      if (has(data, "planned", "string")) {
+        return data.planned;
+      } else {
+        return "";
+      }
+    })();
+
+    return {id: data.id, title: data.title, children, status, type, archived, action, planned};
   }
 
   if (typeof data !== "object" || !(data instanceof Array)) return null;
