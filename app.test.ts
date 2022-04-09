@@ -47,7 +47,7 @@ function viewed(state: State | View): View {
 }
 
 function nthTask(view: View | State, n: number) {
-  const result = viewed(view).taskList[n];
+  const result = viewed(view).taskList.flatMap((section) => section.tasks)[n];
   if (!result) throw "no such task";
   return result;
 }
@@ -82,10 +82,26 @@ function sideBarActiveProjects(view: View) {
   return view.sideBar.find((section) => section.title === "Active projects")?.filters ?? [];
 }
 
+type TaskView = View["taskList"][number]["tasks"][number];
+
+function tasks<P extends (keyof TaskView)[] | keyof TaskView>(
+  view: View | State,
+  properties: P,
+): P extends keyof TaskView ? TaskView[P][] : P extends any[] ? {[K in P[number]]: TaskView[K]}[] : never {
+  function select(task: any, properties: any): any {
+    if (typeof properties === "string") return task[properties];
+    return properties.reduce((result: any, property: any) => ({...result, [property]: task[property]}), {});
+  }
+
+  return viewed(view)
+    .taskList.flatMap((section) => section.tasks)
+    .map((task) => select(task, properties)) as any;
+}
+
 describe("adding tasks", () => {
   describe("with empty state", () => {
     test("there are no tasks", () => {
-      expect(view(empty).taskList).toEqual([]);
+      expect(tasks(empty, [])).toEqual([]);
     });
   });
 
@@ -98,19 +114,19 @@ describe("adding tasks", () => {
     ]);
 
     test("there are three tasks in the task list", () => {
-      expect(view(example).taskList.length).toEqual(3);
+      expect(tasks(example, [])).toEqual([{}, {}, {}]);
     });
 
     test("they are added from top to bottom", () => {
-      expect(view(example).taskList.map((t) => t.title)).toEqual(["Task 1", "Task 2", "Task 3"]);
+      expect(tasks(example, "title")).toEqual(["Task 1", "Task 2", "Task 3"]);
     });
 
     test("they are all marked unfinished", () => {
-      expect(view(example).taskList.every((t) => !t.done)).toBe(true);
+      expect(tasks(example, "done")).toEqual([false, false, false]);
     });
 
     test("they are marked as stalled", () => {
-      expect(view(example).taskList.map((t) => t.badges)).toEqual([["stalled"], ["stalled"], ["stalled"]]);
+      expect(tasks(example, "badges")).toEqual([["stalled"], ["stalled"], ["stalled"]]);
     });
   });
 });
@@ -140,7 +156,7 @@ describe("adding tasks in filter", () => {
     const example = updateAll(empty, [...switchToFilter("ready"), ...addTask("Task 1")]);
 
     test("the task is shown in the current task list", () => {
-      expect(view(example).taskList.map((t) => t.title)).toEqual(["Task 1"]);
+      expect(tasks(example, "title")).toEqual(["Task 1"]);
     });
   });
 
@@ -156,7 +172,7 @@ describe("adding tasks in filter", () => {
 
     describe("before adding any tasks", () => {
       test("no tasks are shown", () => {
-        expect(view(step1).taskList).toEqual([]);
+        expect(tasks(step1, [])).toEqual([]);
       });
     });
 
@@ -164,7 +180,7 @@ describe("adding tasks in filter", () => {
 
     describe("after adding a task", () => {
       test("the task is shown in the current task list", () => {
-        expect(view(step2).taskList.map((t) => t.title)).toEqual(["Inside project"]);
+        expect(tasks(step2, "title")).toEqual(["Inside project"]);
       });
     });
 
@@ -172,7 +188,7 @@ describe("adding tasks in filter", () => {
 
     describe("after adding another task", () => {
       test("the task is added to the end of the list", () => {
-        expect(view(step3).taskList.map((t) => t.title)).toEqual(["Inside project", "Another task"]);
+        expect(tasks(step3, "title")).toEqual(["Inside project", "Another task"]);
       });
     });
   });
@@ -189,31 +205,31 @@ describe("dragging tasks to filters", () => {
     ]);
 
     test("they are all marked as stalled at first", () => {
-      expect(view(example).taskList.map((t) => t.badges)).toEqual([["stalled"], ["stalled"], ["stalled"]]);
+      expect(tasks(example, "badges")).toEqual([["stalled"], ["stalled"], ["stalled"]]);
     });
 
     test("they are all marked unfinished at first", () => {
-      expect(view(example).taskList.every((t) => !t.done)).toBe(true);
+      expect(tasks(example, "done")).toEqual([false, false, false]);
     });
 
     const action = updateAll(example, dragToFilter(nthTask(example, 0).id, "ready"));
     test("dragging a task to the action filter gives it the ready badge", () => {
-      expect(view(action).taskList.map((t) => t.badges)).toEqual([["ready"], ["stalled"], ["stalled"]]);
+      expect(tasks(action, "badges")).toEqual([["ready"], ["stalled"], ["stalled"]]);
     });
 
     const done = updateAll(example, dragToFilter(nthTask(example, 0).id, "done"));
     test("dragging a task to the done filter marks it as done", () => {
-      expect(view(done).taskList.map((t) => t.done)).toEqual([true, false, false]);
+      expect(tasks(done, "done")).toEqual([true, false, false]);
     });
 
     test("dragging a task marked action to stalled gives it the stalled badge again", () => {
       const stalled = updateAll(action, dragToFilter(nthTask(action, 0).id, "stalled"));
-      expect(view(stalled).taskList.map((t) => t.badges)).toEqual([["stalled"], ["stalled"], ["stalled"]]);
+      expect(tasks(stalled, "badges")).toEqual([["stalled"], ["stalled"], ["stalled"]]);
     });
 
     test("dragging a task marked done to unfinished marks it as unfinished again", () => {
       const unfinished = updateAll(done, dragToFilter(nthTask(done, 0).id, "not-done"));
-      expect(view(unfinished).taskList.every((t) => !t.done)).toBe(true);
+      expect(tasks(unfinished, "done")).toEqual([false, false, false]);
     });
   });
 });
@@ -232,7 +248,7 @@ describe("reordering tasks with drag and drop", () => {
         const moved = updateAll(example, [
           ...reorderTask(nthTask(example, from - 1).id, nthTask(example, to - 1).id, side),
         ]);
-        expect(view(moved).taskList.map((t) => t.title)).toEqual(result.map((x) => `Task ${x}`));
+        expect(tasks(moved, "title")).toEqual(result.map((x) => `Task ${x}`));
       });
     }
 
@@ -294,7 +310,7 @@ describe("nesting tasks with drag and drop", () => {
     ]);
 
     test("before dragging anything, neither task is indented", () => {
-      expect(view(example).taskList.map((t) => t.indentation)).toEqual([0, 0, 0, 0]);
+      expect(tasks(example, "indentation")).toEqual([0, 0, 0, 0]);
     });
 
     const afterDragging = updateAll(example, [
@@ -349,7 +365,7 @@ describe("nesting tasks with drag and drop", () => {
     const draggingLast = updateAll(example, [startDragNthTask(4)]);
 
     test("tasks are indented correctly", () => {
-      expect(view(example).taskList.map((t) => t.indentation)).toEqual([0, 1, 2, 1, 0]);
+      expect(tasks(example, "indentation")).toEqual([0, 1, 2, 1, 0]);
     });
 
     test("below the task above the task at a higer level of indentation, there are drop targets only at that level of indentation", () => {
@@ -399,7 +415,7 @@ describe("nesting tasks with drag and drop", () => {
       ]);
 
       test("the tasks are indented correctly", () => {
-        expect(view(example).taskList.map((t) => t.indentation)).toEqual([0, 1, 2, 3, 1]);
+        expect(tasks(example, "indentation")).toEqual([0, 1, 2, 3, 1]);
       });
 
       function dropTargetsOfNthTaskAtOrAbove(state: State, n: number, indentation: number) {
@@ -465,15 +481,15 @@ describe("nesting tasks with drag and drop", () => {
           ]);
 
           test("there are still three tasks in the example", () => {
-            expect(view(afterDrop).taskList).toHaveLength(3);
+            expect(tasks(afterDrop, []).length).toEqual(3);
           });
 
           test("they are still in the same order", () => {
-            expect(view(afterDrop).taskList.map((t) => t.title)).toEqual(["Task 0", "Task 1", "Task 2"]);
+            expect(tasks(afterDrop, "title")).toEqual(["Task 0", "Task 1", "Task 2"]);
           });
 
           test("the indentation has changed", () => {
-            expect(view(afterDrop).taskList.map((t) => t.indentation)).toEqual([0, 1, 0]);
+            expect(tasks(afterDrop, "indentation")).toEqual([0, 1, 0]);
           });
         });
       });
@@ -615,7 +631,7 @@ describe("drag and drop in filtered views", () => {
 
     describe("initially", () => {
       test("the correct tasks are shown in the finished view", () => {
-        expect(view(example).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+        expect(tasks(example, ["title", "indentation"])).toEqual([
           {title: "Task 1", indentation: 0},
           {title: "Task 2", indentation: 0},
         ]);
@@ -629,7 +645,7 @@ describe("drag and drop in filtered views", () => {
       ]);
 
       test("the correct tasks are shown in the all view", () => {
-        expect(view(step1).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+        expect(tasks(step1, ["title", "indentation"])).toEqual([
           {title: "Task 0", indentation: 0},
           {title: "Task 1", indentation: 1},
           {title: "Task 2", indentation: 2},
@@ -644,7 +660,7 @@ describe("drag and drop in filtered views", () => {
       ]);
 
       test("the correct tasks are shown in the all view", () => {
-        expect(view(step1).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+        expect(tasks(step1, ["title", "indentation"])).toEqual([
           {title: "Task 0", indentation: 0},
           {title: "Task 2", indentation: 0},
           {title: "Task 1", indentation: 1},
@@ -659,7 +675,7 @@ describe("drag and drop in filtered views", () => {
       ]);
 
       test("the correct tasks are shown in the all view", () => {
-        expect(view(step1).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+        expect(tasks(step1, ["title", "indentation"])).toEqual([
           {title: "Task 0", indentation: 0},
           {title: "Task 1", indentation: 1},
           {title: "Task 2", indentation: 2},
@@ -764,15 +780,15 @@ describe("dragging a subtree of tasks", () => {
 
   describe("initially", () => {
     test("the example has three tasks", () => {
-      expect(view(example).taskList.length).toBe(3);
+      expect(tasks(example, []).length).toBe(3);
     });
 
     test("the example has tasks in the correct order", () => {
-      expect(view(example).taskList.map((t) => t.title)).toEqual(["Task 0", "Task 1", "Task 2"]);
+      expect(tasks(example, "title")).toEqual(["Task 0", "Task 1", "Task 2"]);
     });
 
     test("the example is indented correctly", () => {
-      expect(view(example).taskList.map((t) => t.indentation)).toEqual([0, 1, 0]);
+      expect(tasks(example, "indentation")).toEqual([0, 1, 0]);
     });
   });
 
@@ -780,15 +796,15 @@ describe("dragging a subtree of tasks", () => {
 
   describe("after dragging the subtree into another task", () => {
     test("there are still three tasks", () => {
-      expect(view(afterDragging).taskList.length).toBe(3);
+      expect(tasks(afterDragging, []).length).toBe(3);
     });
 
     test("the tasks have changed order", () => {
-      expect(view(afterDragging).taskList.map((t) => t.title)).toEqual(["Task 2", "Task 0", "Task 1"]);
+      expect(tasks(afterDragging, "title")).toEqual(["Task 2", "Task 0", "Task 1"]);
     });
 
     test("the tasks have changed indentation", () => {
-      expect(view(afterDragging).taskList.map((t) => t.indentation)).toEqual([0, 1, 2]);
+      expect(tasks(afterDragging, "indentation")).toEqual([0, 1, 2]);
     });
   });
 });
@@ -812,41 +828,41 @@ describe("filtered views of tasks", () => {
 
     describe("before marking the task as done", () => {
       test("the correct tasks are shown in the 'all' view", () => {
-        expect(view(exampleBeforeAll).taskList.map((t) => t.title)).toEqual(["Task 0", "Task 1", "Task 2"]);
+        expect(tasks(exampleBeforeAll, "title")).toEqual(["Task 0", "Task 1", "Task 2"]);
       });
 
       test("the tasks have the correct indentation", () => {
-        expect(view(exampleBeforeAll).taskList.map((t) => t.indentation)).toEqual([0, 1, 2]);
+        expect(tasks(exampleBeforeAll, "indentation")).toEqual([0, 1, 2]);
       });
 
       test("the filtered view is empty", () => {
-        expect(view(exampleBeforeDone).taskList.length).toBe(0);
+        expect(tasks(exampleBeforeDone, []).length).toBe(0);
       });
     });
 
     describe("after marking the task as done", () => {
       test("the same tasks are shown in the 'all' view", () => {
-        expect(view(exampleAfterAll).taskList.map((t) => t.title)).toEqual(["Task 0", "Task 1", "Task 2"]);
+        expect(tasks(exampleAfterAll, "title")).toEqual(["Task 0", "Task 1", "Task 2"]);
       });
 
       test("the tasks have the same indentation in the 'all' view", () => {
-        expect(view(exampleAfterAll).taskList.map((t) => t.indentation)).toEqual([0, 1, 2]);
+        expect(tasks(exampleAfterAll, "indentation")).toEqual([0, 1, 2]);
       });
 
       test("the filtered view now contains the task", () => {
-        expect(view(exampleAfterDone).taskList.map((t) => t.title)).toContainEqual("Task 1");
+        expect(tasks(exampleAfterDone, "title")).toContainEqual("Task 1");
       });
 
       test("the filtered view also contains the subtask, even though it doesn't match filter itself", () => {
-        expect(view(exampleAfterDone).taskList.map((t) => t.title)).toContainEqual("Task 2");
+        expect(tasks(exampleAfterDone, "title")).toContainEqual("Task 2");
       });
 
       test("the filtered view contains no other tasks", () => {
-        expect(view(exampleAfterDone).taskList).toHaveLength(2);
+        expect(tasks(exampleAfterDone, []).length).toEqual(2);
       });
 
       test("the tasks in the filtered view have the correct indentation", () => {
-        expect(view(exampleAfterDone).taskList.map((t) => t.indentation)).toEqual([0, 1]);
+        expect(tasks(exampleAfterDone, "indentation")).toEqual([0, 1]);
       });
     });
 
@@ -857,7 +873,7 @@ describe("filtered views of tasks", () => {
       ]);
 
       test("the same tasks are shown in the 'done' view (since it was already included)", () => {
-        expect(view(example2).taskList.map((t) => t.title)).toEqual(["Task 1", "Task 2"]);
+        expect(tasks(example2, "title")).toEqual(["Task 1", "Task 2"]);
       });
 
       test("the task is now marked as done", () => {
@@ -923,7 +939,7 @@ describe("the task editor", () => {
 
     describe("initially", () => {
       test("the example task is shown in the task list", () => {
-        expect(view(step1).taskList.map((t) => t.title)).toEqual(["Task"]);
+        expect(tasks(step1, "title")).toEqual(["Task"]);
       });
 
       test("the task editor is hidden", () => {
@@ -958,7 +974,7 @@ describe("the task editor", () => {
       });
 
       test("the task in the task list has the new title", () => {
-        expect(view(step3).taskList.map((t) => t.title)).toEqual(["Task with edited title"]);
+        expect(tasks(step3, "title")).toEqual(["Task with edited title"]);
       });
     });
   });
@@ -968,7 +984,7 @@ describe("the task editor", () => {
 
     describe("initially", () => {
       test("the example task is not checked in the task list", () => {
-        expect(view(step1).taskList.map((t) => t.done)).toEqual([false]);
+        expect(tasks(step1, "done")).toEqual([false]);
       });
 
       test("there is a component titled 'Status'", () => {
@@ -996,7 +1012,7 @@ describe("the task editor", () => {
 
     describe("if the task is checked in the task list", () => {
       test("the task is marked as done in the task list", () => {
-        expect(view(step2a).taskList.map((t) => t.done)).toEqual([true]);
+        expect(tasks(step2a, "done")).toEqual([true]);
       });
 
       test("the selected status option is changed", () => {
@@ -1010,7 +1026,7 @@ describe("the task editor", () => {
 
     describe("if the task status is changed in the editor instead", () => {
       test("the task is marked as done in the task list", () => {
-        expect(view(step2b).taskList.map((t) => t.done)).toEqual([true]);
+        expect(tasks(step2b, "done")).toEqual([true]);
       });
 
       test("the selected status option is changed", () => {
@@ -1026,7 +1042,7 @@ describe("the task editor", () => {
 
     describe("initially", () => {
       test("the example task has the stalled badge in the task list", () => {
-        expect(view(step1).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+        expect(tasks(step1, "badges")).toEqual([["stalled"]]);
       });
 
       test("there is a component titled 'Actionable'", () => {
@@ -1054,7 +1070,7 @@ describe("the task editor", () => {
 
     describe("after dragging the task into the ready filter", () => {
       test("the task has the ready badge in the task list", () => {
-        expect(view(step2).taskList.map((t) => t.badges)).toEqual([["ready"]]);
+        expect(tasks(step2, "badges")).toEqual([["ready"]]);
       });
 
       test("the selected option becomes 'Ready'", () => {
@@ -1068,7 +1084,7 @@ describe("the task editor", () => {
 
     describe("after changing the task status back in the editor", () => {
       test("the task reverts to the stalled badge", () => {
-        expect(view(step3).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+        expect(tasks(step3, "badges")).toEqual([["stalled"]]);
       });
 
       test("the selected option becomes 'Not Ready' again", () => {
@@ -1086,11 +1102,11 @@ describe("paused tasks", () => {
 
     describe("initially", () => {
       test("the task has the stalled badge", () => {
-        expect(view(step1).taskList.map((t) => t.badges)).toEqual([["stalled"]]);
+        expect(tasks(step1, "badges")).toEqual([["stalled"]]);
       });
 
       test("the task is not paused", () => {
-        expect(view(step1).taskList.map((t) => t.paused)).toEqual([false]);
+        expect(tasks(step1, "paused")).toEqual([false]);
       });
     });
 
@@ -1098,11 +1114,11 @@ describe("paused tasks", () => {
 
     describe("after changing the task status to paused in the editor", () => {
       test("the task loses its badges", () => {
-        expect(view(step2).taskList.map((t) => t.badges)).toEqual([[]]);
+        expect(tasks(step2, "badges")).toEqual([[]]);
       });
 
       test("the task is paused", () => {
-        expect(view(step2).taskList.map((t) => t.paused)).toEqual([true]);
+        expect(tasks(step2, "paused")).toEqual([true]);
       });
     });
   });
@@ -1118,11 +1134,11 @@ describe("paused tasks", () => {
 
     describe("initially", () => {
       test("neither the parent nor the child is paused", () => {
-        expect(view(step1).taskList.map((t) => t.paused)).toEqual([false, false]);
+        expect(tasks(step1, "paused")).toEqual([false, false]);
       });
 
       test("the child has the stalled badge", () => {
-        expect(view(step1).taskList.map((t) => t.badges)).toEqual([[], ["stalled"]]);
+        expect(tasks(step1, "badges")).toEqual([[], ["stalled"]]);
       });
     });
 
@@ -1130,11 +1146,11 @@ describe("paused tasks", () => {
 
     describe("after changing the parent's task status to paused in the editor", () => {
       test("both the parent and the child are paused", () => {
-        expect(view(step2).taskList.map((t) => t.paused)).toEqual([true, true]);
+        expect(tasks(step2, "paused")).toEqual([true, true]);
       });
 
       test("neither task has any badges", () => {
-        expect(view(step2).taskList.map((t) => t.badges)).toEqual([[], []]);
+        expect(tasks(step2, "badges")).toEqual([[], []]);
       });
     });
 
@@ -1142,7 +1158,7 @@ describe("paused tasks", () => {
 
     describe("after switching to the stalled filter", () => {
       test("the task list is empty", () => {
-        expect(view(step3).taskList).toEqual([]);
+        expect(tasks(step3, [])).toEqual([]);
       });
     });
   });
@@ -1162,11 +1178,11 @@ describe("paused tasks", () => {
 
       describe("when child is paused", () => {
         test("parent is stalled", () => {
-          expect(view(step1).taskList.map((t) => t.badges)).toEqual([["stalled"], []]);
+          expect(tasks(step1, "badges")).toEqual([["stalled"], []]);
         });
 
         test("child is paused", () => {
-          expect(view(step1).taskList.map((t) => t.paused)).toEqual([false, true]);
+          expect(tasks(step1, "paused")).toEqual([false, true]);
         });
       });
 
@@ -1174,11 +1190,11 @@ describe("paused tasks", () => {
 
       describe("after marking child as done", () => {
         test("parent becomes ready", () => {
-          expect(view(step2).taskList.map((t) => t.badges)).toEqual([["ready"], []]);
+          expect(tasks(step2, "badges")).toEqual([["ready"], []]);
         });
 
         test("child is not paused", () => {
-          expect(view(step2).taskList.map((t) => t.paused)).toEqual([false, false]);
+          expect(tasks(step2, "paused")).toEqual([false, false]);
         });
       });
     });
@@ -1195,11 +1211,11 @@ describe("paused tasks", () => {
 
       describe("when child is paused", () => {
         test("parent is stalled", () => {
-          expect(view(step1).taskList.map((t) => t.badges)).toEqual([["stalled"], []]);
+          expect(tasks(step1, "badges")).toEqual([["stalled"], []]);
         });
 
         test("child is paused", () => {
-          expect(view(step1).taskList.map((t) => t.paused)).toEqual([false, true]);
+          expect(tasks(step1, "paused")).toEqual([false, true]);
         });
       });
 
@@ -1207,11 +1223,11 @@ describe("paused tasks", () => {
 
       describe("after marking child as done", () => {
         test("parent is still stalled", () => {
-          expect(view(step2).taskList.map((t) => t.badges)).toEqual([["stalled"], []]);
+          expect(tasks(step2, "badges")).toEqual([["stalled"], []]);
         });
 
         test("child is not paused", () => {
-          expect(view(step2).taskList.map((t) => t.paused)).toEqual([false, false]);
+          expect(tasks(step2, "paused")).toEqual([false, false]);
         });
       });
     });
@@ -1255,7 +1271,7 @@ describe("counter next to filters", () => {
     ]);
 
     test("there is a paused subtask", () => {
-      expect(view(example).taskList.map((t) => t.paused)).toEqual([false, true]);
+      expect(tasks(example, "paused")).toEqual([false, true]);
     });
 
     test("but the counter only shows one task", () => {
@@ -1280,7 +1296,7 @@ describe("projects", () => {
       });
 
       test("the task is not a project in task list", () => {
-        expect(view(step1).taskList.map((t) => t.project)).toEqual([false]);
+        expect(tasks(step1, "project")).toEqual([false]);
       });
     });
 
@@ -1292,7 +1308,7 @@ describe("projects", () => {
       });
 
       test("the task is a project in task list", () => {
-        expect(view(step2).taskList.map((t) => t.project)).toEqual([true]);
+        expect(tasks(step2, "project")).toEqual([true]);
       });
     });
   });
@@ -1311,7 +1327,7 @@ describe("projects", () => {
       });
 
       test("the task has the ready badge", () => {
-        expect(view(step1).taskList.map((t) => t.badges)).toEqual([["ready"]]);
+        expect(tasks(step1, "badges")).toEqual([["ready"]]);
       });
     });
 
@@ -1323,7 +1339,7 @@ describe("projects", () => {
       });
 
       test("the project has the stalled badge", () => {
-        expect(view(step2).taskList.map((t) => t.badges)).toEqual([["project", "stalled"]]);
+        expect(tasks(step2, "badges")).toEqual([["project", "stalled"]]);
       });
     });
   });
@@ -1345,7 +1361,7 @@ describe("projects", () => {
         setComponentValue("Actionable", "yes"),
       ]);
 
-      expect(view(example).taskList.map((t) => t.badges)).toEqual([["project"], [], ["ready"], ["stalled"]]);
+      expect(tasks(example, "badges")).toEqual([["project"], [], ["ready"], ["stalled"]]);
     });
 
     test("a project with only a stalled subtask is itself also stalled", () => {
@@ -1358,7 +1374,7 @@ describe("projects", () => {
         ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
       ]);
 
-      expect(view(example).taskList.map((t) => t.badges)).toEqual([["project", "stalled"], ["stalled"]]);
+      expect(tasks(example, "badges")).toEqual([["project", "stalled"], ["stalled"]]);
     });
 
     test("however, project isn't stalled if it's paused", () => {
@@ -1370,7 +1386,7 @@ describe("projects", () => {
         setComponentValue("Status", "paused"),
       ]);
 
-      expect(view(example).taskList.map((t) => t.badges)).toEqual([["project"]]);
+      expect(tasks(example, "badges")).toEqual([["project"]]);
     });
   });
 
@@ -1399,7 +1415,7 @@ describe("projects", () => {
       });
 
       test("but the item is still shown as a project in the task list", () => {
-        expect(view(step3a).taskList.map((t) => t.project)).toEqual([true]);
+        expect(tasks(step3a, "project")).toEqual([true]);
       });
     });
 
@@ -1411,7 +1427,7 @@ describe("projects", () => {
       });
 
       test("but the item is still shown as a project in the task list", () => {
-        expect(view(step3b).taskList.map((t) => t.project)).toEqual([true]);
+        expect(tasks(step3b, "project")).toEqual([true]);
       });
     });
   });
@@ -1459,7 +1475,7 @@ describe("projects", () => {
 
     describe("in the 'all' filter", () => {
       test("there are three tasks", () => {
-        expect(view(step1).taskList.length).toEqual(3);
+        expect(tasks(step1, []).length).toEqual(3);
       });
 
       test("the 'all' filter is the only active filter in the sidebar", () => {
@@ -1486,7 +1502,7 @@ describe("projects", () => {
       });
 
       test("only one task (which is in the project) is shown now", () => {
-        expect(view(step2).taskList.length).toEqual(1);
+        expect(tasks(step2, []).length).toEqual(1);
       });
     });
   });
@@ -1508,7 +1524,7 @@ describe("archiving tasks", () => {
     ]);
 
     test("initially all tasks are shown in the view", () => {
-      expect(view(step1).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+      expect(tasks(step1, ["title", "indentation"])).toEqual([
         {title: "Task 1", indentation: 0},
         {title: "Task 2", indentation: 1},
         {title: "Task 3", indentation: 1},
@@ -1518,7 +1534,7 @@ describe("archiving tasks", () => {
     const step2 = updateAll(step1, [archive(1)]);
 
     test("after archiving, the subtask is removed from the main view", () => {
-      expect(view(step2).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+      expect(tasks(step2, ["title", "indentation"])).toEqual([
         {title: "Task 1", indentation: 0},
         {title: "Task 3", indentation: 1},
       ]);
@@ -1527,15 +1543,13 @@ describe("archiving tasks", () => {
     const step3 = updateAll(step2, [...switchToFilter("archive")]);
 
     test("switching to the archive view shows the archived task", () => {
-      expect(view(step3).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
-        {title: "Task 2", indentation: 0},
-      ]);
+      expect(tasks(step3, ["title", "indentation"])).toEqual([{title: "Task 2", indentation: 0}]);
     });
 
     const step4 = updateAll(step3, [...dragToFilter(nthTask(view(step3), 0).id, "all"), ...switchToFilter("all")]);
 
     test("after unarchiving the task, it is restored to the original location in the main view", () => {
-      expect(view(step4).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+      expect(tasks(step4, ["title", "indentation"])).toEqual([
         {title: "Task 1", indentation: 0},
         {title: "Task 2", indentation: 1},
         {title: "Task 3", indentation: 1},
@@ -1572,7 +1586,7 @@ describe("archiving tasks", () => {
 
     describe("before archiving tasks", () => {
       test("the tasks are shown in the all view", () => {
-        expect(view(step1).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+        expect(tasks(step1, ["title", "indentation"])).toEqual([
           {title: "Task 1", indentation: 0},
           {title: "Task 2", indentation: 1},
         ]);
@@ -1581,7 +1595,7 @@ describe("archiving tasks", () => {
       const step1Archive = updateAll(step1, [...switchToFilter("archive")]);
 
       test("the tasks are not shown in the archive view", () => {
-        expect(view(step1Archive).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([]);
+        expect(tasks(step1Archive, ["title", "indentation"])).toEqual([]);
       });
     });
 
@@ -1589,13 +1603,13 @@ describe("archiving tasks", () => {
 
     describe("after archiving tasks", () => {
       test("the tasks are not shown in the all view", () => {
-        expect(view(step2).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([]);
+        expect(tasks(step2, ["title", "indentation"])).toEqual([]);
       });
 
       const step2Archive = updateAll(step2, [...switchToFilter("archive")]);
 
       test("the tasks are shown in the archive view", () => {
-        expect(view(step2Archive).taskList.map(({title, indentation}) => ({title, indentation}))).toEqual([
+        expect(tasks(step2Archive, ["title", "indentation"])).toEqual([
           {title: "Task 1", indentation: 0},
           {title: "Task 2", indentation: 1},
         ]);
@@ -1612,13 +1626,13 @@ describe("archiving tasks", () => {
     ]);
 
     test("initially, the child task is stalled, and the parent is not", () => {
-      expect(view(step1).taskList.map(({badges}) => ({badges}))).toEqual([{badges: []}, {badges: ["stalled"]}]);
+      expect(tasks(step1, "badges")).toEqual([[], ["stalled"]]);
     });
 
     const step2 = updateAll(step1, [archive(1)]);
 
     test("after archiving the child task, the parent becomes stalled", () => {
-      expect(view(step2).taskList.map(({badges}) => ({badges}))).toEqual([{badges: ["stalled"]}]);
+      expect(tasks(step2, "badges")).toEqual([["stalled"]]);
     });
   });
 });
@@ -1643,15 +1657,15 @@ describe("saving and loading files", () => {
     ]);
 
     test("two tasks are loaded", () => {
-      expect(view(step2).taskList.length).toEqual(2);
+      expect(tasks(step2, []).length).toEqual(2);
     });
 
     test("their statuses are loaded correctly", () => {
-      expect(view(step2).taskList.map(({done}) => done)).toEqual([false, true]);
+      expect(tasks(step2, "done")).toEqual([false, true]);
     });
 
     test("the tasks have the correct badges", () => {
-      expect(view(step2).taskList.map(({badges}) => badges)).toEqual([["ready"], []]);
+      expect(tasks(step2, "badges")).toEqual([["ready"], []]);
     });
   });
 
@@ -1751,17 +1765,17 @@ describe("planning", () => {
     ]);
 
     test("the task has the today badge", () => {
-      expect(view(step1).taskList.map(({badges}) => badges)).toEqual([["today", "stalled"]]);
+      expect(tasks(step1, "badges")).toEqual([["today", "stalled"]]);
     });
 
     test("the task has the 'today' property set in the task list", () => {
-      expect(view(step1).taskList.map(({today}) => today)).toEqual([true]);
+      expect(tasks(step1, "today")).toEqual([true]);
     });
 
     const step2 = updateAll(step1, [setComponentValue("Planned", "")]);
 
     test("clearing the date removes the today badge", () => {
-      expect(view(step2).taskList.map(({badges}) => badges)).toEqual([["stalled"]]);
+      expect(tasks(step2, "badges")).toEqual([["stalled"]]);
     });
   });
 });
