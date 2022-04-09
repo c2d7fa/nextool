@@ -6,6 +6,9 @@ import {Send} from "./app";
 
 import * as style from "./task-list.module.scss";
 
+type TaskListViewSection = TaskListView[number];
+type TaskListViewRow = TaskListViewSection["tasks"][number];
+
 function CheckBox(props: {checked: boolean; id: string; send: Send}) {
   return (
     <div
@@ -30,7 +33,7 @@ function BadgeFor(props: {type: BadgeId}) {
   }
 }
 
-function Badges(props: {task: TaskListView[number]}) {
+function Badges(props: {task: TaskListViewRow}) {
   return (
     <span className={style.badges}>
       {props.task.badges.map((badge) => (
@@ -40,7 +43,7 @@ function Badges(props: {task: TaskListView[number]}) {
   );
 }
 
-function Title(props: {task: TaskListView[number]}) {
+function Title(props: {task: TaskListViewRow}) {
   return (
     <span
       className={[
@@ -79,7 +82,7 @@ function DropTarget(props: {
   );
 }
 
-function TaskRow(props: {task: TaskListView[number]; send: Send}) {
+function TaskRow(props: {task: TaskListViewRow; send: Send}) {
   return (
     <Drag.Draggable id={{type: "task" as const, id: props.task.id}} send={props.send}>
       <div
@@ -114,14 +117,27 @@ function TaskRow(props: {task: TaskListView[number]; send: Send}) {
   );
 }
 
+function TaskListSection(props: {view: TaskListViewSection; send: Send}) {
+  return (
+    <>
+      {props.view.title && <h1 className={style.listSection}>{props.view.title}</h1>}
+      <div className={style.taskList}>
+        {props.view.tasks.length === 0 ? (
+          <div className={style.empty}>There are no tasks in this view.</div>
+        ) : (
+          props.view.tasks.map((task) => <TaskRow key={task.id} task={task} send={props.send} />)
+        )}
+      </div>
+    </>
+  );
+}
+
 export function TaskList(props: {view: TaskListView; send: Send}) {
   return (
-    <div className={style.taskList}>
-      {props.view.length === 0 ? (
-        <div className={style.empty}>There are no tasks in this view.</div>
-      ) : (
-        props.view.map((task) => <TaskRow key={task.id} task={task} send={props.send} />)
-      )}
-    </div>
+    <>
+      {props.view.map((section, index) => (
+        <TaskListSection key={index} view={section} send={props.send} />
+      ))}
+    </>
   );
 }

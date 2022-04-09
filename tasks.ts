@@ -19,16 +19,19 @@ export type Tasks = IndentedList.Tree<TaskData>;
 type DropTarget = {width: number | "full"; indentation: number; side: "above" | "below"};
 
 export type TaskListView = {
-  id: string;
-  title: string;
-  indentation: number;
-  done: boolean;
-  paused: boolean;
-  project: boolean;
-  today: boolean;
-  badges: BadgeId[];
-  dropIndicator: null | {side: "above" | "below"; indentation: number};
-  dropTargets: DropTarget[];
+  title: null | string;
+  tasks: {
+    id: string;
+    title: string;
+    indentation: number;
+    done: boolean;
+    paused: boolean;
+    project: boolean;
+    today: boolean;
+    badges: BadgeId[];
+    dropIndicator: null | {side: "above" | "below"; indentation: number};
+    dropTargets: DropTarget[];
+  }[];
 }[];
 
 export function merge(tasks: Tasks, updates: ({id: string} & Partial<Task>)[]): Tasks {
@@ -285,16 +288,21 @@ export function view(args: {
     }));
   }
 
-  return list.map((task, index) => ({
-    id: task.id,
-    title: task.title,
-    indentation: task.indentation,
-    done: isDone(task),
-    paused: isPaused(tasks, IndentedList.findNode(tasks, task)!),
-    badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
-    project: task.type === "project",
-    today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
-    dropIndicator: dropIndicator(task),
-    dropTargets: dropTargetsNear(index),
-  }));
+  return [
+    {
+      title: null,
+      tasks: list.map((task, index) => ({
+        id: task.id,
+        title: task.title,
+        indentation: task.indentation,
+        done: isDone(task),
+        paused: isPaused(tasks, IndentedList.findNode(tasks, task)!),
+        badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
+        project: task.type === "project",
+        today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
+        dropIndicator: dropIndicator(task),
+        dropTargets: dropTargetsNear(index),
+      })),
+    },
+  ];
 }
