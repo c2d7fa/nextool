@@ -109,6 +109,10 @@
     border-bottom-left-radius: 3px;
   }
 
+  & *:last-child > button, & > button:last-child {
+    @include shared.input-shadow;
+  }
+
   button {
     @include shared.reset-button;
     @include shared.input-padding(1.5);
