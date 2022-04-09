@@ -82,20 +82,32 @@ function sideBarActiveProjects(view: View) {
   return view.sideBar.find((section) => section.title === "Active projects")?.filters ?? [];
 }
 
+function select<T extends object, P extends (keyof T)[] | keyof T>(
+  x: T,
+  properties: P,
+): P extends keyof T ? T[P][] : P extends any[] ? {[K in P[number]]: T[K]}[] : never {
+  if (typeof properties === "string") return (x as any)[properties];
+  return (properties as any).reduce(
+    (result: any, property: keyof T) => ({...result, [property]: x[property]}),
+    {},
+  );
+}
+
 type TaskView = View["taskList"][number]["tasks"][number];
 
 function tasks<P extends (keyof TaskView)[] | keyof TaskView>(
   view: View | State,
   properties: P,
 ): P extends keyof TaskView ? TaskView[P][] : P extends any[] ? {[K in P[number]]: TaskView[K]}[] : never {
-  function select(task: any, properties: any): any {
-    if (typeof properties === "string") return task[properties];
-    return properties.reduce((result: any, property: any) => ({...result, [property]: task[property]}), {});
-  }
-
   return viewed(view)
     .taskList.flatMap((section) => section.tasks)
     .map((task) => select(task, properties)) as any;
+}
+
+function tasksInSection(view: View | State, title: string, properties: (keyof TaskView)[] | keyof TaskView) {
+  return viewed(view)
+    .taskList.flatMap((section) => (section.title === title ? section.tasks : []))
+    .map((task: TaskView) => select(task, properties));
 }
 
 describe("adding tasks", () => {
@@ -912,6 +924,35 @@ describe("section filters", () => {
           {label: "Ready", selected: true},
           {label: "Stalled", selected: true},
         ]);
+      });
+    });
+  });
+
+  describe("the section filter shows tasks in its subfilters, with headings above each list", () => {
+    describe("actions filter", () => {
+      const example = updateAll(empty, [
+        ...switchToFilter("all"),
+        ...addTask("Ready 1"),
+        ...addTask("Ready 2"),
+        ...addTask("Stalled 1"),
+        ...addTask("Stalled 2"),
+        (view) => dragToFilter(nthTask(view, 0).id, "ready"),
+        (view) => dragToFilter(nthTask(view, 1).id, "ready"),
+        ...switchToFilter({type: "section", section: "actions"}),
+      ]);
+
+      const taskListHeadings = (view: View | State) => viewed(view).taskList.map((section) => section.title);
+
+      test("has sections titled 'Ready' and 'Stalled'", () => {
+        expect(taskListHeadings(example)).toEqual(["Ready", "Stalled"]);
+      });
+
+      test("the 'Ready' section has the two tasks that are ready", () => {
+        expect(tasksInSection(example, "Ready", "title")).toEqual(["Ready 1", "Ready 2"]);
+      });
+
+      test("the 'Stalled' section has the two tasks that are stalled", () => {
+        expect(tasksInSection(example, "Stalled", "title")).toEqual(["Stalled 1", "Stalled 2"]);
       });
     });
   });

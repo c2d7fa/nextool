@@ -70,9 +70,7 @@ export type View = {
 export function view(app: State, {today}: {today: Date}): View {
   const stalledTasks = Tasks.countStalledTasks(app.tasks);
 
-  const activeProjects = Tasks.projects(app.tasks).filter(
-    (project) => project.status === "active" && !project.archived,
-  );
+  const activeProjects = Tasks.activeProjects(app.tasks);
 
   function isFilterSelected(filter: FilterId): boolean {
     function sectionContains(section: string, filter: FilterId) {
