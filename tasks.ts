@@ -137,7 +137,7 @@ function isArchived(tasks: Tasks, task: TaskData): boolean {
   return IndentedList.anyAncestor(tasks, task, (task) => task.archived);
 }
 
-export function isStalled(tasks: Tasks, task: {id: string}): boolean {
+function isStalled(tasks: Tasks, task: {id: string}): boolean {
   const task_ = IndentedList.findNode(tasks, task);
   if (task_ === null) return false;
 
@@ -242,12 +242,13 @@ function filterTasks(tasks: Tasks, filter: FilterId): Tasks {
   return filter_(tasks);
 }
 
-export function activeProjects(tasks: Tasks): IndentedList.IndentedListItem<TaskData>[] {
+export function activeProjects(tasks: Tasks): IndentedList.IndentedListItem<TaskData & {stalled: boolean}>[] {
   return IndentedList.filterNodes(tasks, (node) => node.type === "project")
     .map((project) => ({
       ...project,
       indentation: 0,
       project: true,
+      stalled: isStalled(tasks, {id: project.id}),
     }))
     .filter((project) => project.status === "active" && !project.archived);
 }

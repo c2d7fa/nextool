@@ -150,7 +150,7 @@ export function view(app: State, {today}: {today: Date}): View {
           selected: isFilterSelected({type: "project", project: project}),
           filter: {type: "project", project: project},
           dropTarget: null,
-          indicator: Tasks.isStalled(app.tasks, project) ? {} : null,
+          indicator: project.stalled ? {} : null,
         })),
       },
       {
