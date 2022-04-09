@@ -101,7 +101,7 @@
   flex-direction: column;
 
   & *:first-child > button, & > button:first-child {
-    border-top: 1px solid #c0c0c0;
+    border-top: 1px solid #aaa;
     border-top-left-radius: 3px;
   }
 
@@ -124,10 +124,10 @@
 
     background-color: #f8f8f8;
 
-    border-bottom: 1px solid #c0c0c0;
+    border-bottom: 1px solid #aaa;
 
     margin-left: 0.5em;
-    border-left: 1px solid #c0c0c0;
+    border-left: 1px solid #aaa;
 
     .label {
       display: inline-block;
@@ -149,11 +149,10 @@
     &.selected {
       color: #666;
       font-weight: 500;
-      background-color: #f4f4f4;
-      @include shared.input-shadow(3px, inset);
+      background-color: #f0f0f0;
 
       &:hover {
-        background-color: #f2f2f2;
+        background-color: #ececec;
       }
 
       .label {
