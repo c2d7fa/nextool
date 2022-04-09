@@ -50,7 +50,7 @@
     background-color: #f0f0f0;
     border-right: 1px solid #00000020;
 
-    h1 {
+    .sectionTitle {
       font-family: "Roboto Condensed", sans-serif;
       font-weight: normal;
       margin: 0;
@@ -64,6 +64,10 @@
       word-spacing: 0.6ex;
       font-size: 0.8em;
       user-select: none;
+
+      &:hover {
+        color: #666;
+      }
     }
   }
 

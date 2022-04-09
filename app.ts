@@ -58,7 +58,7 @@ export type FilterView = {
   indicator: null | {text: string} | {};
 };
 
-export type SideBarSectionView = {title: string; filters: FilterView[]};
+export type SideBarSectionView = {title: string; filter: FilterId; filters: FilterView[]};
 
 export type View = {
   addTask: {value: string};
@@ -79,6 +79,7 @@ export function view(app: State, {today}: {today: Date}): View {
     sideBar: [
       {
         title: "Actions",
+        filter: {type: "section", section: "actions"},
         filters: [
           {
             label: "Ready",
@@ -98,6 +99,7 @@ export function view(app: State, {today}: {today: Date}): View {
       },
       {
         title: "Tasks",
+        filter: {type: "section", section: "tasks"},
         filters: [
           {
             label: "All",
@@ -125,6 +127,7 @@ export function view(app: State, {today}: {today: Date}): View {
       },
       {
         title: "Active projects",
+        filter: {type: "section", section: "activeProjects"},
         filters: activeProjects.map((project) => ({
           label: project.title,
           selected:
@@ -138,6 +141,7 @@ export function view(app: State, {today}: {today: Date}): View {
       },
       {
         title: "Archive",
+        filter: {type: "section", section: "archive"},
         filters: [
           {
             label: "Archive",

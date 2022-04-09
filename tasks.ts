@@ -187,7 +187,8 @@ export type FilterId =
   | "stalled"
   | "not-done"
   | "archive"
-  | {type: "project"; project: {id: string}};
+  | {type: "project"; project: {id: string}}
+  | {type: "section"; section: "actions" | "tasks" | "activeProjects" | "archive"};
 
 function taskProject(tasks: Tasks, task: Task): null | {id: string} {
   const parent = IndentedList.findParent(tasks, task);
@@ -205,7 +206,7 @@ function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
   if (!doesSubtaskMatch(tasks, task, filter)) return false;
 
   if (typeof filter === "object") {
-    if (taskProject(tasks, task)?.id === filter.project.id) return true;
+    if (filter.type === "project" && taskProject(tasks, task)?.id === filter.project.id) return true;
     else return false;
   }
 

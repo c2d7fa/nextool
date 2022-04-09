@@ -72,7 +72,12 @@ function FilterSelector(props: {filters: App.FilterView[]; send: App.Send}) {
 function SideBarSection(props: {section: App.SideBarSectionView; send: App.Send}) {
   return (
     <>
-      <h1>{props.section.title}</h1>
+      <h1
+        className={style.sectionTitle}
+        onClick={() => props.send({tag: "selectFilter", filter: props.section.filter})}
+      >
+        {props.section.title}
+      </h1>
       <FilterSelector filters={props.section.filters} send={props.send} />
     </>
   );
