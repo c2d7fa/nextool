@@ -50,7 +50,7 @@
     background-color: #f0f0f0;
     border-right: 1px solid #00000020;
 
-    h1 {
+    .sectionTitle {
       font-family: "Roboto Condensed", sans-serif;
       font-weight: normal;
       margin: 0;
@@ -64,6 +64,10 @@
       word-spacing: 0.6ex;
       font-size: 0.8em;
       user-select: none;
+
+      &:hover {
+        color: #666;
+      }
     }
   }
 
@@ -80,7 +84,6 @@
       grid-area: left;
       display: flex;
       flex-direction: column;
-      row-gap: 1em;
       align-items: flex-start;
       overflow: auto;
     }
@@ -98,12 +101,16 @@
   flex-direction: column;
 
   & *:first-child > button, & > button:first-child {
-    border-top: 1px solid #c0c0c0;
+    border-top: 1px solid #aaa;
     border-top-left-radius: 3px;
   }
 
   & *:last-child > button, & > button:last-child {
     border-bottom-left-radius: 3px;
+  }
+
+  & *:last-child > button, & > button:last-child {
+    @include shared.input-shadow;
   }
 
   button {
@@ -121,10 +128,10 @@
 
     background-color: #f8f8f8;
 
-    border-bottom: 1px solid #c0c0c0;
+    border-bottom: 1px solid #aaa;
 
     margin-left: 0.5em;
-    border-left: 1px solid #c0c0c0;
+    border-left: 1px solid #aaa;
 
     .label {
       display: inline-block;
@@ -146,11 +153,10 @@
     &.selected {
       color: #666;
       font-weight: 500;
-      background-color: #f4f4f4;
-      @include shared.input-shadow(3px, inset);
+      background-color: #f0f0f0;
 
       &:hover {
-        background-color: #f2f2f2;
+        background-color: #ececec;
       }
 
       .label {

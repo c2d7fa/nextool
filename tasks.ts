@@ -19,16 +19,19 @@ export type Tasks = IndentedList.Tree<TaskData>;
 type DropTarget = {width: number | "full"; indentation: number; side: "above" | "below"};
 
 export type TaskListView = {
-  id: string;
-  title: string;
-  indentation: number;
-  done: boolean;
-  paused: boolean;
-  project: boolean;
-  today: boolean;
-  badges: BadgeId[];
-  dropIndicator: null | {side: "above" | "below"; indentation: number};
-  dropTargets: DropTarget[];
+  title: null | string;
+  tasks: {
+    id: string;
+    title: string;
+    indentation: number;
+    done: boolean;
+    paused: boolean;
+    project: boolean;
+    today: boolean;
+    badges: BadgeId[];
+    dropIndicator: null | {side: "above" | "below"; indentation: number};
+    dropTargets: DropTarget[];
+  }[];
 }[];
 
 export function merge(tasks: Tasks, updates: ({id: string} & Partial<Task>)[]): Tasks {
@@ -180,6 +183,8 @@ function badges(tasks: Tasks, task: Task, args?: {today: Date}): BadgeId[] {
   ].filter(Boolean) as BadgeId[];
 }
 
+type FilterSectionId = "actions" | "tasks" | "activeProjects" | "archive";
+
 export type FilterId =
   | "all"
   | "ready"
@@ -187,7 +192,8 @@ export type FilterId =
   | "stalled"
   | "not-done"
   | "archive"
-  | {type: "project"; project: {id: string}};
+  | {type: "project"; project: {id: string}}
+  | {type: "section"; section: FilterSectionId};
 
 function taskProject(tasks: Tasks, task: Task): null | {id: string} {
   const parent = IndentedList.findParent(tasks, task);
@@ -205,7 +211,7 @@ function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
   if (!doesSubtaskMatch(tasks, task, filter)) return false;
 
   if (typeof filter === "object") {
-    if (taskProject(tasks, task)?.id === filter.project.id) return true;
+    if (filter.type === "project" && taskProject(tasks, task)?.id === filter.project.id) return true;
     else return false;
   }
 
@@ -236,24 +242,26 @@ function filterTasks(tasks: Tasks, filter: FilterId): Tasks {
   return filter_(tasks);
 }
 
-export function projects(tasks: Tasks): IndentedList.IndentedListItem<TaskData & {project: true}>[] {
-  return IndentedList.filterNodes(tasks, (node) => node.type === "project").map((project) => ({
-    ...project,
-    indentation: 0,
-    project: true,
-  }));
+export function activeProjects(tasks: Tasks): IndentedList.IndentedListItem<TaskData>[] {
+  return IndentedList.filterNodes(tasks, (node) => node.type === "project")
+    .map((project) => ({
+      ...project,
+      indentation: 0,
+      project: true,
+    }))
+    .filter((project) => project.status === "active" && !project.archived);
 }
 
 export function countStalledTasks(tasks: Tasks): number {
   return filterTasks(tasks, "stalled").length;
 }
 
-export function view(args: {
+function viewTasks(args: {
   tasks: Tasks;
   filter: FilterId;
   taskDrag: DragState<DragId, DropId>;
   today: Date;
-}): TaskListView {
+}): TaskListView[number]["tasks"] {
   const {tasks, filter, taskDrag} = args;
 
   const filtered = filterTasks(tasks, filter);
@@ -296,4 +304,57 @@ export function view(args: {
     dropIndicator: dropIndicator(task),
     dropTargets: dropTargetsNear(index),
   }));
+}
+
+function subfilters(tasks: Tasks, section: FilterSectionId): FilterId[] {
+  if (section === "actions") return ["ready", "stalled"];
+  else if (section === "tasks") return ["all", "not-done", "done"];
+  else if (section === "activeProjects")
+    return activeProjects(tasks).map((project) => ({type: "project", project: {id: project.id}}));
+  else if (section === "archive") return ["archive"];
+  else {
+    const unreachable: never = section;
+    return unreachable;
+  }
+}
+
+function filterTitle(tasks: Tasks, filter: FilterId): string {
+  if (typeof filter === "object" && filter.type === "section") {
+    const section = filter.section;
+    if (section === "actions") return "Actions";
+    else if (section === "tasks") return "Tasks";
+    else if (section === "activeProjects") return "Active Projects";
+    else if (section === "archive") return "Archive";
+    else {
+      const unreachable: never = section;
+      return unreachable;
+    }
+  } else if (typeof filter === "object" && filter.type === "project") {
+    return IndentedList.findNode(tasks, {id: filter.project.id})?.title ?? "";
+  } else if (filter === "ready") return "Ready";
+  else if (filter === "done") return "Completed";
+  else if (filter === "stalled") return "Stalled";
+  else if (filter === "not-done") return "Unfinished";
+  else if (filter === "archive") return "Archive";
+  else if (filter === "all") return "All";
+  else {
+    const unreachable: never = filter;
+    return unreachable;
+  }
+}
+
+export function view(args: {
+  tasks: Tasks;
+  filter: FilterId;
+  taskDrag: DragState<DragId, DropId>;
+  today: Date;
+}): TaskListView {
+  if (typeof args.filter === "object" && args.filter.type === "section") {
+    return subfilters(args.tasks, args.filter.section).map((subfilter) => ({
+      title: filterTitle(args.tasks, subfilter),
+      tasks: viewTasks({...args, filter: subfilter}),
+    }));
+  } else {
+    return [{title: null, tasks: viewTasks(args)}];
+  }
 }
