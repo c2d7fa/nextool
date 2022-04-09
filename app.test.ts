@@ -867,6 +867,40 @@ describe("filtered views of tasks", () => {
   });
 });
 
+describe("section filters", () => {
+  describe("setting a section filter makes all filters in that section active", () => {
+    const step1 = updateAll(empty, []);
+
+    describe("initially", () => {
+      test("only the 'ready' filter is active", () => {
+        expect(
+          view(step1)
+            .sideBar.flatMap((section) => (section.title === "Actions" ? section.filters : []))
+            .map(({label, selected}) => ({label, selected})),
+        ).toEqual([
+          {label: "Ready", selected: true},
+          {label: "Stalled", selected: false},
+        ]);
+      });
+    });
+
+    const step2 = updateAll(step1, [{tag: "selectFilter", filter: {type: "section", section: "actions"}}]);
+
+    describe("after selecting the actions section filter", () => {
+      test("all filters in the 'actions' section become active", () => {
+        expect(
+          view(step2)
+            .sideBar.flatMap((section) => (section.title === "Actions" ? section.filters : []))
+            .map(({label, selected}) => ({label, selected})),
+        ).toEqual([
+          {label: "Ready", selected: true},
+          {label: "Stalled", selected: true},
+        ]);
+      });
+    });
+  });
+});
+
 function componentTitled(view: View, title: string) {
   function groups(view: View) {
     return view.editor?.sections.flatMap((section) => section) ?? [];
