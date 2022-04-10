@@ -319,7 +319,29 @@ function subfilters(tasks: Tasks, section: FilterSectionId): FilterId[] {
   }
 }
 
-function filterTitle(tasks: Tasks, filter: FilterId): string {
+export function isSubfilter(tasks: Tasks, parent: FilterId, filter: FilterId) {
+  if (typeof parent === "string" && parent === filter) return true;
+
+  if (
+    typeof parent === "object" &&
+    parent.type === "project" &&
+    typeof filter === "object" &&
+    filter.type === "project" &&
+    parent.project.id === filter.project.id
+  )
+    return true;
+
+  if (
+    typeof parent === "object" &&
+    parent.type === "section" &&
+    subfilters(tasks, parent.section).some((subfilter) => isSubfilter(tasks, subfilter, filter))
+  )
+    return true;
+
+  return false;
+}
+
+export function filterTitle(tasks: Tasks, filter: FilterId): string {
   if (typeof filter === "object" && filter.type === "section") {
     const section = filter.section;
     if (section === "actions") return "Actions";

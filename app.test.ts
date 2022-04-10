@@ -85,7 +85,7 @@ function sideBarActiveProjects(view: View) {
 function select<T extends object, P extends (keyof T)[] | keyof T>(
   x: T,
   properties: P,
-): P extends keyof T ? T[P][] : P extends any[] ? {[K in P[number]]: T[K]}[] : never {
+): P extends keyof T ? T[P] : P extends any[] ? {[K in P[number]]: T[K]} : never {
   if (typeof properties === "string") return (x as any)[properties];
   return (properties as any).reduce(
     (result: any, property: keyof T) => ({...result, [property]: x[property]}),
@@ -897,33 +897,68 @@ describe("filtered views of tasks", () => {
 
 describe("section filters", () => {
   describe("setting a section filter makes all filters in that section active", () => {
-    const step1 = updateAll(empty, []);
+    function filtersInSection(view: View | State, sectionTitle: string): {label: string; selected: boolean}[] {
+      return viewed(view)
+        .sideBar.filter((section) => section.title === sectionTitle)
+        .flatMap((section) => section.filters)
+        .map((filter) => select(filter, ["label", "selected"]));
+    }
 
-    describe("initially", () => {
-      test("only the 'ready' filter is active", () => {
-        expect(
-          view(step1)
-            .sideBar.flatMap((section) => (section.title === "Actions" ? section.filters : []))
-            .map(({label, selected}) => ({label, selected})),
-        ).toEqual([
-          {label: "Ready", selected: true},
-          {label: "Stalled", selected: false},
-        ]);
+    describe("for actions section", () => {
+      const step1 = updateAll(empty, []);
+
+      describe("initially", () => {
+        test("only the 'ready' filter is active", () => {
+          expect(filtersInSection(step1, "Actions")).toEqual([
+            {label: "Ready", selected: true},
+            {label: "Stalled", selected: false},
+          ]);
+        });
+      });
+
+      const step2 = updateAll(step1, [{tag: "selectFilter", filter: {type: "section", section: "actions"}}]);
+
+      describe("after selecting the actions section filter", () => {
+        test("all filters in the 'actions' section become active", () => {
+          expect(filtersInSection(step2, "Actions")).toEqual([
+            {label: "Ready", selected: true},
+            {label: "Stalled", selected: true},
+          ]);
+        });
       });
     });
 
-    const step2 = updateAll(step1, [{tag: "selectFilter", filter: {type: "section", section: "actions"}}]);
+    describe("for the active project section", () => {
+      const step1 = updateAll(empty, [
+        ...switchToFilter("all"),
+        ...addTask("Project 0"),
+        ...addTask("Project 1"),
+        openNth(0),
+        setComponentValue("Type", "project"),
+        openNth(1),
+        setComponentValue("Type", "project"),
+      ]);
 
-    describe("after selecting the actions section filter", () => {
-      test("all filters in the 'actions' section become active", () => {
-        expect(
-          view(step2)
-            .sideBar.flatMap((section) => (section.title === "Actions" ? section.filters : []))
-            .map(({label, selected}) => ({label, selected})),
-        ).toEqual([
-          {label: "Ready", selected: true},
-          {label: "Stalled", selected: true},
-        ]);
+      describe("initially", () => {
+        test("no filters in the active project section are selected", () => {
+          expect(filtersInSection(step1, "Active projects")).toEqual([
+            {label: "Project 0", selected: false},
+            {label: "Project 1", selected: false},
+          ]);
+        });
+      });
+
+      const step2 = updateAll(step1, [
+        {tag: "selectFilter", filter: {type: "section", section: "activeProjects"}},
+      ]);
+
+      describe("after selecting the active project section filter", () => {
+        test("all filters in the 'active project' section become active", () => {
+          expect(filtersInSection(step2, "Active projects")).toEqual([
+            {label: "Project 0", selected: true},
+            {label: "Project 1", selected: true},
+          ]);
+        });
       });
     });
   });

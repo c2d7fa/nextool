@@ -69,26 +69,16 @@ export type View = {
 
 export function view(app: State, {today}: {today: Date}): View {
   const stalledTasks = Tasks.countStalledTasks(app.tasks);
-
   const activeProjects = Tasks.activeProjects(app.tasks);
 
-  function isFilterSelected(filter: FilterId): boolean {
-    function sectionContains(section: string, filter: FilterId) {
-      if (section === "actions") return typeof filter === "string" && ["ready", "stalled"].includes(filter);
-      if (section === "tasks") return typeof filter === "string" && ["all", "not-done", "done"].includes(filter);
-      if (section === "activeProjects") return typeof filter === "object" && filter.type === "project";
-      if (section === "archive") return typeof filter === "string" && ["archive"].includes(filter);
-      return false;
-    }
-
-    if (JSON.stringify(app.filter) === JSON.stringify(filter)) return true;
-    if (
-      typeof app.filter === "object" &&
-      app.filter.type === "section" &&
-      sectionContains(app.filter.section, filter)
-    )
-      return true;
-    return false;
+  function filterView(filter: FilterId): FilterView {
+    return {
+      label: Tasks.filterTitle(app.tasks, filter),
+      filter,
+      selected: Tasks.isSubfilter(app.tasks, app.filter, filter),
+      dropTarget: typeof filter === "string" ? {type: "filter", id: filter} : null,
+      indicator: null,
+    };
   }
 
   return {
@@ -98,73 +88,27 @@ export function view(app: State, {today}: {today: Date}): View {
         title: "Actions",
         filter: {type: "section", section: "actions"},
         filters: [
-          {
-            label: "Ready",
-            filter: "ready",
-            selected: isFilterSelected("ready"),
-            dropTarget: {type: "filter", id: "ready"},
-            indicator: null,
-          },
-          {
-            label: "Stalled",
-            filter: "stalled",
-            selected: isFilterSelected("stalled"),
-            dropTarget: {type: "filter", id: "stalled"},
-            indicator: stalledTasks === 0 ? null : {text: `${stalledTasks}`},
-          },
+          filterView("ready"),
+          {...filterView("stalled"), indicator: stalledTasks === 0 ? null : {text: `${stalledTasks}`}},
         ],
       },
       {
         title: "Tasks",
         filter: {type: "section", section: "tasks"},
-        filters: [
-          {
-            label: "All",
-            filter: "all",
-            selected: isFilterSelected("all"),
-            dropTarget: {type: "filter", id: "all"},
-            indicator: null,
-          },
-          {
-            label: "Unfinished",
-            filter: "not-done",
-            selected: isFilterSelected("not-done"),
-            dropTarget: {type: "filter", id: "not-done"},
-            indicator: null,
-          },
-
-          {
-            label: "Finished",
-            filter: "done",
-            selected: isFilterSelected("done"),
-            dropTarget: {type: "filter", id: "done"},
-            indicator: null,
-          },
-        ],
+        filters: [filterView("all"), filterView("not-done"), filterView("done")],
       },
       {
         title: "Active projects",
         filter: {type: "section", section: "activeProjects"},
         filters: activeProjects.map((project) => ({
-          label: project.title,
-          selected: isFilterSelected({type: "project", project: project}),
-          filter: {type: "project", project: project},
-          dropTarget: null,
+          ...filterView({type: "project", project}),
           indicator: project.stalled ? {} : null,
         })),
       },
       {
         title: "Archive",
         filter: {type: "section", section: "archive"},
-        filters: [
-          {
-            label: "Archive",
-            filter: "archive",
-            selected: isFilterSelected("archive"),
-            dropTarget: {type: "filter", id: "archive"},
-            indicator: null,
-          },
-        ],
+        filters: [filterView("archive")],
       },
     ],
     taskList: Tasks.view({...app, today}),
