@@ -199,10 +199,9 @@ $project-hue: shared.$project-hue;
     left: 0;
     right: 0;
 
-    height: 0.5em;
 
-    &.above { top: 0; }
-    &.below { bottom: 0; }
+    &.above { top: 0; height: 0.5em; }
+    &.below { bottom: -0.5em; height: 1em; }
   }
 
   .dropIndicator {

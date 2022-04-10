@@ -352,10 +352,8 @@ describe("nesting tasks with drag and drop", () => {
       ]);
     });
 
-    test("the second item has two drop targets both above and below it", () => {
+    test("the second item has two drop targets below it", () => {
       expect(dropTargetsAround(draggingFourth, 1)).toEqual([
-        {width: 1, indentation: 0, side: "above"},
-        {width: "full", indentation: 1, side: "above"},
         {width: 1, indentation: 0, side: "below"},
         {width: "full", indentation: 1, side: "below"},
       ]);
@@ -397,7 +395,6 @@ describe("nesting tasks with drag and drop", () => {
 
       test("the drop targets for the second task are updated", () => {
         expect(dropTargetsAround(draggingFourthAfter, 1)).toEqual([
-          {width: "full", indentation: 1, side: "above"},
           {width: 1, indentation: 0, side: "below"},
           {width: 1, indentation: 1, side: "below"},
           {width: "full", indentation: 2, side: "below"},
@@ -430,14 +427,6 @@ describe("nesting tasks with drag and drop", () => {
         {width: 1, indentation: 1, side: "below"},
         {width: 1, indentation: 2, side: "below"},
         {width: "full", indentation: 3, side: "below"},
-      ]);
-    });
-
-    test("above the task at a higer level of indentation, there are drop targets only at that level of indentation", () => {
-      expect(dropTargetsAround(draggingLast, 3, "above")).toEqual([
-        {width: 1, indentation: 1, side: "above"},
-        {width: 1, indentation: 2, side: "above"},
-        {width: "full", indentation: 3, side: "above"},
       ]);
     });
   });
@@ -490,21 +479,15 @@ describe("nesting tasks with drag and drop", () => {
     });
   });
 
-  function expectNthTaskNearbyDropTargetsToHave(
+  function expectNthTaskToHaveDropTargetsNearAtItself(
     state: State,
     n: number,
     dropTargets: {width: number | "full"; indentation: number}[],
   ) {
-    expect(dropTargetsAround(state, n)).toEqual([
-      ...dropTargets.map((dropTarget) => ({...dropTarget, side: "above"})),
-      ...dropTargets.map((dropTarget) => ({...dropTarget, side: "below"})),
-    ]);
-    expect(dropTargetsAround(state, n - 1, "below")).toEqual([
-      ...dropTargets.map((dropTarget) => ({...dropTarget, side: "below"})),
-    ]);
-    expect(dropTargetsAround(state, n + 1, "above")).toEqual([
-      ...dropTargets.map((dropTarget) => ({...dropTarget, side: "above"})),
-    ]);
+    expect(dropTargetsAround(state, n)).toEqual(dropTargets.map((dropTarget) => ({...dropTarget, side: "below"})));
+    expect(dropTargetsAround(state, n - 1, "below")).toEqual(
+      dropTargets.map((dropTarget) => ({...dropTarget, side: "below"})),
+    );
   }
 
   describe("dragging a task onto itself (or direct neighbors)", () => {
@@ -518,7 +501,7 @@ describe("nesting tasks with drag and drop", () => {
       ]);
 
       test("the task can be dropped in the same place or indented one spot", () => {
-        expectNthTaskNearbyDropTargetsToHave(example, 1, [
+        expectNthTaskToHaveDropTargetsNearAtItself(example, 1, [
           {width: 1, indentation: 0},
           {width: "full", indentation: 1},
         ]);
@@ -565,7 +548,7 @@ describe("nesting tasks with drag and drop", () => {
       ]);
 
       test("the drop targets can be used to unindent the task", () => {
-        expectNthTaskNearbyDropTargetsToHave(example, 2, [
+        expectNthTaskToHaveDropTargetsNearAtItself(example, 2, [
           {width: 1, indentation: 0},
           {width: 1, indentation: 1},
           {width: "full", indentation: 2},
@@ -585,7 +568,7 @@ describe("nesting tasks with drag and drop", () => {
           startDragNthTask(1),
         ]);
 
-        expectNthTaskNearbyDropTargetsToHave(example, 1, [{width: "full", indentation: 1}]);
+        expectNthTaskToHaveDropTargetsNearAtItself(example, 1, [{width: "full", indentation: 1}]);
       });
 
       test("even at the end of a subtree, task cannot be dragged beyong following task", () => {
@@ -603,7 +586,7 @@ describe("nesting tasks with drag and drop", () => {
           startDragNthTask(3),
         ]);
 
-        expectNthTaskNearbyDropTargetsToHave(example, 3, [
+        expectNthTaskToHaveDropTargetsNearAtItself(example, 3, [
           {width: 1, indentation: 1},
           {width: 1, indentation: 2},
           {width: "full", indentation: 3},
@@ -624,7 +607,7 @@ describe("nesting tasks with drag and drop", () => {
           startDragNthTask(2),
         ]);
 
-        expectNthTaskNearbyDropTargetsToHave(example, 2, [
+        expectNthTaskToHaveDropTargetsNearAtItself(example, 2, [
           {width: 1, indentation: 0},
           {width: 1, indentation: 1},
           {width: "full", indentation: 2},
@@ -694,7 +677,7 @@ describe("nesting tasks with drag and drop", () => {
         });
 
         test("the task can be dropped near itself at the top level", () => {
-          expectNthTaskNearbyDropTargetsToHave(step1, 1, [
+          expectNthTaskToHaveDropTargetsNearAtItself(step1, 1, [
             {width: 1, indentation: 0},
             {width: "full", indentation: 1},
           ]);

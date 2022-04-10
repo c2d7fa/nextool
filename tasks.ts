@@ -307,7 +307,7 @@ function viewRows(args: {
   const dropTargetsBelow = (index: number) => dropTargetsNear(index).filter((target) => target.side === "below");
 
   return list.flatMap((task, index) => [
-    ...dropTargetsAbove(index),
+    ...(index === 0 ? dropTargetsAbove(index) : []),
     {
       type: "task",
       id: task.id,
