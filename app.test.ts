@@ -119,6 +119,15 @@ function pickerValue(view: View | State, title: string): string {
   return component.options.find((option) => option.active)?.value ?? "";
 }
 
+function dropTargetsAround(
+  view: View | State,
+  n: number,
+  side?: "below" | "above",
+): {width: number | "full"; indentation: number; side: "above" | "below"}[] {
+  if (!side) return nthTask(view, n).dropTargets;
+  else return dropTargetsAround(view, n, undefined).filter((target) => target.side === side);
+}
+
 // -----
 
 describe("adding tasks", () => {
@@ -304,7 +313,7 @@ describe("nesting tasks with drag and drop", () => {
     const draggingFourth = updateAll(example, [startDragNthTask(3)]);
 
     test("the first item has one drop target above it and two drop below it", () => {
-      expect(nthTask(draggingFourth, 0).dropTargets).toEqual([
+      expect(dropTargetsAround(draggingFourth, 0)).toEqual([
         {width: "full", indentation: 0, side: "above"},
         {width: 1, indentation: 0, side: "below"},
         {width: "full", indentation: 1, side: "below"},
@@ -312,7 +321,7 @@ describe("nesting tasks with drag and drop", () => {
     });
 
     test("the second item has two drop targets both above and below it", () => {
-      expect(nthTask(draggingFourth, 1).dropTargets).toEqual([
+      expect(dropTargetsAround(draggingFourth, 1)).toEqual([
         {width: 1, indentation: 0, side: "above"},
         {width: "full", indentation: 1, side: "above"},
         {width: 1, indentation: 0, side: "below"},
@@ -348,14 +357,14 @@ describe("nesting tasks with drag and drop", () => {
       });
 
       test("the drop targets for the first task are updated", () => {
-        expect(nthTask(draggingFourthAfter, 0).dropTargets).toEqual([
+        expect(dropTargetsAround(draggingFourthAfter, 0)).toEqual([
           {width: "full", indentation: 0, side: "above"},
           {width: "full", indentation: 1, side: "below"},
         ]);
       });
 
       test("the drop targets for the second task are updated", () => {
-        expect(nthTask(draggingFourthAfter, 1).dropTargets).toEqual([
+        expect(dropTargetsAround(draggingFourthAfter, 1)).toEqual([
           {width: "full", indentation: 1, side: "above"},
           {width: 1, indentation: 0, side: "below"},
           {width: 1, indentation: 1, side: "below"},
@@ -385,7 +394,7 @@ describe("nesting tasks with drag and drop", () => {
     });
 
     test("below the task above the task at a higer level of indentation, there are drop targets only at that level of indentation", () => {
-      expect(nthTask(draggingLast, 2).dropTargets.filter((dropTarget) => dropTarget.side === "below")).toEqual([
+      expect(dropTargetsAround(draggingLast, 2, "below")).toEqual([
         {width: 1, indentation: 1, side: "below"},
         {width: 1, indentation: 2, side: "below"},
         {width: "full", indentation: 3, side: "below"},
@@ -393,7 +402,7 @@ describe("nesting tasks with drag and drop", () => {
     });
 
     test("above the task at a higer level of indentation, there are drop targets only at that level of indentation", () => {
-      expect(nthTask(draggingLast, 3).dropTargets.filter((dropTarget) => dropTarget.side === "above")).toEqual([
+      expect(dropTargetsAround(draggingLast, 3, "above")).toEqual([
         {width: 1, indentation: 1, side: "above"},
         {width: 1, indentation: 2, side: "above"},
         {width: "full", indentation: 3, side: "above"},
@@ -406,12 +415,12 @@ describe("nesting tasks with drag and drop", () => {
       const example = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1"), startDragNthTask(0)]);
 
       test("there are drop targets above and below the task itself at the same level of indentation", () => {
-        expect(nthTask(example, 0).dropTargets).toContainEqual({width: "full", indentation: 0, side: "above"});
-        expect(nthTask(example, 0).dropTargets).toContainEqual({width: "full", indentation: 0, side: "below"});
+        expect(dropTargetsAround(example, 0)).toContainEqual({width: "full", indentation: 0, side: "above"});
+        expect(dropTargetsAround(example, 0)).toContainEqual({width: "full", indentation: 0, side: "below"});
       });
 
       test("there are no other drop targets", () => {
-        expect(nthTask(example, 0).dropTargets).toHaveLength(2);
+        expect(dropTargetsAround(example, 0)).toHaveLength(2);
       });
     });
 
@@ -435,7 +444,7 @@ describe("nesting tasks with drag and drop", () => {
       });
 
       function dropTargetsOfNthTaskAtOrAbove(state: State, n: number, indentation: number) {
-        return nthTask(state, n).dropTargets.filter((dropTarget) => dropTarget.indentation >= indentation);
+        return dropTargetsAround(state, n).filter((dropTarget) => dropTarget.indentation >= indentation);
       }
 
       test("the task being dragged has no drop targets above its own level of indentation", () => {
@@ -454,14 +463,14 @@ describe("nesting tasks with drag and drop", () => {
     n: number,
     dropTargets: {width: number | "full"; indentation: number}[],
   ) {
-    expect(nthTask(state, n).dropTargets).toEqual([
+    expect(dropTargetsAround(state, n)).toEqual([
       ...dropTargets.map((dropTarget) => ({...dropTarget, side: "above"})),
       ...dropTargets.map((dropTarget) => ({...dropTarget, side: "below"})),
     ]);
-    expect(nthTask(state, n - 1).dropTargets.filter((dropTarget) => dropTarget.side === "below")).toEqual([
+    expect(dropTargetsAround(state, n - 1, "below")).toEqual([
       ...dropTargets.map((dropTarget) => ({...dropTarget, side: "below"})),
     ]);
-    expect(nthTask(state, n + 1).dropTargets.filter((dropTarget) => dropTarget.side === "above")).toEqual([
+    expect(dropTargetsAround(state, n + 1, "above")).toEqual([
       ...dropTargets.map((dropTarget) => ({...dropTarget, side: "above"})),
     ]);
   }
@@ -605,7 +614,7 @@ describe("nesting tasks with drag and drop", () => {
         startDragNthTask(2),
       ]);
 
-      expect(nthTask(example, 3).dropTargets.filter((dropTarget) => dropTarget.side === "below")).toEqual([
+      expect(dropTargetsAround(example, 3, "below")).toEqual([
         {width: 1, indentation: 0, side: "below"},
         {width: "full", indentation: 1, side: "below"},
       ]);
@@ -624,9 +633,7 @@ describe("nesting tasks with drag and drop", () => {
           startDragNthTask(0),
         ]);
 
-        expect(nthTask(example, 2).dropTargets.filter((dropTarget) => dropTarget.side === "below")).toEqual([
-          {width: "full", indentation: 1, side: "below"},
-        ]);
+        expect(dropTargetsAround(example, 2, "below")).toEqual([{width: "full", indentation: 1, side: "below"}]);
       });
     });
   });
