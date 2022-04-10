@@ -34,12 +34,8 @@ function dragAndDrop(drag: DragId, drop: DropId): Event[] {
   ];
 }
 
-function dragToFilter(id: string, filter: FilterId): Event[] {
-  return dragAndDrop({type: "task", id}, {type: "filter", id: filter});
-}
-
-function reorderTask(source: string, target: string, side: "above" | "below"): Event[] {
-  return dragAndDrop({type: "task", id: source}, {type: "task", id: target, side, indentation: 0});
+function dragToFilter(n: number, filter: FilterId) {
+  return (view: View) => dragAndDrop({type: "task", id: nthTask(view, n).id}, {type: "filter", id: filter});
 }
 
 function viewed(state: State | View): View {
@@ -109,6 +105,15 @@ function tasksInSection(view: View | State, title: string, properties: (keyof Ta
     .taskList.flatMap((section) => (section.title === title ? section.tasks : []))
     .map((task: TaskView) => select(task, properties));
 }
+
+function componentOptions(view: View | State, title: string): string[] {
+  const component = componentTitled(view, title);
+  if (component == null) return [];
+  if (component.type !== "picker") return [];
+  return component.options.map((option) => option.value);
+}
+
+// -----
 
 describe("adding tasks", () => {
   describe("with empty state", () => {
@@ -224,23 +229,23 @@ describe("dragging tasks to filters", () => {
       expect(tasks(example, "done")).toEqual([false, false, false]);
     });
 
-    const action = updateAll(example, dragToFilter(nthTask(example, 0).id, "ready"));
+    const action = updateAll(example, [dragToFilter(0, "ready")]);
     test("dragging a task to the action filter gives it the ready badge", () => {
       expect(tasks(action, "badges")).toEqual([["ready"], ["stalled"], ["stalled"]]);
     });
 
-    const done = updateAll(example, dragToFilter(nthTask(example, 0).id, "done"));
+    const done = updateAll(example, [dragToFilter(0, "done")]);
     test("dragging a task to the done filter marks it as done", () => {
       expect(tasks(done, "done")).toEqual([true, false, false]);
     });
 
     test("dragging a task marked action to stalled gives it the stalled badge again", () => {
-      const stalled = updateAll(action, dragToFilter(nthTask(action, 0).id, "stalled"));
+      const stalled = updateAll(action, [dragToFilter(0, "stalled")]);
       expect(tasks(stalled, "badges")).toEqual([["stalled"], ["stalled"], ["stalled"]]);
     });
 
     test("dragging a task marked done to unfinished marks it as unfinished again", () => {
-      const unfinished = updateAll(done, dragToFilter(nthTask(done, 0).id, "not-done"));
+      const unfinished = updateAll(done, [dragToFilter(0, "not-done")]);
       expect(tasks(unfinished, "done")).toEqual([false, false, false]);
     });
   });
@@ -257,9 +262,7 @@ describe("reordering tasks with drag and drop", () => {
 
     function testReorder(from: number, to: number, side: "above" | "below", result: number[]): void {
       test(`dragging task ${from} to ${side} ${to}`, () => {
-        const moved = updateAll(example, [
-          ...reorderTask(nthTask(example, from - 1).id, nthTask(example, to - 1).id, side),
-        ]);
+        const moved = updateAll(example, [...dragAndDropNth(from - 1, to - 1, {side, indentation: 0})]);
         expect(tasks(moved, "title")).toEqual(result.map((x) => `Task ${x}`));
       });
     }
@@ -325,12 +328,7 @@ describe("nesting tasks with drag and drop", () => {
       expect(tasks(example, "indentation")).toEqual([0, 0, 0, 0]);
     });
 
-    const afterDragging = updateAll(example, [
-      ...dragAndDrop(
-        {type: "task", id: nthTask(example, 0).id},
-        {type: "task", id: nthTask(example, 1).id, side: "below", indentation: 1},
-      ),
-    ]);
+    const afterDragging = updateAll(example, [...dragAndDropNth(0, 1, {side: "below", indentation: 1})]);
 
     const draggingFourthAfter = updateAll(afterDragging, [startDragNthTask(3)]);
 
@@ -745,8 +743,8 @@ describe("an action that has unfinished children isn't ready", () => {
       ...addTask("Parent"),
       ...addTask("Child"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
-      (view) => dragToFilter(nthTask(view, 0).id, "ready"),
-      (view) => dragToFilter(nthTask(view, 1).id, "ready"),
+      dragToFilter(0, "ready"),
+      dragToFilter(1, "ready"),
     ]);
 
     const childFinished = updateAll(example, [...check(view(example), 1)]);
@@ -971,8 +969,8 @@ describe("section filters", () => {
         ...addTask("Ready 2"),
         ...addTask("Stalled 1"),
         ...addTask("Stalled 2"),
-        (view) => dragToFilter(nthTask(view, 0).id, "ready"),
-        (view) => dragToFilter(nthTask(view, 1).id, "ready"),
+        dragToFilter(0, "ready"),
+        dragToFilter(1, "ready"),
         ...switchToFilter({type: "section", section: "actions"}),
       ]);
 
@@ -993,12 +991,12 @@ describe("section filters", () => {
   });
 });
 
-function componentTitled(view: View, title: string) {
+function componentTitled(view: View | State, title: string) {
   function groups(view: View) {
     return view.editor?.sections.flatMap((section) => section) ?? [];
   }
 
-  return groups(view).find((group) => group.title === title)?.components[0] ?? null;
+  return groups(viewed(view)).find((group) => group.title === title)?.components[0] ?? null;
 }
 
 function setComponentValue(componentTitle: string, value: string) {
@@ -1031,11 +1029,11 @@ describe("the task editor", () => {
       });
 
       test("there is a component called 'Title'", () => {
-        expect(componentTitled(view(step2), "Title")).not.toBeNull();
+        expect(componentTitled(step2, "Title")).not.toBeNull();
       });
 
       test("the component contains the task title", () => {
-        expect(componentTitled(view(step2), "Title")).toMatchObject({type: "text", value: "Task"});
+        expect(componentTitled(step2, "Title")).toMatchObject({type: "text", value: "Task"});
       });
     });
 
@@ -1043,7 +1041,7 @@ describe("the task editor", () => {
 
     describe("after editing title in the editor", () => {
       test("the title component contains the new title", () => {
-        expect(componentTitled(view(step3), "Title")).toMatchObject({
+        expect(componentTitled(step3, "Title")).toMatchObject({
           type: "text",
           value: "Task with edited title",
         });
@@ -1064,23 +1062,19 @@ describe("the task editor", () => {
       });
 
       test("there is a component titled 'Status'", () => {
-        expect(componentTitled(view(step1), "Status")).not.toBeNull();
+        expect(componentTitled(step1, "Status")).not.toBeNull();
       });
 
       test("it is a picker component", () => {
-        expect(componentTitled(view(step1), "Status")).toMatchObject({type: "picker"});
+        expect(componentTitled(step1, "Status")).toMatchObject({type: "picker"});
       });
 
       test("it has the correct options", () => {
-        expect((componentTitled(view(step1), "Status") as any).options.map((option: any) => option.value)).toEqual(
-          ["active", "paused", "done"],
-        );
+        expect(componentOptions(step1, "Status")).toEqual(["active", "paused", "done"]);
       });
 
       test("the selected option is 'Active'", () => {
-        expect(
-          (componentTitled(view(step1), "Status") as any).options.map((option: any) => option.active),
-        ).toEqual([true, false, false]);
+        expect(componentOptions(step1, "Status")).toEqual([true, false, false]);
       });
     });
 
@@ -1092,9 +1086,7 @@ describe("the task editor", () => {
       });
 
       test("the selected status option is changed", () => {
-        expect(
-          (componentTitled(view(step2a), "Status") as any).options.map((option: any) => option.active),
-        ).toEqual([false, false, true]);
+        expect(componentOptions(step2a, "Status")).toEqual([false, false, true]);
       });
     });
 
@@ -1106,9 +1098,7 @@ describe("the task editor", () => {
       });
 
       test("the selected status option is changed", () => {
-        expect(
-          (componentTitled(view(step2b), "Status") as any).options.map((option: any) => option.active),
-        ).toEqual([false, false, true]);
+        expect(componentOptions(step2b, "Status")).toEqual([false, false, true]);
       });
     });
   });
@@ -1122,27 +1112,23 @@ describe("the task editor", () => {
       });
 
       test("there is a component titled 'Actionable'", () => {
-        expect(componentTitled(view(step1), "Actionable")).not.toBeNull();
+        expect(componentTitled(step1, "Actionable")).not.toBeNull();
       });
 
       test("it is a picker component", () => {
-        expect(componentTitled(view(step1), "Actionable")).toMatchObject({type: "picker"});
+        expect(componentTitled(step1, "Actionable")).toMatchObject({type: "picker"});
       });
 
       test("it has the correct options", () => {
-        expect(
-          (componentTitled(view(step1), "Actionable") as any).options.map((option: any) => option.value),
-        ).toEqual(["yes", "no"]);
+        expect(componentOptions(step1, "Actionable")).toEqual(["yes", "no"]);
       });
 
       test("the selected option is 'Not Ready'", () => {
-        expect(
-          (componentTitled(view(step1), "Actionable") as any).options.map((option: any) => option.active),
-        ).toEqual([false, true]);
+        expect(componentOptions(step1, "Actionable")).toEqual([false, true]);
       });
     });
 
-    const step2 = updateAll(step1, [...dragToFilter(nthTask(step1, 0).id, "ready")]);
+    const step2 = updateAll(step1, [dragToFilter(0, "ready")]);
 
     describe("after dragging the task into the ready filter", () => {
       test("the task has the ready badge in the task list", () => {
@@ -1150,9 +1136,7 @@ describe("the task editor", () => {
       });
 
       test("the selected option becomes 'Ready'", () => {
-        expect(
-          (componentTitled(view(step2), "Actionable") as any).options.map((option: any) => option.active),
-        ).toEqual([true, false]);
+        expect(componentOptions(step2, "Actionable")).toEqual([true, false]);
       });
     });
 
@@ -1164,9 +1148,7 @@ describe("the task editor", () => {
       });
 
       test("the selected option becomes 'Not Ready' again", () => {
-        expect(
-          (componentTitled(view(step3), "Actionable") as any).options.map((option: any) => option.active),
-        ).toEqual([false, true]);
+        expect(componentOptions(step3, "Actionable")).toEqual([false, true]);
       });
     });
   });
@@ -1328,7 +1310,7 @@ describe("counter next to filters", () => {
       expect(indicatorForFilter(view(step2), "Stalled")).toEqual({text: "1"});
     });
 
-    const step3 = updateAll(step2, [...dragToFilter(nthTask(step2, 0).id, "ready")]);
+    const step3 = updateAll(step2, [dragToFilter(0, "ready")]);
 
     test("after dragging task into ready filter, the counter is hidden again", () => {
       expect(indicatorForFilter(view(step3), "Stalled")).toEqual(null);
@@ -1399,7 +1381,7 @@ describe("projects", () => {
 
     describe("before marking an action as a project", () => {
       test("there is a component in the editor called 'Actionable'", () => {
-        expect(componentTitled(view(step1), "Actionable")).not.toBeNull();
+        expect(componentTitled(step1, "Actionable")).not.toBeNull();
       });
 
       test("the task has the ready badge", () => {
@@ -1411,7 +1393,7 @@ describe("projects", () => {
 
     describe("after marking a task as a project", () => {
       test("there is no component in the editor called 'Actionable'", () => {
-        expect(componentTitled(view(step2), "Actionable")).toBeNull();
+        expect(componentTitled(step2, "Actionable")).toBeNull();
       });
 
       test("the project has the stalled badge", () => {
@@ -1586,7 +1568,7 @@ describe("projects", () => {
 
 describe("archiving tasks", () => {
   function archive(n: number) {
-    return (view: View) => dragToFilter(nthTask(view, n).id, "archive");
+    return dragToFilter(n, "archive");
   }
 
   describe("when the archived task is a subtask", () => {
@@ -1622,7 +1604,7 @@ describe("archiving tasks", () => {
       expect(tasks(step3, ["title", "indentation"])).toEqual([{title: "Task 2", indentation: 0}]);
     });
 
-    const step4 = updateAll(step3, [...dragToFilter(nthTask(view(step3), 0).id, "all"), ...switchToFilter("all")]);
+    const step4 = updateAll(step3, [dragToFilter(0, "all"), ...switchToFilter("all")]);
 
     test("after unarchiving the task, it is restored to the original location in the main view", () => {
       expect(tasks(step4, ["title", "indentation"])).toEqual([
@@ -1788,7 +1770,7 @@ describe("planning", () => {
 
     describe("initially", () => {
       test("the planned date is not set", () => {
-        expect(componentTitled(view(step1), "Planned")).toMatchObject({type: "date", value: ""});
+        expect(componentTitled(step1, "Planned")).toMatchObject({type: "date", value: ""});
       });
     });
 
@@ -1796,7 +1778,7 @@ describe("planning", () => {
 
     describe("after setting planned date", () => {
       test("the planned date is set in the editor", () => {
-        expect(componentTitled(view(step2), "Planned")).toMatchObject({type: "date", value: "2020-01-01"});
+        expect(componentTitled(step2, "Planned")).toMatchObject({type: "date", value: "2020-01-01"});
       });
     });
 
@@ -1811,7 +1793,7 @@ describe("planning", () => {
 
     describe("after loading the file", () => {
       test("the planned date is still set in the editor", () => {
-        expect(componentTitled(view(loaded), "Planned")).toMatchObject({type: "date", value: "2020-01-01"});
+        expect(componentTitled(loaded, "Planned")).toMatchObject({type: "date", value: "2020-01-01"});
       });
     });
   });
@@ -1825,7 +1807,7 @@ describe("planning", () => {
 
         describe("after setting planned date", () => {
           test("the planned date is not set in the editor", () => {
-            expect(componentTitled(view(step2), "Planned")).toMatchObject({type: "date", value: ""});
+            expect(componentTitled(step2, "Planned")).toMatchObject({type: "date", value: ""});
           });
         });
       });
