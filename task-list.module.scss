@@ -107,7 +107,7 @@ $project-hue: shared.$project-hue;
     user-select: none;
   }
 
-  & > * {
+  & > *:not(.dropContainer) {
     @include shared.border-between(1px solid #c8c8c8);
   }
 
@@ -188,44 +188,34 @@ $project-hue: shared.$project-hue;
         );
       }
     }
+  }
+}
 
-    position: relative;
+.dropContainer {
+  position: relative;
 
-    .dropTarget {
-      position: absolute;
+  .dropTarget {
+    position: absolute;
+    left: 0;
+    right: 0;
 
-      left: 0;
-      right: 0;
+    height: 0.5em;
 
-      &.below {
-        bottom: -2px;
-        height: 12px;
-      }
+    &.above { top: 0; }
+    &.below { bottom: 0; }
+  }
 
-      &.above {
-        top: 0;
-        height: 10px;
-      }
-    }
+  .dropIndicator {
+    position: absolute;
+    right: 0;
 
-    .dropIndicator {
-      position: absolute;
+    &.below { bottom: 0; }
+    &.above { top: 0; }
 
-      right: 0;
+    height: 2px;
+    border-radius: 2px;
 
-      height: 2px;
-      border-radius: 2px;
-
-      &.below {
-        bottom: 0;
-      }
-
-      &.above {
-        top: -3px;
-      }
-
-      background-color: #00000080;
-    }
+    background-color: #00000080;
   }
 }
 
