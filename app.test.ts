@@ -632,44 +632,46 @@ describe("nesting tasks with drag and drop", () => {
   });
 
   describe("dragging a task out when there is an archived task below it", () => {
-    const step1 = updateAll(empty, [
-      ...switchToFilter("all"),
-      ...addTask("Task 0"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
-      ...addTask("Task 3"),
-      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
-      ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
-      dragToFilter(2, "archive"),
-      startDragNthTask(1),
-    ]);
+    describe.each([0, 1, 2])("when the archived task has indentation %d", (indentation) => {
+      const step1 = updateAll(empty, [
+        ...switchToFilter("all"),
+        ...addTask("Task 0"),
+        ...addTask("Task 1"),
+        ...addTask("Task 2"),
+        ...addTask("Task 3"),
+        ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+        ...dragAndDropNth(2, 1, {side: "below", indentation}),
+        dragToFilter(2, "archive"),
+        startDragNthTask(1),
+      ]);
 
-    describe("initially", () => {
-      test("the tasks are indented correctly", () => {
-        expect(tasks(step1, ["title", "indentation"])).toEqual([
-          {title: "Task 0", indentation: 0},
-          {title: "Task 1", indentation: 1},
-          {title: "Task 3", indentation: 0},
-        ]);
+      describe("initially", () => {
+        test("the tasks are indented correctly", () => {
+          expect(tasks(step1, ["title", "indentation"])).toEqual([
+            {title: "Task 0", indentation: 0},
+            {title: "Task 1", indentation: 1},
+            {title: "Task 3", indentation: 0},
+          ]);
+        });
+
+        test("the task can be dropped near itself at the top level", () => {
+          expectNthTaskNearbyDropTargetsToHave(step1, 1, [
+            {width: 1, indentation: 0},
+            {width: "full", indentation: 1},
+          ]);
+        });
       });
 
-      test("the task can be dropped near itself at the top level", () => {
-        expectNthTaskNearbyDropTargetsToHave(step1, 1, [
-          {width: 1, indentation: 0},
-          {width: "full", indentation: 1},
-        ]);
-      });
-    });
+      const step2 = updateAll(step1, [...dragAndDropNth(1, 2, {side: "above", indentation: 0})]);
 
-    const step2 = updateAll(step1, [...dragAndDropNth(1, 2, {side: "above", indentation: 0})]);
-
-    describe("after dropping task", () => {
-      test.skip("[BUG] the task is now indented at the top level", () => {
-        expect(tasks(step2, ["title", "indentation"])).toEqual([
-          {title: "Task 0", indentation: 0},
-          {title: "Task 1", indentation: 0},
-          {title: "Task 3", indentation: 0},
-        ]);
+      describe("after dropping task", () => {
+        test.skip("[BUG] the task is now indented at the top level", () => {
+          expect(tasks(step2, ["title", "indentation"])).toEqual([
+            {title: "Task 0", indentation: 0},
+            {title: "Task 1", indentation: 0},
+            {title: "Task 3", indentation: 0},
+          ]);
+        });
       });
     });
   });
