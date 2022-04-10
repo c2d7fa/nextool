@@ -106,11 +106,17 @@ function tasksInSection(view: View | State, title: string, properties: (keyof Ta
     .map((task: TaskView) => select(task, properties));
 }
 
-function componentOptions(view: View | State, title: string): string[] {
+function pickerOptions(view: View | State, title: string): string[] {
   const component = componentTitled(view, title);
   if (component == null) return [];
   if (component.type !== "picker") return [];
   return component.options.map((option) => option.value);
+}
+
+function pickerValue(view: View | State, title: string): string {
+  const component = componentTitled(view, title);
+  if (component?.type !== "picker") return "";
+  return component.options.find((option) => option.active)?.value ?? "";
 }
 
 // -----
@@ -1070,11 +1076,11 @@ describe("the task editor", () => {
       });
 
       test("it has the correct options", () => {
-        expect(componentOptions(step1, "Status")).toEqual(["active", "paused", "done"]);
+        expect(pickerOptions(step1, "Status")).toEqual(["active", "paused", "done"]);
       });
 
       test("the selected option is 'Active'", () => {
-        expect(componentOptions(step1, "Status")).toEqual([true, false, false]);
+        expect(pickerValue(step1, "Status")).toEqual("active");
       });
     });
 
@@ -1086,7 +1092,7 @@ describe("the task editor", () => {
       });
 
       test("the selected status option is changed", () => {
-        expect(componentOptions(step2a, "Status")).toEqual([false, false, true]);
+        expect(pickerValue(step2a, "Status")).toEqual("done");
       });
     });
 
@@ -1098,7 +1104,7 @@ describe("the task editor", () => {
       });
 
       test("the selected status option is changed", () => {
-        expect(componentOptions(step2b, "Status")).toEqual([false, false, true]);
+        expect(pickerValue(step2b, "Status")).toEqual("done");
       });
     });
   });
@@ -1120,11 +1126,11 @@ describe("the task editor", () => {
       });
 
       test("it has the correct options", () => {
-        expect(componentOptions(step1, "Actionable")).toEqual(["yes", "no"]);
+        expect(pickerOptions(step1, "Actionable")).toEqual(["yes", "no"]);
       });
 
       test("the selected option is 'Not Ready'", () => {
-        expect(componentOptions(step1, "Actionable")).toEqual([false, true]);
+        expect(pickerValue(step1, "Actionable")).toEqual("no");
       });
     });
 
@@ -1136,7 +1142,7 @@ describe("the task editor", () => {
       });
 
       test("the selected option becomes 'Ready'", () => {
-        expect(componentOptions(step2, "Actionable")).toEqual([true, false]);
+        expect(pickerValue(step2, "Actionable")).toEqual("yes");
       });
     });
 
@@ -1148,7 +1154,7 @@ describe("the task editor", () => {
       });
 
       test("the selected option becomes 'Not Ready' again", () => {
-        expect(componentOptions(step3, "Actionable")).toEqual([false, true]);
+        expect(pickerValue(step3, "Actionable")).toEqual("no");
       });
     });
   });
@@ -1337,12 +1343,6 @@ describe("counter next to filters", () => {
     });
   });
 });
-
-function pickerValue(view: View, title: string) {
-  const component = componentTitled(view, title);
-  if (component?.type !== "picker") return null;
-  return component.options.find((option) => option.active)?.value;
-}
 
 describe("projects", () => {
   describe("marking a task as a project in the task list updates type", () => {
