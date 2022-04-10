@@ -16,22 +16,30 @@ type TaskData = {
 type Task = IndentedList.TreeNode<TaskData>;
 export type Tasks = IndentedList.Tree<TaskData>;
 
-type DropTarget = {width: number | "full"; indentation: number; side: "above" | "below"};
+type DropTarget = {
+  type: "dropTarget";
+  id: string;
+  width: number | "full";
+  indentation: number;
+  side: "above" | "below";
+};
+
+export type TaskView = {
+  type: "task";
+  id: string;
+  title: string;
+  indentation: number;
+  done: boolean;
+  paused: boolean;
+  project: boolean;
+  today: boolean;
+  badges: BadgeId[];
+  dropIndicator: null | {side: "above" | "below"; indentation: number};
+};
 
 export type TaskListView = {
   title: null | string;
-  tasks: {
-    id: string;
-    title: string;
-    indentation: number;
-    done: boolean;
-    paused: boolean;
-    project: boolean;
-    today: boolean;
-    badges: BadgeId[];
-    dropIndicator: null | {side: "above" | "below"; indentation: number};
-    dropTargets: DropTarget[];
-  }[];
+  rows: (DropTarget | TaskView)[];
 }[];
 
 export function merge(tasks: Tasks, updates: ({id: string} & Partial<Task>)[]): Tasks {
@@ -257,12 +265,12 @@ export function countStalledTasks(tasks: Tasks): number {
   return filterTasks(tasks, "stalled").length;
 }
 
-function viewTasks(args: {
+function viewRows(args: {
   tasks: Tasks;
   filter: FilterId;
   taskDrag: DragState<DragId, DropId>;
   today: Date;
-}): TaskListView[number]["tasks"] {
+}): TaskListView[number]["rows"] {
   const {tasks, filter, taskDrag} = args;
 
   const filtered = filterTasks(tasks, filter);
@@ -287,24 +295,33 @@ function viewTasks(args: {
     }
 
     return locations.map((location) => ({
+      id: list[index]!.id,
+      type: "dropTarget",
       width: isRightmost(location) ? "full" : 1,
       indentation: location.indentation,
       side: location.side,
     }));
   }
 
-  return list.map((task, index) => ({
-    id: task.id,
-    title: task.title,
-    indentation: task.indentation,
-    done: isDone(task),
-    paused: isPaused(tasks, IndentedList.findNode(tasks, task)!),
-    badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
-    project: task.type === "project",
-    today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
-    dropIndicator: dropIndicator(task),
-    dropTargets: dropTargetsNear(index),
-  }));
+  const dropTargetsAbove = (index: number) => dropTargetsNear(index).filter((target) => target.side === "above");
+  const dropTargetsBelow = (index: number) => dropTargetsNear(index).filter((target) => target.side === "below");
+
+  return list.flatMap((task, index) => [
+    ...dropTargetsAbove(index),
+    {
+      type: "task",
+      id: task.id,
+      title: task.title,
+      indentation: task.indentation,
+      done: isDone(task),
+      paused: isPaused(tasks, IndentedList.findNode(tasks, task)!),
+      badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
+      project: task.type === "project",
+      today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
+      dropIndicator: dropIndicator(task),
+    },
+    ...dropTargetsBelow(index),
+  ]);
 }
 
 function subfilters(tasks: Tasks, section: FilterSectionId): FilterId[] {
@@ -375,9 +392,9 @@ export function view(args: {
   if (typeof args.filter === "object" && args.filter.type === "section") {
     return subfilters(args.tasks, args.filter.section).map((subfilter) => ({
       title: filterTitle(args.tasks, subfilter),
-      tasks: viewTasks({...args, filter: subfilter}),
+      rows: viewRows({...args, filter: subfilter}),
     }));
   } else {
-    return [{title: null, tasks: viewTasks(args)}];
+    return [{title: null, rows: viewRows(args)}];
   }
 }

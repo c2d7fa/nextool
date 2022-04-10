@@ -1,5 +1,5 @@
 import {updateApp, State, view as viewApp, Event, empty, DragId, DropId, View, effects, Effect} from "./app";
-import {FilterId} from "./tasks";
+import {FilterId, TaskView} from "./tasks";
 
 function view(state: State): View {
   return viewApp(state, {today: new Date("2020-03-15")});
@@ -42,10 +42,12 @@ function viewed(state: State | View): View {
   return "tasks" in state ? view(state) : state;
 }
 
-function nthTask(view: View | State, n: number) {
-  const result = viewed(view).taskList.flatMap((section) => section.tasks)[n];
+function nthTask(view: View | State, n: number): TaskView {
+  const result = viewed(view)
+    .taskList.flatMap((section) => section.rows)
+    .filter((row) => row.type === "task")[n];
   if (!result) throw "no such task";
-  return result;
+  return result as TaskView;
 }
 
 function check(view: View | State, n: number): Event[] {
@@ -89,21 +91,21 @@ function select<T extends object, P extends (keyof T)[] | keyof T>(
   );
 }
 
-type TaskView = View["taskList"][number]["tasks"][number];
-
 function tasks<P extends (keyof TaskView)[] | keyof TaskView>(
   view: View | State,
   properties: P,
 ): P extends keyof TaskView ? TaskView[P][] : P extends any[] ? {[K in P[number]]: TaskView[K]}[] : never {
   return viewed(view)
-    .taskList.flatMap((section) => section.tasks)
-    .map((task) => select(task, properties)) as any;
+    .taskList.flatMap((section) => section.rows)
+    .filter((row) => row.type === "task")
+    .map((task: any) => select(task, properties)) as any;
 }
 
 function tasksInSection(view: View | State, title: string, properties: (keyof TaskView)[] | keyof TaskView) {
   return viewed(view)
-    .taskList.flatMap((section) => (section.title === title ? section.tasks : []))
-    .map((task: TaskView) => select(task, properties));
+    .taskList.flatMap((section) => (section.title === title ? section.rows : []))
+    .filter((row) => row.type === "task")
+    .map((task: any) => select(task, properties));
 }
 
 function pickerOptions(view: View | State, title: string): string[] {
@@ -124,8 +126,38 @@ function dropTargetsAround(
   n: number,
   side?: "below" | "above",
 ): {width: number | "full"; indentation: number; side: "above" | "below"}[] {
-  if (!side) return nthTask(view, n).dropTargets;
-  else return dropTargetsAround(view, n, undefined).filter((target) => target.side === side);
+  if (side === "above") {
+    let result: {width: number | "full"; indentation: number; side: "above" | "below"}[] = [];
+    for (const row of viewed(view).taskList.flatMap((section) => section.rows)) {
+      if (row.type === "task") {
+        if (row.id === nthTask(view, n).id) {
+          return result;
+        } else {
+          result = [];
+        }
+      } else if (row.type === "dropTarget" && row.side === "above") {
+        result.push({width: row.width, indentation: row.indentation, side: row.side});
+      }
+    }
+    return [];
+  } else if (side === "below") {
+    let isCorrectRow = false;
+    let result: {width: number | "full"; indentation: number; side: "above" | "below"}[] = [];
+    for (const row of viewed(view).taskList.flatMap((section) => section.rows)) {
+      if (row.type === "task") {
+        if (row.id === nthTask(view, n).id) {
+          isCorrectRow = true;
+        } else if (isCorrectRow) {
+          return result;
+        }
+      } else if (row.type === "dropTarget" && row.side === "below" && isCorrectRow) {
+        result.push({width: row.width, indentation: row.indentation, side: row.side});
+      }
+    }
+    return result;
+  } else {
+    return [...dropTargetsAround(view, n, "above"), ...dropTargetsAround(view, n, "below")];
+  }
 }
 
 // -----
