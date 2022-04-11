@@ -16,13 +16,13 @@ type TaskData = {
 type Task = IndentedList.TreeNode<TaskData>;
 export type Tasks = IndentedList.Tree<TaskData>;
 
-type DropTargetView = {
-  type: "dropTarget";
+export type DropTargetHandle = {
   id: string;
-  width: number | "full";
   indentation: number;
   side: "above" | "below";
 };
+
+export type DropTargetView = {type: "dropTarget"; width: number | "full"} & DropTargetHandle;
 
 type DropIndicatorView = {
   type: "dropIndicator";
@@ -288,12 +288,12 @@ function viewRows(args: {
   const list = IndentedList.toList(filtered);
 
   function dropIndicator(task: TaskData) {
-    if (taskDrag.hovering?.type !== "task") return null;
-    if (taskDrag.hovering.id !== task.id) return null;
+    if (taskDrag.hovering?.type !== "list") return null;
+    if (taskDrag.hovering.target.id !== task.id) return null;
     return {
       type: "dropIndicator" as const,
-      side: taskDrag.hovering.side,
-      indentation: taskDrag.hovering.indentation,
+      side: taskDrag.hovering.target.side,
+      indentation: taskDrag.hovering.target.indentation,
     };
   }
 

@@ -17,9 +17,7 @@ export type CheckEvent = {tag: "check"; id: string};
 export type SelectEditingTask = {tag: "selectEditingTask"; id: string};
 
 export type DragId = {type: "task"; id: string};
-export type DropId =
-  | {type: "filter"; id: FilterId}
-  | {type: "task"; id: string; side: "above" | "below"; indentation: number};
+export type DropId = {type: "filter"; id: FilterId} | {type: "list"; target: Tasks.DropTargetHandle};
 
 export type Event =
   | CheckEvent
@@ -154,8 +152,8 @@ export function updateApp(app: State, ev: Event): State {
     if (drop.type === "filter") {
       const app_ = {...app, tasks: edit(app, drag.id, {type: "moveToFilter", filter: drop.id})};
       return {...app_, editor: TaskEditor.reload(app_)};
-    } else if (drop.type === "task") {
-      return {...app, tasks: edit(app, drag.id, {type: "drop", target: drop})};
+    } else if (drop.type === "list") {
+      return {...app, tasks: edit(app, drag.id, {type: "drop", target: drop.target})};
     } else {
       const unreachable: never = drop;
       return unreachable;

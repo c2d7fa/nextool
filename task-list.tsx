@@ -1,5 +1,5 @@
 import * as React from "react";
-import {BadgeId, TaskListView, TaskView} from "./tasks";
+import {BadgeId, DropTargetView, TaskListView, TaskView} from "./tasks";
 import {Badge} from "./ui";
 import * as Drag from "./drag";
 import {Send} from "./app";
@@ -59,24 +59,15 @@ function Title(props: {task: TaskView}) {
   );
 }
 
-function DropTarget(props: {
-  id: string;
-  side: "below" | "above";
-  indentation: number;
-  width: number | "full";
-  send: Send;
-}) {
+function DropTarget(props: {target: DropTargetView; send: Send}) {
   return (
     <div className={style.dropContainer}>
-      <Drag.DropTarget
-        id={{type: "task", id: props.id, side: props.side, indentation: props.indentation}}
-        send={props.send}
-      >
+      <Drag.DropTarget id={{type: "list", target: props.target}} send={props.send}>
         <div
-          className={`${style.dropTarget} ${style[props.side]}`}
+          className={`${style.dropTarget} ${style[props.target.side]}`}
           style={{
-            left: `${props.indentation * 2}em`,
-            width: props.width === "full" ? undefined : `${props.width * 2}em`,
+            left: `${props.target.indentation * 2}em`,
+            width: props.target.width === "full" ? undefined : `${props.target.width * 2}em`,
           }}
         />
       </Drag.DropTarget>
@@ -86,7 +77,7 @@ function DropTarget(props: {
 
 function TaskRow(props: {row: TaskListViewRow; send: Send}) {
   if (props.row.type === "dropTarget") {
-    return <DropTarget {...props.row} send={props.send} />;
+    return <DropTarget target={props.row} send={props.send} />;
   } else if (props.row.type === "dropIndicator") {
     return (
       <div className={style.dropContainer}>

@@ -63,7 +63,7 @@ function dragAndDropNth(
     (view: View) =>
       dragAndDrop(
         {type: "task", id: nthTask(view, m).id},
-        {type: "task", id: nthTask(view, n).id, side, indentation},
+        {type: "list", target: {id: nthTask(view, n).id, side, indentation}},
       ),
   ];
 }
