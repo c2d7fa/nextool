@@ -87,22 +87,20 @@ function DropTarget(props: {
 function TaskRow(props: {row: TaskListViewRow; send: Send}) {
   if (props.row.type === "dropTarget") {
     return <DropTarget {...props.row} send={props.send} />;
+  } else if (props.row.type === "dropIndicator") {
+    return (
+      <div className={style.dropContainer}>
+        <div
+          className={`${style.dropIndicator} ${style[props.row.side]}`}
+          style={{left: `${2 * props.row.indentation}em`}}
+        />
+      </div>
+    );
   } else {
     const task: TaskView = props.row;
 
-    const dropIndicatorBelow = task.dropIndicator?.side === "below" ? task.dropIndicator : null;
-    const dropIndicatorAbove = task.dropIndicator?.side === "above" ? task.dropIndicator : null;
-
     return (
       <>
-        <div className={style.dropContainer}>
-          {dropIndicatorAbove && (
-            <div
-              className={`${style.dropIndicator} ${style[dropIndicatorAbove.side]}`}
-              style={{left: `${2 * dropIndicatorAbove.indentation}em`}}
-            />
-          )}
-        </div>
         <Drag.Draggable id={{type: "task" as const, id: task.id}} send={props.send}>
           <div
             className={[style.taskRow, task.project ? style.project : "", task.today ? style.today : ""].join(" ")}
@@ -120,14 +118,6 @@ function TaskRow(props: {row: TaskListViewRow; send: Send}) {
             </span>
           </div>
         </Drag.Draggable>
-        <div className={style.dropContainer}>
-          {dropIndicatorBelow && (
-            <div
-              className={`${style.dropIndicator} ${style[dropIndicatorBelow.side]}`}
-              style={{left: `${2 * dropIndicatorBelow.indentation}em`}}
-            />
-          )}
-        </div>
       </>
     );
   }

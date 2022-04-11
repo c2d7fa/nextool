@@ -24,6 +24,12 @@ type DropTarget = {
   side: "above" | "below";
 };
 
+type DropIndicator = {
+  type: "dropIndicator";
+  side: "above" | "below";
+  indentation: number;
+};
+
 export type TaskView = {
   type: "task";
   id: string;
@@ -34,12 +40,11 @@ export type TaskView = {
   project: boolean;
   today: boolean;
   badges: BadgeId[];
-  dropIndicator: null | {side: "above" | "below"; indentation: number};
 };
 
 export type TaskListView = {
   title: null | string;
-  rows: (DropTarget | TaskView)[];
+  rows: (DropTarget | DropIndicator | TaskView)[];
 }[];
 
 export function merge(tasks: Tasks, updates: ({id: string} & Partial<Task>)[]): Tasks {
@@ -279,7 +284,11 @@ function viewRows(args: {
   function dropIndicator(task: TaskData) {
     if (taskDrag.hovering?.type !== "task") return null;
     if (taskDrag.hovering.id !== task.id) return null;
-    return {side: taskDrag.hovering.side, indentation: taskDrag.hovering.indentation};
+    return {
+      type: "dropIndicator" as const,
+      side: taskDrag.hovering.side,
+      indentation: taskDrag.hovering.indentation,
+    };
   }
 
   function dropTargetsNear(index: number): DropTarget[] {
@@ -305,9 +314,14 @@ function viewRows(args: {
 
   const dropTargetsAbove = (index: number) => dropTargetsNear(index).filter((target) => target.side === "above");
   const dropTargetsBelow = (index: number) => dropTargetsNear(index).filter((target) => target.side === "below");
+  const dropIndicatorAbove = (index: number) =>
+    dropIndicator(list[index]!)?.side === "above" ? dropIndicator(list[index]!) : null;
+  const dropIndicatorBelow = (index: number) =>
+    dropIndicator(list[index]!)?.side === "below" ? dropIndicator(list[index]!) : null;
 
   return list.flatMap((task, index) => [
     ...(index === 0 ? dropTargetsAbove(index) : []),
+    ...(dropIndicatorAbove(index) !== null ? [dropIndicatorAbove(index)!] : []),
     {
       type: "task",
       id: task.id,
@@ -318,9 +332,9 @@ function viewRows(args: {
       badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
       project: task.type === "project",
       today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
-      dropIndicator: dropIndicator(task),
     },
     ...dropTargetsBelow(index),
+    ...(dropIndicatorBelow(index) !== null ? [dropIndicatorBelow(index)!] : []),
   ]);
 }
 
