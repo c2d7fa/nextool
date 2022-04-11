@@ -64,7 +64,7 @@ function DropTarget(props: {target: DropTargetView; send: Send}) {
     <div className={style.dropContainer}>
       <Drag.DropTarget id={{type: "list", target: props.target}} send={props.send}>
         <div
-          className={`${style.dropTarget} ${style[props.target.side]}`}
+          className={style.dropTarget}
           style={{
             left: `${props.target.indentation * 2}em`,
             width: props.target.width === "full" ? undefined : `${props.target.width * 2}em`,
@@ -81,10 +81,7 @@ function TaskRow(props: {row: TaskListViewRow; send: Send}) {
   } else if (props.row.type === "dropIndicator") {
     return (
       <div className={style.dropContainer}>
-        <div
-          className={`${style.dropIndicator} ${style[props.row.side]}`}
-          style={{left: `${2 * props.row.indentation}em`}}
-        />
+        <div className={style.dropIndicator} style={{left: `${2 * props.row.indentation}em`}} />
       </div>
     );
   } else {

@@ -196,20 +196,17 @@ $project-hue: shared.$project-hue;
 
   .dropTarget {
     position: absolute;
+    top: -0.5em;
+    bottom: -0.5em;
     left: 0;
     right: 0;
-
-
-    &.above { top: 0; height: 0.5em; }
-    &.below { bottom: -0.5em; height: 1em; }
   }
 
   .dropIndicator {
     position: absolute;
+    
+    bottom: 0;
     right: 0;
-
-    &.below { bottom: 0; }
-    &.above { top: 0; }
 
     height: 2px;
     border-radius: 2px;

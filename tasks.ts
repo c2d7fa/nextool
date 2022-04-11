@@ -26,7 +26,6 @@ export type DropTargetView = {type: "dropTarget"; width: number | "full"} & Drop
 
 type DropIndicatorView = {
   type: "dropIndicator";
-  side: "above" | "below";
   indentation: number;
 };
 
@@ -287,14 +286,15 @@ function viewRows(args: {
   const filtered = filterTasks(tasks, filter);
   const list = IndentedList.toList(filtered);
 
-  function dropIndicator(task: TaskData) {
+  function dropIndicator(taskIndex: number) {
     if (taskDrag.hovering?.type !== "list") return null;
-    if (taskDrag.hovering.target.id !== task.id) return null;
-    return {
-      type: "dropIndicator" as const,
-      side: taskDrag.hovering.target.side,
-      indentation: taskDrag.hovering.target.indentation,
-    };
+    if (
+      (taskDrag.hovering.target.id === list[taskIndex]?.id && taskDrag.hovering.target.side === "below") ||
+      (taskDrag.hovering.target.id === list[taskIndex + 1]?.id && taskDrag.hovering.target.side === "above")
+    ) {
+      return {type: "dropIndicator" as const, indentation: taskDrag.hovering.target.indentation};
+    }
+    return null;
   }
 
   function dropTargetsNear(index: number): DropTargetView[] {
@@ -320,28 +320,26 @@ function viewRows(args: {
 
   const dropTargetsAbove = (index: number) => dropTargetsNear(index).filter((target) => target.side === "above");
   const dropTargetsBelow = (index: number) => dropTargetsNear(index).filter((target) => target.side === "below");
-  const dropIndicatorAbove = (index: number) =>
-    dropIndicator(list[index]!)?.side === "above" ? dropIndicator(list[index]!) : null;
-  const dropIndicatorBelow = (index: number) =>
-    dropIndicator(list[index]!)?.side === "below" ? dropIndicator(list[index]!) : null;
 
-  return list.flatMap((task, index) => [
-    ...(index === 0 ? dropTargetsAbove(index) : []),
-    ...(dropIndicatorAbove(index) !== null ? [dropIndicatorAbove(index)!] : []),
-    {
-      type: "task",
-      id: task.id,
-      title: task.title,
-      indentation: task.indentation,
-      done: isDone(task),
-      paused: isPaused(tasks, IndentedList.findNode(tasks, task)!),
-      badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
-      project: task.type === "project",
-      today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
-    },
-    ...dropTargetsBelow(index),
-    ...(dropIndicatorBelow(index) !== null ? [dropIndicatorBelow(index)!] : []),
-  ]);
+  return [
+    ...(dropIndicator(-1) ? [dropIndicator(-1)!] : []),
+    ...list.flatMap((task, index) => [
+      ...(index === 0 ? dropTargetsAbove(index) : []),
+      {
+        type: "task" as const,
+        id: task.id,
+        title: task.title,
+        indentation: task.indentation,
+        done: isDone(task),
+        paused: isPaused(tasks, IndentedList.findNode(tasks, task)!),
+        badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
+        project: task.type === "project",
+        today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
+      },
+      ...dropTargetsBelow(index),
+      ...(dropIndicator(index) ? [dropIndicator(index)!] : []),
+    ]),
+  ];
 }
 
 function subfilters(tasks: Tasks, section: FilterSectionId): FilterId[] {
