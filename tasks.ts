@@ -16,7 +16,7 @@ type TaskData = {
 type Task = IndentedList.TreeNode<TaskData>;
 export type Tasks = IndentedList.Tree<TaskData>;
 
-type DropTarget = {
+type DropTargetView = {
   type: "dropTarget";
   id: string;
   width: number | "full";
@@ -24,7 +24,7 @@ type DropTarget = {
   side: "above" | "below";
 };
 
-type DropIndicator = {
+type DropIndicatorView = {
   type: "dropIndicator";
   side: "above" | "below";
   indentation: number;
@@ -44,7 +44,7 @@ export type TaskView = {
 
 export type TaskListView = {
   title: null | string;
-  rows: (DropTarget | DropIndicator | TaskView)[];
+  rows: (DropTargetView | DropIndicatorView | TaskView)[];
 }[];
 
 export function merge(tasks: Tasks, updates: ({id: string} & Partial<Task>)[]): Tasks {
@@ -297,7 +297,7 @@ function viewRows(args: {
     };
   }
 
-  function dropTargetsNear(index: number): DropTarget[] {
+  function dropTargetsNear(index: number): DropTargetView[] {
     const source = taskDrag.dragging?.id;
     if (!source) return [];
 
