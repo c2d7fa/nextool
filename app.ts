@@ -155,17 +155,7 @@ export function updateApp(app: State, ev: Event): State {
       const app_ = {...app, tasks: edit(app, drag.id, {type: "moveToFilter", filter: drop.id})};
       return {...app_, editor: TaskEditor.reload(app_)};
     } else if (drop.type === "task") {
-      return {
-        ...app,
-        tasks: edit(app, drag.id, {
-          type: "move",
-          location: {
-            side: drop.side,
-            target: {id: drop.id},
-            indentation: drop.indentation,
-          },
-        }),
-      };
+      return {...app, tasks: edit(app, drag.id, {type: "drop", target: drop})};
     } else {
       const unreachable: never = drop;
       return unreachable;

@@ -85,7 +85,7 @@ export type EditOperation =
   | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action" | "archived"; value: boolean}
   | {type: "set"; property: "planned"; value: Date | null}
-  | {type: "move"; location: IndentedList.IndentedListInsertLocation}
+  | {type: "drop"; target: {id: string; side: "above" | "below"; indentation: number}}
   | {type: "moveToFilter"; filter: FilterId}
   | null;
 
@@ -123,11 +123,17 @@ export function edit(
         filter !== "archive" ? ({type: "set", property: "archived", value: false} as const) : null;
 
       return edit({tasks, filter}, id, update, archiveUpdate);
-    } else if (operation.type === "move") {
+    } else if (operation.type === "drop") {
+      const location = {
+        side: operation.target.side,
+        target: {id: operation.target.id},
+        indentation: operation.target.indentation,
+      };
+
       return IndentedList.moveItemInSublistOfTree(
         {tree: tasks, list: IndentedList.toList(filterTasks(tasks, filter))},
         {id},
-        operation.location,
+        location,
       );
     } else {
       const unreachable: never = operation;
