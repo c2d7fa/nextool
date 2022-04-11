@@ -85,7 +85,7 @@ export type EditOperation =
   | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action" | "archived"; value: boolean}
   | {type: "set"; property: "planned"; value: Date | null}
-  | {type: "move"; side: "above" | "below"; target: {id: string}; indentation: number}
+  | {type: "move"; location: IndentedList.IndentedListInsertLocation}
   | {type: "moveToFilter"; filter: FilterId}
   | null;
 
@@ -127,7 +127,7 @@ export function edit(
       return IndentedList.moveItemInSublistOfTree(
         {tree: tasks, list: IndentedList.toList(filterTasks(tasks, filter))},
         {id},
-        operation,
+        operation.location,
       );
     } else {
       const unreachable: never = operation;
