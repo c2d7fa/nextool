@@ -22,7 +22,12 @@ export type DropTargetHandle = {
   side: "above" | "below";
 };
 
-export type DropTargetView = {type: "dropTarget"; width: number | "full"} & DropTargetHandle;
+export type DropTargetView = {
+  type: "dropTarget";
+  width: number | "full";
+  indentation: number;
+  target: DropTargetHandle;
+};
 
 type DropIndicatorView = {
   type: "dropIndicator";
@@ -310,16 +315,17 @@ function viewRows(args: {
     }
 
     return locations.map((location) => ({
-      id: list[index]!.id,
       type: "dropTarget",
+      target: {id: list[index]!.id, indentation: location.indentation, side: location.side},
       width: isRightmost(location) ? "full" : 1,
       indentation: location.indentation,
-      side: location.side,
     }));
   }
 
-  const dropTargetsAbove = (index: number) => dropTargetsNear(index).filter((target) => target.side === "above");
-  const dropTargetsBelow = (index: number) => dropTargetsNear(index).filter((target) => target.side === "below");
+  const dropTargetsAbove = (index: number) =>
+    dropTargetsNear(index).filter((target) => target.target.side === "above");
+  const dropTargetsBelow = (index: number) =>
+    dropTargetsNear(index).filter((target) => target.target.side === "below");
 
   return [
     ...(dropIndicator(-1) ? [dropIndicator(-1)!] : []),

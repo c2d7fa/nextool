@@ -59,15 +59,15 @@ function Title(props: {task: TaskView}) {
   );
 }
 
-function DropTarget(props: {target: DropTargetView; send: Send}) {
+function DropTarget(props: {view: DropTargetView; send: Send}) {
   return (
     <div className={style.dropContainer}>
-      <Drag.DropTarget id={{type: "list", target: props.target}} send={props.send}>
+      <Drag.DropTarget id={{type: "list", target: props.view.target}} send={props.send}>
         <div
           className={style.dropTarget}
           style={{
-            left: `${props.target.indentation * 2}em`,
-            width: props.target.width === "full" ? undefined : `${props.target.width * 2}em`,
+            left: `${props.view.indentation * 2}em`,
+            width: props.view.width === "full" ? undefined : `${props.view.width * 2}em`,
           }}
         />
       </Drag.DropTarget>
@@ -77,7 +77,7 @@ function DropTarget(props: {target: DropTargetView; send: Send}) {
 
 function TaskRow(props: {row: TaskListViewRow; send: Send}) {
   if (props.row.type === "dropTarget") {
-    return <DropTarget target={props.row} send={props.send} />;
+    return <DropTarget view={props.row} send={props.send} />;
   } else if (props.row.type === "dropIndicator") {
     return (
       <div className={style.dropContainer}>
