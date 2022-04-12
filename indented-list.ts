@@ -7,23 +7,10 @@ export type IndentedListItem<D> = D & Handle & {indentation: number};
 export type IndentedList<D> = IndentedListItem<D>[];
 
 type TreeLocation = {parent: Handle | null; index: number};
-export type IndentedListInsertLocation = {side: "above" | "below"; target: Handle | null; indentation: number};
+export type IndentedListInsertLocation = {previousSibling: Handle | null; indentation: number};
 
 function range(start: number, end: number): number[] {
   return Array.from(Array(end - start + 1), (_, i) => i + start);
-}
-
-function aboveInList<D>(tree: Tree<D>, query: Handle): (D & Handle) | null {
-  return toList(tree)[indexInList(tree, query) - 1] ?? null;
-}
-
-function convertToBelow<D>(
-  tree: Tree<D>,
-  location: IndentedListInsertLocation,
-): IndentedListInsertLocation & {side: "below"} {
-  if (location.target === null) return {side: "below", target: null, indentation: 0};
-  if (location.side === "below") return location as IndentedListInsertLocation & {side: "below"};
-  return {...location, side: "below", target: aboveInList(tree, location.target)};
 }
 
 function reposition<T>(list: T[], sourceIndex: number, target: {index: number; side: "above" | "below"}): T[] {
@@ -104,13 +91,12 @@ function listInsertLocationToTreeLocation<D>(
   tree: Tree<D>,
   location: IndentedListInsertLocation,
 ): TreeLocation | null {
-  if (location.target === null) return {parent: null, index: 0};
-  if (location.side === "above") return listInsertLocationToTreeLocation(tree, convertToBelow(tree, location));
+  if (location.previousSibling === null) return {parent: null, index: 0};
 
   const list = toList(tree);
 
   const reversedList = list.reverse();
-  const listAbove = reversedList.slice(reversedList.findIndex((x) => x.id === location.target!.id));
+  const listAbove = reversedList.slice(reversedList.findIndex((x) => x.id === location.previousSibling!.id));
 
   const previousSibling =
     takeWhile(listAbove, (item) => item.indentation >= location.indentation).find(
@@ -169,16 +155,11 @@ function indexInList<D>(tree: Tree<D>, query: Handle): number {
 }
 
 export function moveItemInTree<D>(tree: Tree<D>, source: Handle, location: IndentedListInsertLocation): Tree<D> {
-  if (
-    location.side === "above" &&
-    location.target &&
-    indexInList(tree, location.target) === indexInList(tree, source) + 1
-  ) {
-    return moveItemInTree(tree, source, {...location, target: source, side: "below"});
-  }
-
-  if (source.id === location.target?.id && location.side === "below") {
-    return moveItemInTree(tree, source, {...location, side: "above"});
+  if (source.id === location.previousSibling?.id) {
+    return moveItemInTree(tree, source, {
+      ...location,
+      previousSibling: toList(tree)[indexInList(tree, source) - 1] ?? null,
+    });
   }
 
   const from = findNodeLocation(tree, source);
@@ -195,12 +176,10 @@ export function moveItemInSublistOfTree<D>(
   source: Handle,
   location: IndentedListInsertLocation,
 ): Tree<D> {
-  if (location.target === null) return moveItemInTree(tree, source, {...location, indentation: 0});
-  if (location.side === "above")
-    return moveItemInSublistOfTree({tree, list}, source, convertToBelow(tree, location));
+  if (location.previousSibling === null) return moveItemInTree(tree, source, {...location, indentation: 0});
 
-  const realIndentation = toList(tree).find((item) => item.id === location.target?.id)?.indentation ?? 0;
-  const sublistIndentation = list.find((item) => item.id === location.target?.id)?.indentation ?? 0;
+  const realIndentation = toList(tree).find((item) => item.id === location.previousSibling?.id)?.indentation ?? 0;
+  const sublistIndentation = list.find((item) => item.id === location.previousSibling?.id)?.indentation ?? 0;
   const indentation = realIndentation - sublistIndentation + location.indentation;
 
   return moveItemInTree(tree, source, {...location, indentation});
@@ -232,7 +211,7 @@ export function validInsertLocationsBelow<D>(
   source: Handle,
   targetIndex: number,
 ): IndentedListInsertLocation[] {
-  if (targetIndex === -1) return [{indentation: 0, side: "below", target: null}];
+  if (targetIndex === -1) return [{indentation: 0, previousSibling: null}];
 
   const targetItem = list[targetIndex];
   if (!targetItem) throw "error";
@@ -241,7 +220,7 @@ export function validInsertLocationsBelow<D>(
   if (isTargetDirectlyAboveSource)
     return validInsertLocationsBelow({tree, list}, source, targetIndex + 1).map((location) => ({
       ...location,
-      target: {id: targetItem.id},
+      previousSibling: {id: targetItem.id},
     }));
 
   const sourceItem = list.find((item) => item.id === source.id)!;
@@ -265,8 +244,7 @@ export function validInsertLocationsBelow<D>(
 
   return range(minIndentation, maxIndentation).map((indentation) => ({
     indentation,
-    side: "below" as const,
-    target: {id: targetItem.id},
+    previousSibling: {id: targetItem.id},
   }));
 }
 

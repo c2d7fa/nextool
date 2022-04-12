@@ -281,12 +281,7 @@ function viewRows(args: {
 
   function dropIndicatorBelow(taskIndex: number) {
     if (taskDrag.hovering?.type !== "list") return null;
-    if (
-      (taskDrag.hovering.location.target?.id === list[taskIndex]?.id &&
-        taskDrag.hovering.location.side === "below") ||
-      (taskDrag.hovering.location.target?.id === list[taskIndex + 1]?.id &&
-        taskDrag.hovering.location.side === "above")
-    ) {
+    if (taskDrag.hovering.location.previousSibling?.id === list[taskIndex]?.id) {
       return {type: "dropIndicator" as const, indentation: taskDrag.hovering.location.indentation};
     }
     return null;
@@ -299,8 +294,7 @@ function viewRows(args: {
     const locations = IndentedList.validInsertLocationsBelow({list, tree: tasks}, source, index);
 
     function isRightmost(location: IndentedList.IndentedListInsertLocation): boolean {
-      const locationsInGroup = locations.filter((l) => l.side === location.side);
-      const highestIndentation = Math.max(...locationsInGroup.map((l) => l.indentation));
+      const highestIndentation = Math.max(...locations.map((l) => l.indentation));
       return location.indentation === highestIndentation;
     }
 
