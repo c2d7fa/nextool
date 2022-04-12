@@ -13,28 +13,22 @@ function range(start: number, end: number): number[] {
   return Array.from(Array(end - start + 1), (_, i) => i + start);
 }
 
-function reposition<T>(list: T[], sourceIndex: number, target: {index: number; side: "above" | "below"}): T[] {
-  function repositionBelow(list: T[], sourceIndex: number, targetIndex: number): T[] {
-    return range(0, list.length - 1).map((i) => {
-      const isUpwards = targetIndex < sourceIndex;
+function reposition<T>(list: T[], sourceIndex: number, targetIndex: number): T[] {
+  return range(0, list.length - 1).map((i) => {
+    const isUpwards = targetIndex <= sourceIndex;
 
-      const adjustedTargetIndex = isUpwards ? targetIndex + 1 : targetIndex;
-      const adjustedSourceIndex = isUpwards ? sourceIndex + 1 : sourceIndex;
+    const adjustedTargetIndex = isUpwards ? targetIndex : targetIndex - 1;
+    const adjustedSourceIndex = isUpwards ? sourceIndex + 1 : sourceIndex;
 
-      if (i === adjustedTargetIndex) return list[sourceIndex]!;
+    if (i === adjustedTargetIndex) return list[sourceIndex]!;
 
-      const isRemoved = i >= adjustedSourceIndex;
-      const isInserted = i >= adjustedTargetIndex;
+    const isRemoved = i >= adjustedSourceIndex;
+    const isInserted = i >= adjustedTargetIndex;
 
-      const adjustment = (isRemoved ? +1 : 0) + (isInserted ? -1 : 0);
+    const adjustment = (isRemoved ? +1 : 0) + (isInserted ? -1 : 0);
 
-      return list[i + adjustment]!;
-    });
-  }
-
-  return target.side === "below"
-    ? repositionBelow(list, sourceIndex, target.index)
-    : repositionBelow(list, sourceIndex, target.index - 1);
+    return list[i + adjustment]!;
+  });
 }
 
 export function filterNodes<D>(tree: Tree<D>, pred: (node: TreeNode<D>) => boolean): TreeNode<D>[] {
@@ -120,14 +114,10 @@ function listInsertLocationToTreeLocation<D>(
 
 function moveNodeInTree<D>(tree: Tree<D>, from: TreeLocation, to: TreeLocation): Tree<D> {
   if (from.parent === to.parent) {
-    return updateChildren(tree, from.parent ?? null, (children) => {
-      const updatedChildren = reposition(children, from.index, {index: to.index, side: "above"});
-      return updatedChildren;
-    });
+    return updateChildren(tree, from.parent ?? null, (children) => reposition(children, from.index, to.index));
   }
 
   const fromNode = from.parent === null ? tree[from.index] : findNode(tree, from.parent)!.children[from.index];
-
   if (!fromNode) throw "error";
 
   const removed = updateChildren(tree, from.parent ?? null, (children) =>
