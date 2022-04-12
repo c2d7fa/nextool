@@ -23,6 +23,11 @@ Watch unit tests:
 
     $ yarn jest --watch-all --verbose
 
+Run unit tests with coverage:
+
+    $ yarn jest --verbose --coverage=true --collectCoverageFrom=*.ts
+    $ open ./coverage/lcov-report/index.html
+
 Generate screenshot above:
 
     $ yarn parcel index.html &
