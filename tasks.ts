@@ -172,7 +172,10 @@ function badges(tasks: Tasks, task: Task, args?: {today: Date}): BadgeId[] {
 
   function isReady(task: Task): boolean {
     const hasUnfinishedChildren = task.children.some((child) => !isDone(child));
-    return !isInactive(task) && !isProject(task) && task.action && !hasUnfinishedChildren;
+    return (
+      (!isInactive(task) && !isProject(task) && task.action && !hasUnfinishedChildren) ||
+      (isProject(task) && hasReadyDescendants(task))
+    );
   }
 
   function isStalledTask(task: Task): boolean {
@@ -215,6 +218,8 @@ function taskProject(tasks: Tasks, task: Task): null | {id: string} {
 
 function doesSubtaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
   if (filter === "stalled") return IndentedList.anyDescendant(tasks, task, (subtask) => isStalled(tasks, subtask));
+  if (filter === "ready")
+    return IndentedList.anyDescendant(tasks, task, (subtask) => badges(tasks, subtask).includes("ready"));
   if (isArchived(tasks, task) && filter !== "archive") return false;
   return true;
 }

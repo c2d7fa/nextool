@@ -1577,7 +1577,7 @@ describe("projects", () => {
         setComponentValue("Actionable", "yes"),
       ]);
 
-      expect(tasks(example, "badges")).toEqual([["project"], [], ["ready"], ["stalled"]]);
+      expect(tasks(example, "badges")).toEqual([["project", "ready"], [], ["ready"], ["stalled"]]);
     });
 
     test("a project with only a stalled subtask is itself also stalled", () => {
@@ -1603,6 +1603,33 @@ describe("projects", () => {
       ]);
 
       expect(tasks(example, "badges")).toEqual([["project"]]);
+    });
+  });
+
+  describe("a project is ready if it has a ready subtask", () => {
+    const example = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Project"),
+      openNth(0),
+      setComponentValue("Type", "project"),
+      ...addTask("Task 1"),
+      ...addTask("Task 2"),
+      ...addTask("Task 3"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
+      ...dragAndDropNth(3, 2, {side: "below", indentation: 1}),
+      openNth(2),
+      setComponentValue("Actionable", "yes"),
+    ]);
+
+    test("the project shows up in the ready filter", () => {
+      const step2 = updateAll(example, [...switchToFilter("ready")]);
+
+      expect(tasks(step2, ["title", "indentation", "badges"])).toEqual([
+        {title: "Project", indentation: 0, badges: ["project", "ready"]},
+        {title: "Task 1", indentation: 1, badges: []},
+        {title: "Task 2", indentation: 2, badges: ["ready"]},
+      ]);
     });
   });
 
