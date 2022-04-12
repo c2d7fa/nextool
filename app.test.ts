@@ -678,13 +678,52 @@ describe("nesting tasks with drag and drop", () => {
       const step2 = updateAll(step1, [...dragAndDropNth(1, 2, {side: "above", indentation: 0})]);
 
       describe("after dropping task", () => {
-        test.skip("[BUG] the task is now indented at the top level", () => {
+        test("the task is now indented at the top level", () => {
           expect(tasks(step2, ["title", "indentation"])).toEqual([
             {title: "Task 0", indentation: 0},
             {title: "Task 1", indentation: 0},
             {title: "Task 3", indentation: 0},
           ]);
         });
+      });
+    });
+  });
+
+  describe("dragging a task into a parent when there is an archived task at the top-level below the parent", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Task 0"),
+      ...addTask("Task 1"),
+      ...addTask("Task 2"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 0}),
+      dragToFilter(1, "archive"),
+      startDragNthTask(1),
+    ]);
+
+    describe("initially", () => {
+      test("the non-archived tasks are shown at the top-level", () => {
+        expect(tasks(step1, ["title", "indentation"])).toEqual([
+          {title: "Task 0", indentation: 0},
+          {title: "Task 2", indentation: 0},
+        ]);
+      });
+
+      test("the task can be dropped near itself at indentation levels 0 or 1", () => {
+        expectNthTaskToHaveDropTargetsNearAtItself(step1, 1, [
+          {width: 1, indentation: 0},
+          {width: "full", indentation: 1},
+        ]);
+      });
+    });
+
+    const step2 = updateAll(step1, [...dragAndDropNth(1, 0, {side: "below", indentation: 1})]);
+
+    describe("after dropping task", () => {
+      test("the task is now indented under the parent", () => {
+        expect(tasks(step2, ["title", "indentation"])).toEqual([
+          {title: "Task 0", indentation: 0},
+          {title: "Task 2", indentation: 1},
+        ]);
       });
     });
   });
