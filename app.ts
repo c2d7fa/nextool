@@ -10,6 +10,7 @@ import * as Storage from "./storage";
 type TextFieldId = "addTitle";
 
 import type {FilterId, BadgeId} from "./tasks";
+import {IndentedListInsertLocation} from "./indented-list";
 export type {FilterId, BadgeId};
 
 export type SelectFilterEvent = {tag: "selectFilter"; filter: FilterId};
@@ -17,7 +18,7 @@ export type CheckEvent = {tag: "check"; id: string};
 export type SelectEditingTask = {tag: "selectEditingTask"; id: string};
 
 export type DragId = {type: "task"; id: string};
-export type DropId = {type: "filter"; id: FilterId} | {type: "list"; target: Tasks.DropTargetHandle};
+export type DropId = {type: "filter"; id: FilterId} | {type: "list"; location: IndentedListInsertLocation};
 
 export type Event =
   | CheckEvent
@@ -153,7 +154,7 @@ export function updateApp(app: State, ev: Event): State {
       const app_ = {...app, tasks: edit(app, drag.id, {type: "moveToFilter", filter: drop.id})};
       return {...app_, editor: TaskEditor.reload(app_)};
     } else if (drop.type === "list") {
-      return {...app, tasks: edit(app, drag.id, {type: "drop", target: drop.target})};
+      return {...app, tasks: edit(app, drag.id, {type: "move", location: drop.location})};
     } else {
       const unreachable: never = drop;
       return unreachable;

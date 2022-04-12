@@ -273,7 +273,7 @@ export function validInsertLocationsNear<D>(
       side: "above" as const,
     })),
     ...locationsBelow(list, source, targetIndex),
-  ].map((location) => ({...location, target: source}));
+  ].map((location) => ({...location, target: list[targetIndex]!}));
 }
 
 export function isDescendant<D>(tree: Tree<D>, query: Handle, ancestor: Handle): boolean {

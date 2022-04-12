@@ -66,7 +66,10 @@ function dragAndDropNth(
         (dropTarget) => dropTarget.indentation === indentation,
       );
       if (dropTarget.length !== 1) throw "no such (unique) drop target";
-      return dragAndDrop({type: "task", id: nthTask(view, m).id}, {type: "list", target: dropTarget[0]!.target});
+      return dragAndDrop(
+        {type: "task", id: nthTask(view, m).id},
+        {type: "list", location: dropTarget[0]!.location},
+      );
     },
   ];
 }

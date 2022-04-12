@@ -16,17 +16,11 @@ type TaskData = {
 type Task = IndentedList.TreeNode<TaskData>;
 export type Tasks = IndentedList.Tree<TaskData>;
 
-export type DropTargetHandle = {
-  id: string;
-  indentation: number;
-  side: "above" | "below";
-};
-
 export type DropTargetView = {
   type: "dropTarget";
   width: number | "full";
   indentation: number;
-  target: DropTargetHandle;
+  location: IndentedList.IndentedListInsertLocation;
 };
 
 type DropIndicatorView = {
@@ -89,7 +83,7 @@ export type EditOperation =
   | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action" | "archived"; value: boolean}
   | {type: "set"; property: "planned"; value: Date | null}
-  | {type: "drop"; target: {id: string; side: "above" | "below"; indentation: number}}
+  | {type: "move"; location: IndentedList.IndentedListInsertLocation}
   | {type: "moveToFilter"; filter: FilterId}
   | null;
 
@@ -127,17 +121,11 @@ export function edit(
         filter !== "archive" ? ({type: "set", property: "archived", value: false} as const) : null;
 
       return edit({tasks, filter}, id, update, archiveUpdate);
-    } else if (operation.type === "drop") {
-      const location = {
-        side: operation.target.side,
-        target: {id: operation.target.id},
-        indentation: operation.target.indentation,
-      };
-
+    } else if (operation.type === "move") {
       return IndentedList.moveItemInSublistOfTree(
         {tree: tasks, list: IndentedList.toList(filterTasks(tasks, filter))},
         {id},
-        location,
+        operation.location,
       );
     } else {
       const unreachable: never = operation;
@@ -294,10 +282,12 @@ function viewRows(args: {
   function dropIndicator(taskIndex: number) {
     if (taskDrag.hovering?.type !== "list") return null;
     if (
-      (taskDrag.hovering.target.id === list[taskIndex]?.id && taskDrag.hovering.target.side === "below") ||
-      (taskDrag.hovering.target.id === list[taskIndex + 1]?.id && taskDrag.hovering.target.side === "above")
+      (taskDrag.hovering.location.target?.id === list[taskIndex]?.id &&
+        taskDrag.hovering.location.side === "below") ||
+      (taskDrag.hovering.location.target?.id === list[taskIndex + 1]?.id &&
+        taskDrag.hovering.location.side === "above")
     ) {
-      return {type: "dropIndicator" as const, indentation: taskDrag.hovering.target.indentation};
+      return {type: "dropIndicator" as const, indentation: taskDrag.hovering.location.indentation};
     }
     return null;
   }
@@ -316,16 +306,16 @@ function viewRows(args: {
 
     return locations.map((location) => ({
       type: "dropTarget",
-      target: {id: list[index]!.id, indentation: location.indentation, side: location.side},
+      location,
       width: isRightmost(location) ? "full" : 1,
       indentation: location.indentation,
     }));
   }
 
   const dropTargetsAbove = (index: number) =>
-    dropTargetsNear(index).filter((target) => target.target.side === "above");
+    dropTargetsNear(index).filter((target) => target.location.side === "above");
   const dropTargetsBelow = (index: number) =>
-    dropTargetsNear(index).filter((target) => target.target.side === "below");
+    dropTargetsNear(index).filter((target) => target.location.side === "below");
 
   return [
     ...(dropIndicator(-1) ? [dropIndicator(-1)!] : []),
