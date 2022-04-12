@@ -1,5 +1,5 @@
 import {updateApp, State, view as viewApp, Event, empty, DragId, DropId, View, effects, Effect} from "./app";
-import {FilterId, TaskView} from "./tasks";
+import {DropTargetView, FilterId, TaskView} from "./tasks";
 
 function view(state: State): View {
   return viewApp(state, {today: new Date("2020-03-15")});
@@ -60,11 +60,14 @@ function dragAndDropNth(
   {side, indentation}: {side: "above" | "below"; indentation: number},
 ) {
   return [
-    (view: View) =>
-      dragAndDrop(
-        {type: "task", id: nthTask(view, m).id},
-        {type: "list", target: {id: nthTask(view, n).id, side, indentation}},
-      ),
+    startDragNthTask(m),
+    (view: View) => {
+      const dropTarget = dropTargetsAfter_(view, side === "above" ? n - 1 : n).filter(
+        (dropTarget) => dropTarget.indentation === indentation,
+      );
+      if (dropTarget.length !== 1) throw "no such (unique) drop target";
+      return dragAndDrop({type: "task", id: nthTask(view, m).id}, {type: "list", target: dropTarget[0]!.target});
+    },
   ];
 }
 
@@ -121,9 +124,9 @@ function pickerValue(view: View | State, title: string): string {
   return component.options.find((option) => option.active)?.value ?? "";
 }
 
-function dropTargetsAfter(view: View | State, n: number): {width: number | "full"; indentation: number}[] {
+function dropTargetsAfter_(view: View | State, n: number): DropTargetView[] {
   let foundStart = n === -1;
-  let result: {width: number | "full"; indentation: number}[] = [];
+  let result: DropTargetView[] = [];
 
   for (const row of viewed(view).taskList.flatMap((section) => section.rows)) {
     if (row.type === "task") {
@@ -134,12 +137,16 @@ function dropTargetsAfter(view: View | State, n: number): {width: number | "full
       }
     } else if (row.type === "dropTarget") {
       if (foundStart) {
-        result.push(select(row, ["width", "indentation"]));
+        result.push(row);
       }
     }
   }
 
   return result;
+}
+
+function dropTargetsAfter(view: View | State, n: number) {
+  return dropTargetsAfter_(view, n).map((dropTarget) => select(dropTarget, ["width", "indentation"]));
 }
 
 // -----
