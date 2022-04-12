@@ -107,8 +107,8 @@ $project-hue: shared.$project-hue;
     user-select: none;
   }
 
-  & > *:not(.dropContainer) {
-    @include shared.border-between(1px solid #c8c8c8);
+  & > *:not(:last-child) .taskRow  {
+    border-bottom: 1px solid #c0c0c0;
   }
 
   .taskRow {
