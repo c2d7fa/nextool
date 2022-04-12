@@ -815,7 +815,7 @@ describe("drag and drop with multiple sections shown", () => {
     const step2 = updateAll(step1, [...dragAndDropNth(1, 0, {side: "below", indentation: 0})]);
 
     describe("the dragged task is moved to the new section", () => {
-      test("the shown tasks are correct", () => {
+      test.skip("[TODO] the shown tasks are correct", () => {
         expect(tasksInSection(step2, "Ready", "title")).toEqual(["Task 0", "Task 1"]);
         expect(tasksInSection(step2, "Stalled", "title")).toEqual(["Task 2"]);
       });
@@ -1420,48 +1420,79 @@ describe("paused tasks", () => {
   });
 });
 
-describe("counter next to filters", () => {
-  function indicatorForFilter(view: View, label: string) {
-    return view.sideBar.flatMap((section) => section.filters).find((filter) => filter.label === label)?.indicator;
-  }
+describe("the stalled filter", () => {
+  describe("its counter", () => {
+    function indicatorForFilter(view: View, label: string) {
+      return view.sideBar.flatMap((section) => section.filters).find((filter) => filter.label === label)
+        ?.indicator;
+    }
 
-  describe("the counter shows stalled tasks", () => {
-    const step1 = updateAll(empty, []);
+    describe("the counter shows stalled tasks", () => {
+      const step1 = updateAll(empty, []);
 
-    test("with no tasks, the counter isn't shown", () => {
-      expect(indicatorForFilter(view(step1), "Stalled")).toEqual(null);
+      test("with no tasks, the counter isn't shown", () => {
+        expect(indicatorForFilter(view(step1), "Stalled")).toEqual(null);
+      });
+
+      const step2 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task")]);
+
+      test("after adding task, the counter is shown", () => {
+        expect(indicatorForFilter(view(step2), "Stalled")).toEqual({text: "1"});
+      });
+
+      const step3 = updateAll(step2, [dragToFilter(0, "ready")]);
+
+      test("after dragging task into ready filter, the counter is hidden again", () => {
+        expect(indicatorForFilter(view(step3), "Stalled")).toEqual(null);
+      });
     });
 
-    const step2 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task")]);
+    describe("subtasks are not included", () => {
+      const example = updateAll(empty, [
+        ...switchToFilter("all"),
+        ...addTask("Task 1"),
+        ...addTask("Task 2"),
+        ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+        openNth(1),
+        setComponentValue("Status", "paused"),
+        ...switchToFilter("stalled"),
+      ]);
 
-    test("after adding task, the counter is shown", () => {
-      expect(indicatorForFilter(view(step2), "Stalled")).toEqual({text: "1"});
-    });
+      test("there is a paused subtask", () => {
+        expect(tasks(example, "paused")).toEqual([false, true]);
+      });
 
-    const step3 = updateAll(step2, [dragToFilter(0, "ready")]);
-
-    test("after dragging task into ready filter, the counter is hidden again", () => {
-      expect(indicatorForFilter(view(step3), "Stalled")).toEqual(null);
+      test("but the counter only shows one task", () => {
+        expect(indicatorForFilter(view(example), "Stalled")).toEqual({text: "1"});
+      });
     });
   });
 
-  describe("subtasks are not included", () => {
+  describe("projects and their stalled subtasks are shown, but not non-stalled subtasks", () => {
     const example = updateAll(empty, [
       ...switchToFilter("all"),
+      ...addTask("Project"),
       ...addTask("Task 1"),
       ...addTask("Task 2"),
+      ...addTask("Task 3"),
+      ...addTask("Task 4"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
       openNth(1),
       setComponentValue("Status", "paused"),
+      ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
+      openNth(2),
+      setComponentValue("Status", "done"),
+      ...dragAndDropNth(3, 2, {side: "below", indentation: 1}),
+      ...dragAndDropNth(4, 3, {side: "below", indentation: 2}),
       ...switchToFilter("stalled"),
     ]);
 
-    test("there is a paused subtask", () => {
-      expect(tasks(example, "paused")).toEqual([false, true]);
-    });
-
-    test("but the counter only shows one task", () => {
-      expect(indicatorForFilter(view(example), "Stalled")).toEqual({text: "1"});
+    test.skip("[TODO] the correct tasks are shown", () => {
+      expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
+        {title: "Project", indentation: 0, badges: ["stalled"]},
+        {title: "Task 3", indentation: 1, badges: []},
+        {title: "Task 4", indentation: 2, badges: ["stalled"]},
+      ]);
     });
   });
 });
