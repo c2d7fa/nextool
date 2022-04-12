@@ -16,22 +16,33 @@ type TaskData = {
 type Task = IndentedList.TreeNode<TaskData>;
 export type Tasks = IndentedList.Tree<TaskData>;
 
-type DropTarget = {width: number | "full"; indentation: number; side: "above" | "below"};
+export type DropTargetView = {
+  type: "dropTarget";
+  width: number | "full";
+  indentation: number;
+  location: IndentedList.IndentedListInsertLocation;
+};
+
+type DropIndicatorView = {
+  type: "dropIndicator";
+  indentation: number;
+};
+
+export type TaskView = {
+  type: "task";
+  id: string;
+  title: string;
+  indentation: number;
+  done: boolean;
+  paused: boolean;
+  project: boolean;
+  today: boolean;
+  badges: BadgeId[];
+};
 
 export type TaskListView = {
   title: null | string;
-  tasks: {
-    id: string;
-    title: string;
-    indentation: number;
-    done: boolean;
-    paused: boolean;
-    project: boolean;
-    today: boolean;
-    badges: BadgeId[];
-    dropIndicator: null | {side: "above" | "below"; indentation: number};
-    dropTargets: DropTarget[];
-  }[];
+  rows: (DropTargetView | DropIndicatorView | TaskView)[];
 }[];
 
 export function merge(tasks: Tasks, updates: ({id: string} & Partial<Task>)[]): Tasks {
@@ -72,7 +83,7 @@ export type EditOperation =
   | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action" | "archived"; value: boolean}
   | {type: "set"; property: "planned"; value: Date | null}
-  | {type: "move"; side: "above" | "below"; target: {id: string}; indentation: number}
+  | {type: "move"; location: IndentedList.IndentedListInsertLocation}
   | {type: "moveToFilter"; filter: FilterId}
   | null;
 
@@ -114,7 +125,7 @@ export function edit(
       return IndentedList.moveItemInSublistOfTree(
         {tree: tasks, list: IndentedList.toList(filterTasks(tasks, filter))},
         {id},
-        operation,
+        operation.location,
       );
     } else {
       const unreachable: never = operation;
@@ -257,54 +268,62 @@ export function countStalledTasks(tasks: Tasks): number {
   return filterTasks(tasks, "stalled").length;
 }
 
-function viewTasks(args: {
+function viewRows(args: {
   tasks: Tasks;
   filter: FilterId;
   taskDrag: DragState<DragId, DropId>;
   today: Date;
-}): TaskListView[number]["tasks"] {
+}): TaskListView[number]["rows"] {
   const {tasks, filter, taskDrag} = args;
 
   const filtered = filterTasks(tasks, filter);
   const list = IndentedList.toList(filtered);
 
-  function dropIndicator(task: TaskData) {
-    if (taskDrag.hovering?.type !== "task") return null;
-    if (taskDrag.hovering.id !== task.id) return null;
-    return {side: taskDrag.hovering.side, indentation: taskDrag.hovering.indentation};
+  function dropIndicatorsBelow(taskIndex: number) {
+    return taskDrag.hovering?.type === "list" &&
+      taskDrag.hovering.location.previousSibling?.id === list[taskIndex]?.id
+      ? [{type: "dropIndicator" as const, indentation: taskDrag.hovering.location.indentation}]
+      : [];
   }
 
-  function dropTargetsNear(index: number): DropTarget[] {
+  function dropTargetsBelow(index: number): DropTargetView[] {
     const source = taskDrag.dragging?.id;
     if (!source) return [];
 
-    const locations = IndentedList.validInsertLocationsNear({list, tree: tasks}, source, index);
+    const locations = IndentedList.validInsertLocationsBelow({list, tree: tasks}, source, index);
 
     function isRightmost(location: IndentedList.IndentedListInsertLocation): boolean {
-      const locationsInGroup = locations.filter((l) => l.side === location.side);
-      const highestIndentation = Math.max(...locationsInGroup.map((l) => l.indentation));
+      const highestIndentation = Math.max(...locations.map((l) => l.indentation));
       return location.indentation === highestIndentation;
     }
 
     return locations.map((location) => ({
+      type: "dropTarget",
+      location,
       width: isRightmost(location) ? "full" : 1,
       indentation: location.indentation,
-      side: location.side,
     }));
   }
 
-  return list.map((task, index) => ({
-    id: task.id,
-    title: task.title,
-    indentation: task.indentation,
-    done: isDone(task),
-    paused: isPaused(tasks, IndentedList.findNode(tasks, task)!),
-    badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
-    project: task.type === "project",
-    today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
-    dropIndicator: dropIndicator(task),
-    dropTargets: dropTargetsNear(index),
-  }));
+  return [
+    ...dropIndicatorsBelow(-1),
+    ...dropTargetsBelow(-1),
+    ...list.flatMap((task, index) => [
+      {
+        type: "task" as const,
+        id: task.id,
+        title: task.title,
+        indentation: task.indentation,
+        done: isDone(task),
+        paused: isPaused(tasks, IndentedList.findNode(tasks, task)!),
+        badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
+        project: task.type === "project",
+        today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
+      },
+      ...dropTargetsBelow(index),
+      ...dropIndicatorsBelow(index),
+    ]),
+  ];
 }
 
 function subfilters(tasks: Tasks, section: FilterSectionId): FilterId[] {
@@ -375,9 +394,9 @@ export function view(args: {
   if (typeof args.filter === "object" && args.filter.type === "section") {
     return subfilters(args.tasks, args.filter.section).map((subfilter) => ({
       title: filterTitle(args.tasks, subfilter),
-      tasks: viewTasks({...args, filter: subfilter}),
+      rows: viewRows({...args, filter: subfilter}),
     }));
   } else {
-    return [{title: null, tasks: viewTasks(args)}];
+    return [{title: null, rows: viewRows(args)}];
   }
 }
