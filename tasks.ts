@@ -279,7 +279,7 @@ function viewRows(args: {
   const filtered = filterTasks(tasks, filter);
   const list = IndentedList.toList(filtered);
 
-  function dropIndicator(taskIndex: number) {
+  function dropIndicatorBelow(taskIndex: number) {
     if (taskDrag.hovering?.type !== "list") return null;
     if (
       (taskDrag.hovering.location.target?.id === list[taskIndex]?.id &&
@@ -292,11 +292,11 @@ function viewRows(args: {
     return null;
   }
 
-  function dropTargetsNear(index: number): DropTargetView[] {
+  function dropTargetsBelow(index: number): DropTargetView[] {
     const source = taskDrag.dragging?.id;
     if (!source) return [];
 
-    const locations = IndentedList.validInsertLocationsNear({list, tree: tasks}, source, index);
+    const locations = IndentedList.validInsertLocationsBelow({list, tree: tasks}, source, index);
 
     function isRightmost(location: IndentedList.IndentedListInsertLocation): boolean {
       const locationsInGroup = locations.filter((l) => l.side === location.side);
@@ -312,15 +312,10 @@ function viewRows(args: {
     }));
   }
 
-  const dropTargetsAbove = (index: number) =>
-    dropTargetsNear(index).filter((target) => target.location.side === "above");
-  const dropTargetsBelow = (index: number) =>
-    dropTargetsNear(index).filter((target) => target.location.side === "below");
-
   return [
-    ...(dropIndicator(-1) ? [dropIndicator(-1)!] : []),
+    ...(dropIndicatorBelow(-1) ? [dropIndicatorBelow(-1)!] : []),
+    ...dropTargetsBelow(-1),
     ...list.flatMap((task, index) => [
-      ...(index === 0 ? dropTargetsAbove(index) : []),
       {
         type: "task" as const,
         id: task.id,
@@ -333,7 +328,7 @@ function viewRows(args: {
         today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
       },
       ...dropTargetsBelow(index),
-      ...(dropIndicator(index) ? [dropIndicator(index)!] : []),
+      ...(dropIndicatorBelow(index) ? [dropIndicatorBelow(index)!] : []),
     ]),
   ];
 }

@@ -227,53 +227,47 @@ function takeWhile<T>(array: T[], predicate: (value: T, index: number) => boolea
   return array.slice(0, i);
 }
 
-export function validInsertLocationsNear<D>(
+export function validInsertLocationsBelow<D>(
   {tree, list}: {tree: Tree<D>; list: IndentedList<D>},
   source: Handle,
   targetIndex: number,
 ): IndentedListInsertLocation[] {
-  function locationsBelow(
-    list: IndentedList<D>,
-    source: {id: string},
-    targetIndex: number,
-  ): Omit<IndentedListInsertLocation, "target">[] {
-    if (targetIndex === -1) return [{indentation: 0, side: "below"}];
+  if (targetIndex === -1) return [{indentation: 0, side: "below", target: null}];
 
-    const isTargetDirectlyAboveSource = list[targetIndex + 1]?.id === source.id;
-    if (isTargetDirectlyAboveSource) return locationsBelow(list, source, targetIndex + 1);
+  const targetItem = list[targetIndex];
+  if (!targetItem) throw "error";
 
-    const targetItem = list[targetIndex];
-    if (!targetItem) throw "error";
-
-    const sourceItem = list.find((item) => item.id === source.id)!;
-
-    const preceedingItem = list[targetIndex - 1];
-    const preceedingItemIndentation = preceedingItem?.indentation ?? -1;
-
-    const followingItems = list.slice(targetIndex + 1);
-    const followingNonChildren = followingItems.filter((item) => !isDescendant(tree, item, source));
-    const followingNonChild = followingNonChildren[0];
-    const followingNonChildIndentation = followingNonChild?.indentation ?? 0;
-
-    const isSource = targetItem.id === source.id;
-
-    const minIndentation = followingNonChildIndentation;
-    const maxIndentation = isDescendant(tree, targetItem, source)
-      ? sourceItem.indentation
-      : isSource
-      ? Math.max(preceedingItemIndentation + 1, targetItem.indentation)
-      : targetItem.indentation + 1;
-
-    return range(minIndentation, maxIndentation).map((indentation) => ({indentation, side: "below" as const}));
-  }
-
-  return [
-    ...locationsBelow(list, source, targetIndex - 1).map((location) => ({
+  const isTargetDirectlyAboveSource = list[targetIndex + 1]?.id === source.id;
+  if (isTargetDirectlyAboveSource)
+    return validInsertLocationsBelow({tree, list}, source, targetIndex + 1).map((location) => ({
       ...location,
-      side: "above" as const,
-    })),
-    ...locationsBelow(list, source, targetIndex),
-  ].map((location) => ({...location, target: list[targetIndex]!}));
+      target: {id: targetItem.id},
+    }));
+
+  const sourceItem = list.find((item) => item.id === source.id)!;
+
+  const preceedingItem = list[targetIndex - 1];
+  const preceedingItemIndentation = preceedingItem?.indentation ?? -1;
+
+  const followingItems = list.slice(targetIndex + 1);
+  const followingNonChildren = followingItems.filter((item) => !isDescendant(tree, item, source));
+  const followingNonChild = followingNonChildren[0];
+  const followingNonChildIndentation = followingNonChild?.indentation ?? 0;
+
+  const isSource = targetItem.id === source.id;
+
+  const minIndentation = followingNonChildIndentation;
+  const maxIndentation = isDescendant(tree, targetItem, source)
+    ? sourceItem.indentation
+    : isSource
+    ? Math.max(preceedingItemIndentation + 1, targetItem.indentation)
+    : targetItem.indentation + 1;
+
+  return range(minIndentation, maxIndentation).map((indentation) => ({
+    indentation,
+    side: "below" as const,
+    target: {id: targetItem.id},
+  }));
 }
 
 export function isDescendant<D>(tree: Tree<D>, query: Handle, ancestor: Handle): boolean {
