@@ -796,6 +796,43 @@ describe("drag and drop in filtered views", () => {
 });
 
 describe("drag and drop with multiple sections shown", () => {
+  describe("reordering subtasks within a section of a filtered view", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Project"),
+      openNth(0),
+      setComponentValue("Type", "project"),
+      ...addTask("Task 1"),
+      ...addTask("Task 2"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
+      ...switchToFilter({type: "section", section: "actions"}),
+    ]);
+
+    describe("initially", () => {
+      test("the correct tasks are shown in each section", () => {
+        expect(tasksInSection(step1, "Ready", ["title", "indentation"])).toEqual([]);
+        expect(tasksInSection(step1, "Stalled", ["title", "indentation"])).toEqual([
+          {title: "Project", indentation: 0},
+          {title: "Task 1", indentation: 1},
+          {title: "Task 2", indentation: 1},
+        ]);
+      });
+    });
+
+    const step2 = updateAll(step1, [...dragAndDropNth(1, 2, {side: "below", indentation: 1})]);
+
+    describe("after dragging the first child below the second child", () => {
+      test.skip("[BUG] they have switched places", () => {
+        expect(tasksInSection(step2, "Stalled", ["title", "indentation"])).toEqual([
+          {title: "Project", indentation: 0},
+          {title: "Task 2", indentation: 1},
+          {title: "Task 1", indentation: 1},
+        ]);
+      });
+    });
+  });
+
   describe("dragging a task from the stalled section into the ready section makes it ready", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter({type: "section", section: "actions"}),
