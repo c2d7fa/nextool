@@ -279,12 +279,11 @@ function viewRows(args: {
   const filtered = filterTasks(tasks, filter);
   const list = IndentedList.toList(filtered);
 
-  function dropIndicatorBelow(taskIndex: number) {
-    if (taskDrag.hovering?.type !== "list") return null;
-    if (taskDrag.hovering.location.previousSibling?.id === list[taskIndex]?.id) {
-      return {type: "dropIndicator" as const, indentation: taskDrag.hovering.location.indentation};
-    }
-    return null;
+  function dropIndicatorsBelow(taskIndex: number) {
+    return taskDrag.hovering?.type === "list" &&
+      taskDrag.hovering.location.previousSibling?.id === list[taskIndex]?.id
+      ? [{type: "dropIndicator" as const, indentation: taskDrag.hovering.location.indentation}]
+      : [];
   }
 
   function dropTargetsBelow(index: number): DropTargetView[] {
@@ -307,7 +306,7 @@ function viewRows(args: {
   }
 
   return [
-    ...(dropIndicatorBelow(-1) ? [dropIndicatorBelow(-1)!] : []),
+    ...dropIndicatorsBelow(-1),
     ...dropTargetsBelow(-1),
     ...list.flatMap((task, index) => [
       {
@@ -322,7 +321,7 @@ function viewRows(args: {
         today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
       },
       ...dropTargetsBelow(index),
-      ...(dropIndicatorBelow(index) ? [dropIndicatorBelow(index)!] : []),
+      ...dropIndicatorsBelow(index),
     ]),
   ];
 }
