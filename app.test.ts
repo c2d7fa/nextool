@@ -1450,16 +1450,19 @@ describe("the stalled filter", () => {
     describe("subtasks are not included", () => {
       const example = updateAll(empty, [
         ...switchToFilter("all"),
+        ...addTask("Project"),
+        openNth(0),
+        setComponentValue("Type", "project"),
         ...addTask("Task 1"),
-        ...addTask("Task 2"),
         ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
-        openNth(1),
-        setComponentValue("Status", "paused"),
         ...switchToFilter("stalled"),
       ]);
 
-      test("there is a paused subtask", () => {
-        expect(tasks(example, "paused")).toEqual([false, true]);
+      test("there is a stalled subtask", () => {
+        expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
+          {title: "Project", indentation: 0, badges: ["project", "stalled"]},
+          {title: "Task 1", indentation: 1, badges: ["stalled"]},
+        ]);
       });
 
       test("but the counter only shows one task", () => {
@@ -1472,6 +1475,8 @@ describe("the stalled filter", () => {
     const example = updateAll(empty, [
       ...switchToFilter("all"),
       ...addTask("Project"),
+      openNth(0),
+      setComponentValue("Type", "project"),
       ...addTask("Task 1"),
       ...addTask("Task 2"),
       ...addTask("Task 3"),
@@ -1487,9 +1492,9 @@ describe("the stalled filter", () => {
       ...switchToFilter("stalled"),
     ]);
 
-    test.skip("[TODO] the correct tasks are shown", () => {
+    test("the correct tasks are shown", () => {
       expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
-        {title: "Project", indentation: 0, badges: ["stalled"]},
+        {title: "Project", indentation: 0, badges: ["project", "stalled"]},
         {title: "Task 3", indentation: 1, badges: []},
         {title: "Task 4", indentation: 2, badges: ["stalled"]},
       ]);

@@ -214,6 +214,7 @@ function taskProject(tasks: Tasks, task: Task): null | {id: string} {
 }
 
 function doesSubtaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
+  if (filter === "stalled") return IndentedList.anyDescendant(tasks, task, (subtask) => isStalled(tasks, subtask));
   if (isArchived(tasks, task) && filter !== "archive") return false;
   return true;
 }
