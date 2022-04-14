@@ -44,7 +44,7 @@ function hoverNth(n: number, {side, indentation}: {side: "above" | "below"; inde
       {
         tag: "drag" as const,
         type: "hover" as const,
-        target: {type: "list" as const, location: dropTarget.location},
+        target: {type: "list" as const, target: dropTarget.handle},
       },
     ];
   };
@@ -82,7 +82,7 @@ function dragAndDropNth(
         (dropTarget) => dropTarget.indentation === indentation,
       );
       if (!dropTarget) throw "no such drop target";
-      return dragAndDrop({type: "task", id: nthTask(view, m).id}, {type: "list", location: dropTarget.location});
+      return dragAndDrop({type: "task", id: nthTask(view, m).id}, {type: "list", target: dropTarget.handle});
     },
   ];
 }

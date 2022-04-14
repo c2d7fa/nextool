@@ -62,7 +62,7 @@ function Title(props: {task: TaskView}) {
 function DropTarget(props: {view: DropTargetView; send: Send}) {
   return (
     <div className={style.dropContainer}>
-      <Drag.DropTarget id={{type: "list", location: props.view.location}} send={props.send}>
+      <Drag.DropTarget id={{type: "list", target: props.view.handle}} send={props.send}>
         <div
           className={style.dropTarget}
           style={{
