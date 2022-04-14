@@ -42,8 +42,19 @@ export function filterNodes<D>(tree: Tree<D>, pred: (node: TreeNode<D>) => boole
 }
 
 export function findNode<D>(tree: Tree<D>, query: Handle): TreeNode<D> | null {
-  const matching = filterNodes(tree, (node) => node.id === query.id);
-  return matching[0] ?? null;
+  function find(node: TreeNode<D>): TreeNode<D> | null {
+    if (node.id === query.id) return node;
+    for (const child of node.children) {
+      const result = find(child);
+      if (result) return result;
+    }
+    return null;
+  }
+  for (const node of tree) {
+    const result = find(node);
+    if (result) return result;
+  }
+  return null;
 }
 
 export function updateNode<D>(tree: Tree<D>, query: Handle, update: (x: TreeNode<D>) => TreeNode<D>): Tree<D> {

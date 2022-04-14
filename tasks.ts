@@ -16,11 +16,16 @@ type TaskData = {
 type Task = IndentedList.TreeNode<TaskData>;
 export type Tasks = IndentedList.Tree<TaskData>;
 
+export type DropTargetHandle = {
+  location: IndentedList.IndentedListInsertLocation;
+  filter: FilterId;
+};
+
 export type DropTargetView = {
   type: "dropTarget";
   width: number | "full";
   indentation: number;
-  location: IndentedList.IndentedListInsertLocation;
+  handle: DropTargetHandle;
 };
 
 type DropIndicatorView = {
@@ -83,7 +88,7 @@ export type EditOperation =
   | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action" | "archived"; value: boolean}
   | {type: "set"; property: "planned"; value: Date | null}
-  | {type: "move"; location: IndentedList.IndentedListInsertLocation}
+  | {type: "move"; target: DropTargetHandle}
   | {type: "moveToFilter"; filter: FilterId}
   | null;
 
@@ -122,10 +127,14 @@ export function edit(
 
       return edit({tasks, filter}, id, update, archiveUpdate);
     } else if (operation.type === "move") {
+      const tasks_ = operation.target.filter
+        ? edit({tasks, filter}, id, {type: "moveToFilter", filter: operation.target.filter})
+        : tasks;
+
       return IndentedList.moveItemInSublistOfTree(
-        {tree: tasks, list: IndentedList.toList(filterTasks(tasks, filter))},
+        {tree: tasks_, list: IndentedList.toList(filterTasks(tasks, operation.target.filter ?? filter))},
         {id},
-        operation.location,
+        operation.target.location,
       );
     } else {
       const unreachable: never = operation;
@@ -287,8 +296,9 @@ function viewRows(args: {
 
   function dropIndicatorsBelow(taskIndex: number) {
     return taskDrag.hovering?.type === "list" &&
-      taskDrag.hovering.location.previousSibling?.id === list[taskIndex]?.id
-      ? [{type: "dropIndicator" as const, indentation: taskDrag.hovering.location.indentation}]
+      taskDrag.hovering.target.location.previousSibling?.id === list[taskIndex]?.id &&
+      JSON.stringify(taskDrag.hovering.target.filter) === JSON.stringify(args.filter)
+      ? [{type: "dropIndicator" as const, indentation: taskDrag.hovering.target.location.indentation}]
       : [];
   }
 
@@ -305,7 +315,7 @@ function viewRows(args: {
 
     return locations.map((location) => ({
       type: "dropTarget",
-      location,
+      handle: {location, filter: args.filter},
       width: isRightmost(location) ? "full" : 1,
       indentation: location.indentation,
     }));
