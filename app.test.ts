@@ -839,7 +839,7 @@ describe("drag and drop with multiple sections shown", () => {
     const step2 = updateAll(step1, [...dragAndDropNth(1, 2, {side: "below", indentation: 1})]);
 
     describe("after dragging the first child below the second child", () => {
-      test.skip("[BUG] they have switched places", () => {
+      test("they have switched places", () => {
         expect(tasksInSection(step2, "Stalled", ["title", "indentation"])).toEqual([
           {title: "Project", indentation: 0},
           {title: "Task 2", indentation: 1},
