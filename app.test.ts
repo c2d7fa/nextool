@@ -899,15 +899,15 @@ describe("drag and drop with multiple sections shown", () => {
       });
     });
 
-    const step2 = updateAll(step1, [startDragNthTask(0), hoverNth(1, {side: "above", indentation: 0})]);
+    const step2 = updateAll(step1, [startDragNthTask(1), hoverNth(0, {side: "above", indentation: 0})]);
 
     describe("after hovering over first position in second list", () => {
-      test.skip("[BUG] there is exactly one drop indicator", () => {
+      test("there is exactly one drop indicator", () => {
         expect(
           view(step2)
             .taskList.flatMap((section) => section.rows)
             .filter((row) => row.type === "dropIndicator"),
-        ).toEqual([{type: "dropIndicator", side: "above", indentation: 0}]);
+        ).toHaveLength(1);
       });
     });
   });

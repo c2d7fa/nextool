@@ -16,7 +16,10 @@ type TaskData = {
 type Task = IndentedList.TreeNode<TaskData>;
 export type Tasks = IndentedList.Tree<TaskData>;
 
-export type DropTargetHandle = {location: IndentedList.IndentedListInsertLocation};
+export type DropTargetHandle = {
+  location: IndentedList.IndentedListInsertLocation;
+  filter: FilterId;
+};
 
 export type DropTargetView = {
   type: "dropTarget";
@@ -289,7 +292,8 @@ function viewRows(args: {
 
   function dropIndicatorsBelow(taskIndex: number) {
     return taskDrag.hovering?.type === "list" &&
-      taskDrag.hovering.target.location.previousSibling?.id === list[taskIndex]?.id
+      taskDrag.hovering.target.location.previousSibling?.id === list[taskIndex]?.id &&
+      JSON.stringify(taskDrag.hovering.target.filter) === JSON.stringify(args.filter)
       ? [{type: "dropIndicator" as const, indentation: taskDrag.hovering.target.location.indentation}]
       : [];
   }
@@ -307,7 +311,7 @@ function viewRows(args: {
 
     return locations.map((location) => ({
       type: "dropTarget",
-      handle: {location},
+      handle: {location, filter: args.filter},
       width: isRightmost(location) ? "full" : 1,
       indentation: location.indentation,
     }));
