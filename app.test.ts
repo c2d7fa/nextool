@@ -34,6 +34,22 @@ function dragAndDrop(drag: DragId, drop: DropId): Event[] {
   ];
 }
 
+function hoverNth(n: number, {side, indentation}: {side: "above" | "below"; indentation: number}) {
+  return (view: View) => {
+    const dropTarget = dropTargetsAfter_(view, side === "above" ? n - 1 : n).find(
+      (dropTarget) => dropTarget.indentation === indentation,
+    );
+    if (!dropTarget) throw "no such drop target";
+    return [
+      {
+        tag: "drag" as const,
+        type: "hover" as const,
+        target: {type: "list" as const, location: dropTarget.location},
+      },
+    ];
+  };
+}
+
 function dragToFilter(n: number, filter: FilterId) {
   return (view: View) => dragAndDrop({type: "task", id: nthTask(view, n).id}, {type: "filter", id: filter});
 }
@@ -855,6 +871,43 @@ describe("drag and drop with multiple sections shown", () => {
       test.skip("[TODO] the shown tasks are correct", () => {
         expect(tasksInSection(step2, "Ready", "title")).toEqual(["Task 0", "Task 1"]);
         expect(tasksInSection(step2, "Stalled", "title")).toEqual(["Task 2"]);
+      });
+    });
+  });
+
+  describe("drop indicator when dragging task into first position in section", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Task 0"),
+      ...addTask("Task 1"),
+      dragToFilter(0, "ready"),
+      ...switchToFilter({type: "section", section: "actions"}),
+    ]);
+
+    describe("initially", () => {
+      test("the tasks are in the correct sections", () => {
+        expect(tasksInSection(step1, "Ready", "title")).toEqual(["Task 0"]);
+        expect(tasksInSection(step1, "Stalled", "title")).toEqual(["Task 1"]);
+      });
+
+      test("there is no drop indicator anywhere", () => {
+        expect(
+          view(step1)
+            .taskList.flatMap((section) => section.rows)
+            .filter((row) => row.type === "dropIndicator"),
+        ).toEqual([]);
+      });
+    });
+
+    const step2 = updateAll(step1, [startDragNthTask(0), hoverNth(1, {side: "above", indentation: 0})]);
+
+    describe("after hovering over first position in second list", () => {
+      test.skip("[BUG] there is exactly one drop indicator", () => {
+        expect(
+          view(step2)
+            .taskList.flatMap((section) => section.rows)
+            .filter((row) => row.type === "dropIndicator"),
+        ).toEqual([{type: "dropIndicator", side: "above", indentation: 0}]);
       });
     });
   });
