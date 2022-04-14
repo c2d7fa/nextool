@@ -868,7 +868,7 @@ describe("drag and drop with multiple sections shown", () => {
     const step2 = updateAll(step1, [...dragAndDropNth(1, 0, {side: "below", indentation: 0})]);
 
     describe("the dragged task is moved to the new section", () => {
-      test.skip("[TODO] the shown tasks are correct", () => {
+      test("the shown tasks are correct", () => {
         expect(tasksInSection(step2, "Ready", "title")).toEqual(["Task 0", "Task 1"]);
         expect(tasksInSection(step2, "Stalled", "title")).toEqual(["Task 2"]);
       });

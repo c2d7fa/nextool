@@ -127,8 +127,12 @@ export function edit(
 
       return edit({tasks, filter}, id, update, archiveUpdate);
     } else if (operation.type === "move") {
+      const tasks_ = operation.target.filter
+        ? edit({tasks, filter}, id, {type: "moveToFilter", filter: operation.target.filter})
+        : tasks;
+
       return IndentedList.moveItemInSublistOfTree(
-        {tree: tasks, list: IndentedList.toList(filterTasks(tasks, operation.target.filter ?? filter))},
+        {tree: tasks_, list: IndentedList.toList(filterTasks(tasks, operation.target.filter ?? filter))},
         {id},
         operation.target.location,
       );
