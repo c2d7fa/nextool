@@ -107,7 +107,7 @@ $project-hue: shared.$project-hue;
     user-select: none;
   }
 
-  & > *:not(:last-child) .taskRow  {
+  .taskRow.borderBelow {
     border-bottom: 1px solid #c0c0c0;
   }
 

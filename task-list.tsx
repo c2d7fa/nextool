@@ -91,7 +91,12 @@ function TaskRow(props: {row: TaskListViewRow; send: Send}) {
       <>
         <Drag.Draggable id={{type: "task" as const, id: task.id}} send={props.send}>
           <div
-            className={[style.taskRow, task.project ? style.project : "", task.today ? style.today : ""].join(" ")}
+            className={[
+              style.taskRow,
+              task.project ? style.project : "",
+              task.today ? style.today : "",
+              task.borderBelow ? style.borderBelow : "",
+            ].join(" ")}
             onClick={() => props.send({tag: "selectEditingTask", id: task.id})}
           >
             <span className={style.indentationColumn} style={{width: `${2 * task.indentation}em`}} />

@@ -43,6 +43,7 @@ export type TaskView = {
   project: boolean;
   today: boolean;
   badges: BadgeId[];
+  borderBelow: boolean;
 };
 
 export type TaskListView = {
@@ -335,6 +336,7 @@ function viewRows(args: {
         badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
         project: task.type === "project",
         today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
+        borderBelow: index < list.length - 1,
       },
       ...dropTargetsBelow(index),
       ...dropIndicatorsBelow(index),
