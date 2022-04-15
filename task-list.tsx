@@ -121,13 +121,12 @@ function TaskListSection(props: {view: TaskListViewSection; send: Send}) {
     <>
       {props.view.title && <h1 className={style.listSection}>{props.view.title}</h1>}
       <div className={style.taskList}>
-        {props.view.rows.length === 0 ? (
+        {!props.view.rows.find((row) => row.type === "task") && (
           <div className={style.empty}>There are no tasks in this view.</div>
-        ) : (
-          props.view.rows.map((row, index) => (
-            <TaskRow key={row.type === "task" ? row.id : `drop:${index}`} row={row} send={props.send} />
-          ))
         )}
+        {props.view.rows.map((row, index) => (
+          <TaskRow key={row.type === "task" ? row.id : `drop:${index}`} row={row} send={props.send} />
+        ))}
       </div>
     </>
   );
