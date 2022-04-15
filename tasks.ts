@@ -158,52 +158,45 @@ function isArchived(tasks: Tasks, task: TaskData): boolean {
   return IndentedList.anyAncestor(tasks, task, (task) => task.archived);
 }
 
-function isStalled(tasks: Tasks, task: {id: string}): boolean {
-  const task_ = IndentedList.findNode(tasks, task);
-  if (task_ === null) return false;
-
-  return badges(tasks, task_).includes("stalled");
+function isToday(task: Task, today: Date) {
+  return (task.planned && isSameDay(task.planned, today)) ?? false;
 }
 
-function isToday(tasks: Tasks, task: Task, today: Date) {
-  return (task.planned && isSameDay(task.planned, today)) ?? false;
+function isInactive(tasks: Tasks, task: Task): boolean {
+  return isPaused(tasks, task) || isDone(task) || isArchived(tasks, task);
+}
+
+function isProject(task: Task): boolean {
+  return task.type === "project";
+}
+
+function isReady(tasks: Tasks, task: Task): boolean {
+  function hasReadyDescendants(task: Task): boolean {
+    return task.children.some((child) => isReady(tasks, child) || hasReadyDescendants(child));
+  }
+
+  return isProject(task)
+    ? hasReadyDescendants(task)
+    : task.action && !isInactive(tasks, task) && !task.children.some((child) => !isDone(child));
+}
+
+function isStalledAssumingNotReady(tasks: Tasks, task: Task): boolean {
+  return (
+    !isInactive(tasks, task) && (isProject(task) || !task.children.some((child) => !isInactive(tasks, child)))
+  );
 }
 
 export type BadgeId = "ready" | "stalled" | "project" | "today";
 
 function badges(tasks: Tasks, task: Task, args?: {today: Date}): BadgeId[] {
-  function isProject(task: Task): boolean {
-    return task.type === "project";
-  }
-
-  function isInactive(task: Task): boolean {
-    return isPaused(tasks, task) || isDone(task) || isArchived(tasks, task);
-  }
-
-  function isReady(task: Task): boolean {
-    const hasUnfinishedChildren = task.children.some((child) => !isDone(child));
-    return (
-      (!isInactive(task) && !isProject(task) && task.action && !hasUnfinishedChildren) ||
-      (isProject(task) && hasReadyDescendants(task))
-    );
-  }
-
-  function isStalledTask(task: Task): boolean {
-    const hasActiveChildren = task.children.some((child) => !isInactive(child));
-    return !isInactive(task) && !isReady(task) && !hasActiveChildren;
-  }
-
-  function hasReadyDescendants(task: Task): boolean {
-    return task.children.some((child) => isReady(child) || hasReadyDescendants(child));
-  }
-
-  const isStalled = isStalledTask(task) || (isProject(task) && !isInactive(task) && !hasReadyDescendants(task));
+  const ready = isReady(tasks, task);
+  const stalled = !ready && isStalledAssumingNotReady(tasks, task);
 
   return [
     isProject(task) && "project",
-    args?.today && isToday(tasks, task, args.today) && "today",
-    isStalled && "stalled",
-    isReady(task) && "ready",
+    args?.today && isToday(task, args.today) && "today",
+    stalled && "stalled",
+    ready && "ready",
   ].filter(Boolean) as BadgeId[];
 }
 
@@ -282,6 +275,10 @@ export function activeProjects(
     .filter((project) => project.status === "active" && !project.archived);
 }
 
+function isStalled(tasks: Tasks, task: Task): boolean {
+  return !isReady(tasks, task) && isStalledAssumingNotReady(tasks, task);
+}
+
 export function countStalledTasks(tasks: Tasks): number {
   return filterTasks(tasks, "stalled").length;
 }
@@ -338,7 +335,7 @@ function viewRows(args: {
           paused: isPaused(tasks, task),
           badges: badges(tasks, task, {today: args.today}),
           project: task.type === "project",
-          today: isToday(tasks, task, args.today),
+          today: isToday(task, args.today),
           borderBelow: index < list.length - 1,
         },
         ...dropTargetsBelow(index),
