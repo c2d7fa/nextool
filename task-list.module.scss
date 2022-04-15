@@ -85,6 +85,8 @@ $project-hue: shared.$project-hue;
 .taskList {
   font-family: "Roboto";
 
+  overflow: hidden;
+
   background-color: white;
 
   border: 1px solid #c8c8c8;
@@ -107,7 +109,7 @@ $project-hue: shared.$project-hue;
     user-select: none;
   }
 
-  & > *:not(:last-child) .taskRow  {
+  .taskRow.borderBelow {
     border-bottom: 1px solid #c0c0c0;
   }
 

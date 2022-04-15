@@ -91,7 +91,12 @@ function TaskRow(props: {row: TaskListViewRow; send: Send}) {
       <>
         <Drag.Draggable id={{type: "task" as const, id: task.id}} send={props.send}>
           <div
-            className={[style.taskRow, task.project ? style.project : "", task.today ? style.today : ""].join(" ")}
+            className={[
+              style.taskRow,
+              task.project ? style.project : "",
+              task.today ? style.today : "",
+              task.borderBelow ? style.borderBelow : "",
+            ].join(" ")}
             onClick={() => props.send({tag: "selectEditingTask", id: task.id})}
           >
             <span className={style.indentationColumn} style={{width: `${2 * task.indentation}em`}} />
@@ -116,13 +121,12 @@ function TaskListSection(props: {view: TaskListViewSection; send: Send}) {
     <>
       {props.view.title && <h1 className={style.listSection}>{props.view.title}</h1>}
       <div className={style.taskList}>
-        {props.view.rows.length === 0 ? (
+        {!props.view.rows.find((row) => row.type === "task") && (
           <div className={style.empty}>There are no tasks in this view.</div>
-        ) : (
-          props.view.rows.map((row, index) => (
-            <TaskRow key={row.type === "task" ? row.id : `drop:${index}`} row={row} send={props.send} />
-          ))
         )}
+        {props.view.rows.map((row, index) => (
+          <TaskRow key={row.type === "task" ? row.id : `drop:${index}`} row={row} send={props.send} />
+        ))}
       </div>
     </>
   );
