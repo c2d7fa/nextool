@@ -230,8 +230,7 @@ export function validInsertLocationsBelow<D>(
   const preceedingItemIndentation = preceedingItem?.indentation ?? -1;
 
   const followingItems = list.slice(targetIndex + 1);
-  const followingNonChildren = followingItems.filter((item) => !isDescendant(tree, item, source));
-  const followingNonChild = followingNonChildren[0];
+  const followingNonChild = followingItems.find((item) => !isDescendant(tree, item, source));
   const followingNonChildIndentation = followingNonChild?.indentation ?? 0;
 
   const isSource = targetItem.id === source.id;
