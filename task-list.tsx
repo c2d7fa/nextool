@@ -128,7 +128,7 @@ function TaskListSection(props: {view: TaskListViewSection; send: Send}) {
           <div className={style.empty}>There are no tasks in this view.</div>
         )}
         {props.view.rows.map((row, index) => (
-          <TaskRow key={row.type === "task" ? row.id : `drop:${index}`} row={row} send={props.send} />
+          <TaskRow key={JSON.stringify(row)} row={row} send={props.send} />
         ))}
       </div>
     </>
