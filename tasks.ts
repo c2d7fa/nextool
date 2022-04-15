@@ -235,9 +235,9 @@ function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
     else return false;
   }
 
-  if (filter === "ready") return badges(tasks, task).includes("ready");
+  if (filter === "ready") return isReady(tasks, task);
   else if (filter === "done") return isDone(task);
-  else if (filter === "stalled") return badges(tasks, task).includes("stalled");
+  else if (filter === "stalled") return isStalled(tasks, task);
   else if (filter === "not-done") return !isDone(task);
   else if (filter === "archive") return task.archived;
   else return true;
