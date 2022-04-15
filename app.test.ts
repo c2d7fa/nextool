@@ -2137,22 +2137,22 @@ describe("performance", () => {
   }
 
   test.skip("[TODO] the `view` function is not much worse than linear with respect to tasks shown", () => {
-    const e3 = exampleWithNTasks(500);
-    const d3 = measureSeconds(() => view(e3));
+    const e1 = exampleWithNTasks(500);
+    const t1 = measureSeconds(() => view(e1));
 
-    const e4 = exampleWithNTasks(1000);
-    const d4 = measureSeconds(() => view(e4));
+    const e2 = exampleWithNTasks(1000);
+    const t2 = measureSeconds(() => view(e2));
 
-    expect(d4 / d3).toBeLessThanOrEqual(2.2);
+    expect(t2 / t1).toBeLessThanOrEqual(2.2);
   });
 
   test.skip("[TODO] the `view` function is not much worse than constant with respect to archived tasks", () => {
-    const e3 = exampleWithNArchivedTasks(100);
-    const d3 = measureSeconds(() => view(e3));
+    const e1 = exampleWithNArchivedTasks(100);
+    const t1 = measureSeconds(() => view(e1));
 
-    const e4 = exampleWithNArchivedTasks(500);
-    const d4 = measureSeconds(() => view(e4));
+    const e2 = exampleWithNArchivedTasks(500);
+    const t2 = measureSeconds(() => view(e2));
 
-    expect(d4 / d3).toBeLessThanOrEqual(1.2);
+    expect(t2 / t1).toBeLessThanOrEqual(5.2);
   });
 });
