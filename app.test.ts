@@ -1,3 +1,4 @@
+import * as process from "process";
 import {updateApp, State, view as viewApp, Event, empty, DragId, DropId, View, effects, Effect} from "./app";
 import {DropTargetView, FilterId, TaskView} from "./tasks";
 
@@ -2110,5 +2111,48 @@ describe("planning", () => {
     test("clearing the date removes the today badge", () => {
       expect(tasks(step2, "badges")).toEqual([["stalled"]]);
     });
+  });
+});
+
+describe("performance", () => {
+  function measureSeconds(callback: () => void) {
+    const t1 = process.hrtime.bigint();
+    callback();
+    const t2 = process.hrtime.bigint();
+    return Number((t2 - t1) / BigInt(1e3)) / 1e6;
+  }
+
+  function exampleWithNTasks(n: number) {
+    return updateAll(
+      empty,
+      [...Array(n)].flatMap((_, i) => addTask(`Task ${i + 1}`)),
+    );
+  }
+
+  function exampleWithNArchivedTasks(n: number) {
+    return updateAll(
+      empty,
+      [...Array(n)].flatMap((_, i) => [...addTask(`Task ${i + 1}`), dragToFilter(0, "archive")]),
+    );
+  }
+
+  test.skip("[TODO] the `view` function is not much worse than linear with respect to tasks shown", () => {
+    const e1 = exampleWithNTasks(500);
+    const t1 = measureSeconds(() => view(e1));
+
+    const e2 = exampleWithNTasks(1000);
+    const t2 = measureSeconds(() => view(e2));
+
+    expect(t2 / t1).toBeLessThanOrEqual(2.2);
+  });
+
+  test.skip("[TODO] the `view` function is not much worse than constant with respect to archived tasks", () => {
+    const e1 = exampleWithNArchivedTasks(100);
+    const t1 = measureSeconds(() => view(e1));
+
+    const e2 = exampleWithNArchivedTasks(500);
+    const t2 = measureSeconds(() => view(e2));
+
+    expect(t2 / t1).toBeLessThanOrEqual(5.2);
   });
 });

@@ -1,9 +1,9 @@
 export type Handle = {id: string};
 
-export type TreeNode<D> = D & Handle & {id: string; children: TreeNode<D>[]};
+export type TreeNode<D> = D & Handle & {children: TreeNode<D>[]};
 export type Tree<D> = TreeNode<D>[];
 
-export type IndentedListItem<D> = D & Handle & {indentation: number};
+export type IndentedListItem<D> = TreeNode<D> & {indentation: number};
 export type IndentedList<D> = IndentedListItem<D>[];
 
 type TreeLocation = {parent: Handle | null; index: number};
@@ -230,8 +230,7 @@ export function validInsertLocationsBelow<D>(
   const preceedingItemIndentation = preceedingItem?.indentation ?? -1;
 
   const followingItems = list.slice(targetIndex + 1);
-  const followingNonChildren = followingItems.filter((item) => !isDescendant(tree, item, source));
-  const followingNonChild = followingNonChildren[0];
+  const followingNonChild = followingItems.find((item) => !isDescendant(tree, item, source));
   const followingNonChildIndentation = followingNonChild?.indentation ?? 0;
 
   const isSource = targetItem.id === source.id;

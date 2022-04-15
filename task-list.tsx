@@ -75,46 +75,49 @@ function DropTarget(props: {view: DropTargetView; send: Send}) {
   );
 }
 
-function TaskRow(props: {row: TaskListViewRow; send: Send}) {
-  if (props.row.type === "dropTarget") {
-    return <DropTarget view={props.row} send={props.send} />;
-  } else if (props.row.type === "dropIndicator") {
-    return (
-      <div className={style.dropContainer}>
-        <div className={style.dropIndicator} style={{left: `${2 * props.row.indentation}em`}} />
-      </div>
-    );
-  } else {
-    const task: TaskView = props.row;
+const TaskRow = React.memo(
+  function TaskRow(props: {row: TaskListViewRow; send: Send}) {
+    if (props.row.type === "dropTarget") {
+      return <DropTarget view={props.row} send={props.send} />;
+    } else if (props.row.type === "dropIndicator") {
+      return (
+        <div className={style.dropContainer}>
+          <div className={style.dropIndicator} style={{left: `${2 * props.row.indentation}em`}} />
+        </div>
+      );
+    } else {
+      const task: TaskView = props.row;
 
-    return (
-      <>
-        <Drag.Draggable id={{type: "task" as const, id: task.id}} send={props.send}>
-          <div
-            className={[
-              style.taskRow,
-              task.project ? style.project : "",
-              task.today ? style.today : "",
-              task.borderBelow ? style.borderBelow : "",
-            ].join(" ")}
-            onClick={() => props.send({tag: "selectEditingTask", id: task.id})}
-          >
-            <span className={style.indentationColumn} style={{width: `${2 * task.indentation}em`}} />
-            <span className={style.checkboxColumn}>
-              <CheckBox checked={task.done} id={task.id} send={props.send} />
-            </span>
-            <span className={style.titleColumn}>
-              <Title task={task} />
-            </span>
-            <span className={style.idColumn}>
-              <span className={style.id}>{task.id}</span>
-            </span>
-          </div>
-        </Drag.Draggable>
-      </>
-    );
-  }
-}
+      return (
+        <>
+          <Drag.Draggable id={{type: "task" as const, id: task.id}} send={props.send}>
+            <div
+              className={[
+                style.taskRow,
+                task.project ? style.project : "",
+                task.today ? style.today : "",
+                task.borderBelow ? style.borderBelow : "",
+              ].join(" ")}
+              onClick={() => props.send({tag: "selectEditingTask", id: task.id})}
+            >
+              <span className={style.indentationColumn} style={{width: `${2 * task.indentation}em`}} />
+              <span className={style.checkboxColumn}>
+                <CheckBox checked={task.done} id={task.id} send={props.send} />
+              </span>
+              <span className={style.titleColumn}>
+                <Title task={task} />
+              </span>
+              <span className={style.idColumn}>
+                <span className={style.id}>{task.id}</span>
+              </span>
+            </div>
+          </Drag.Draggable>
+        </>
+      );
+    }
+  },
+  (prev, next) => JSON.stringify(prev) === JSON.stringify(next),
+);
 
 function TaskListSection(props: {view: TaskListViewSection; send: Send}) {
   return (
@@ -125,7 +128,7 @@ function TaskListSection(props: {view: TaskListViewSection; send: Send}) {
           <div className={style.empty}>There are no tasks in this view.</div>
         )}
         {props.view.rows.map((row, index) => (
-          <TaskRow key={row.type === "task" ? row.id : `drop:${index}`} row={row} send={props.send} />
+          <TaskRow key={JSON.stringify(row)} row={row} send={props.send} />
         ))}
       </div>
     </>

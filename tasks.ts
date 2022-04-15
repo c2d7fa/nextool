@@ -158,52 +158,45 @@ function isArchived(tasks: Tasks, task: TaskData): boolean {
   return IndentedList.anyAncestor(tasks, task, (task) => task.archived);
 }
 
-function isStalled(tasks: Tasks, task: {id: string}): boolean {
-  const task_ = IndentedList.findNode(tasks, task);
-  if (task_ === null) return false;
-
-  return badges(tasks, task_).includes("stalled");
+function isToday(task: Task, today: Date) {
+  return (task.planned && isSameDay(task.planned, today)) ?? false;
 }
 
-function isToday(tasks: Tasks, task: Task, today: Date) {
-  return (task.planned && isSameDay(task.planned, today)) ?? false;
+function isInactive(tasks: Tasks, task: Task): boolean {
+  return isPaused(tasks, task) || isDone(task) || isArchived(tasks, task);
+}
+
+function isProject(task: Task): boolean {
+  return task.type === "project";
+}
+
+function isReady(tasks: Tasks, task: Task): boolean {
+  function hasReadyDescendants(task: Task): boolean {
+    return task.children.some((child) => isReady(tasks, child) || hasReadyDescendants(child));
+  }
+
+  return isProject(task)
+    ? hasReadyDescendants(task)
+    : task.action && !isInactive(tasks, task) && !task.children.some((child) => !isDone(child));
+}
+
+function isStalledAssumingNotReady(tasks: Tasks, task: Task): boolean {
+  return (
+    !isInactive(tasks, task) && (isProject(task) || !task.children.some((child) => !isInactive(tasks, child)))
+  );
 }
 
 export type BadgeId = "ready" | "stalled" | "project" | "today";
 
 function badges(tasks: Tasks, task: Task, args?: {today: Date}): BadgeId[] {
-  function isProject(task: Task): boolean {
-    return task.type === "project";
-  }
-
-  function isInactive(task: Task): boolean {
-    return isPaused(tasks, task) || isDone(task) || isArchived(tasks, task);
-  }
-
-  function isReady(task: Task): boolean {
-    const hasUnfinishedChildren = task.children.some((child) => !isDone(child));
-    return (
-      (!isInactive(task) && !isProject(task) && task.action && !hasUnfinishedChildren) ||
-      (isProject(task) && hasReadyDescendants(task))
-    );
-  }
-
-  function isStalledTask(task: Task): boolean {
-    const hasActiveChildren = task.children.some((child) => !isInactive(child));
-    return !isInactive(task) && !isReady(task) && !hasActiveChildren;
-  }
-
-  function hasReadyDescendants(task: Task): boolean {
-    return task.children.some((child) => isReady(child) || hasReadyDescendants(child));
-  }
-
-  const isStalled = isStalledTask(task) || (isProject(task) && !isInactive(task) && !hasReadyDescendants(task));
+  const ready = isReady(tasks, task);
+  const stalled = !ready && isStalledAssumingNotReady(tasks, task);
 
   return [
     isProject(task) && "project",
-    args?.today && isToday(tasks, task, args.today) && "today",
-    isStalled && "stalled",
-    isReady(task) && "ready",
+    args?.today && isToday(task, args.today) && "today",
+    stalled && "stalled",
+    ready && "ready",
   ].filter(Boolean) as BadgeId[];
 }
 
@@ -242,42 +235,47 @@ function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
     else return false;
   }
 
-  if (filter === "ready") return badges(tasks, task).includes("ready");
+  if (filter === "ready") return isReady(tasks, task);
   else if (filter === "done") return isDone(task);
-  else if (filter === "stalled") return badges(tasks, task).includes("stalled");
+  else if (filter === "stalled") return isStalled(tasks, task);
   else if (filter === "not-done") return !isDone(task);
   else if (filter === "archive") return task.archived;
   else return true;
 }
 
 function filterTasks(tasks: Tasks, filter: FilterId): Tasks {
-  function filterSubtasks_(subtasks: IndentedList.TreeNode<TaskData>[]): IndentedList.TreeNode<TaskData>[] {
+  function trim(subtasks: IndentedList.TreeNode<TaskData>[]): IndentedList.TreeNode<TaskData>[] {
     return subtasks.flatMap((subtask) => {
       if (!doesSubtaskMatch(tasks, subtask, filter)) return [];
-      else return [{...subtask, children: filterSubtasks_(subtask.children)}];
+      else return [{...subtask, children: trim(subtask.children)}];
     });
   }
 
-  function filter_(tasks_: IndentedList.TreeNode<TaskData>[]): IndentedList.TreeNode<TaskData>[] {
+  function search(tasks_: IndentedList.TreeNode<TaskData>[]): IndentedList.TreeNode<TaskData>[] {
     return tasks_.flatMap((task) => {
-      const matches = doesTaskMatch(tasks, task, filter);
-      if (matches) return [{...task, children: filterSubtasks_(task.children)}];
-      return filter_(task.children);
+      if (doesTaskMatch(tasks, task, filter)) return [{...task, children: trim(task.children)}];
+      return search(task.children);
     });
   }
 
-  return filter_(tasks);
+  return search(tasks);
 }
 
-export function activeProjects(tasks: Tasks): IndentedList.IndentedListItem<TaskData & {stalled: boolean}>[] {
+export function activeProjects(
+  tasks: Tasks,
+): Omit<IndentedList.IndentedListItem<TaskData & {stalled: boolean}>, "children">[] {
   return IndentedList.filterNodes(tasks, (node) => node.type === "project")
     .map((project) => ({
       ...project,
       indentation: 0,
       project: true,
-      stalled: isStalled(tasks, {id: project.id}),
+      stalled: isStalled(tasks, project),
     }))
     .filter((project) => project.status === "active" && !project.archived);
+}
+
+function isStalled(tasks: Tasks, task: Task): boolean {
+  return !isReady(tasks, task) && isStalledAssumingNotReady(tasks, task);
 }
 
 export function countStalledTasks(tasks: Tasks): number {
@@ -325,22 +323,24 @@ function viewRows(args: {
   return [
     ...dropIndicatorsBelow(-1),
     ...dropTargetsBelow(-1),
-    ...list.flatMap((task, index) => [
-      {
-        type: "task" as const,
-        id: task.id,
-        title: task.title,
-        indentation: task.indentation,
-        done: isDone(task),
-        paused: isPaused(tasks, IndentedList.findNode(tasks, task)!),
-        badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
-        project: task.type === "project",
-        today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
-        borderBelow: index < list.length - 1,
-      },
-      ...dropTargetsBelow(index),
-      ...dropIndicatorsBelow(index),
-    ]),
+    ...list.flatMap((task, index) => {
+      return [
+        {
+          type: "task" as const,
+          id: task.id,
+          title: task.title,
+          indentation: task.indentation,
+          done: isDone(task),
+          paused: isPaused(tasks, task),
+          badges: badges(tasks, task, {today: args.today}),
+          project: task.type === "project",
+          today: isToday(task, args.today),
+          borderBelow: index < list.length - 1,
+        },
+        ...dropTargetsBelow(index),
+        ...dropIndicatorsBelow(index),
+      ];
+    }),
   ];
 }
 
