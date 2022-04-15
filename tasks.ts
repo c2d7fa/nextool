@@ -244,22 +244,21 @@ function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
 }
 
 function filterTasks(tasks: Tasks, filter: FilterId): Tasks {
-  function filterSubtasks_(subtasks: IndentedList.TreeNode<TaskData>[]): IndentedList.TreeNode<TaskData>[] {
+  function trim(subtasks: IndentedList.TreeNode<TaskData>[]): IndentedList.TreeNode<TaskData>[] {
     return subtasks.flatMap((subtask) => {
       if (!doesSubtaskMatch(tasks, subtask, filter)) return [];
-      else return [{...subtask, children: filterSubtasks_(subtask.children)}];
+      else return [{...subtask, children: trim(subtask.children)}];
     });
   }
 
-  function filter_(tasks_: IndentedList.TreeNode<TaskData>[]): IndentedList.TreeNode<TaskData>[] {
+  function search(tasks_: IndentedList.TreeNode<TaskData>[]): IndentedList.TreeNode<TaskData>[] {
     return tasks_.flatMap((task) => {
-      const matches = doesTaskMatch(tasks, task, filter);
-      if (matches) return [{...task, children: filterSubtasks_(task.children)}];
-      return filter_(task.children);
+      if (doesTaskMatch(tasks, task, filter)) return [{...task, children: trim(task.children)}];
+      return search(task.children);
     });
   }
 
-  return filter_(tasks);
+  return search(tasks);
 }
 
 export function activeProjects(
