@@ -269,13 +269,15 @@ function filterTasks(tasks: Tasks, filter: FilterId): Tasks {
   return filter_(tasks);
 }
 
-export function activeProjects(tasks: Tasks): IndentedList.IndentedListItem<TaskData & {stalled: boolean}>[] {
+export function activeProjects(
+  tasks: Tasks,
+): Omit<IndentedList.IndentedListItem<TaskData & {stalled: boolean}>, "children">[] {
   return IndentedList.filterNodes(tasks, (node) => node.type === "project")
     .map((project) => ({
       ...project,
       indentation: 0,
       project: true,
-      stalled: isStalled(tasks, {id: project.id}),
+      stalled: isStalled(tasks, project),
     }))
     .filter((project) => project.status === "active" && !project.archived);
 }
@@ -325,22 +327,24 @@ function viewRows(args: {
   return [
     ...dropIndicatorsBelow(-1),
     ...dropTargetsBelow(-1),
-    ...list.flatMap((task, index) => [
-      {
-        type: "task" as const,
-        id: task.id,
-        title: task.title,
-        indentation: task.indentation,
-        done: isDone(task),
-        paused: isPaused(tasks, IndentedList.findNode(tasks, task)!),
-        badges: badges(tasks, IndentedList.findNode(tasks, task)!, {today: args.today}),
-        project: task.type === "project",
-        today: isToday(tasks, IndentedList.findNode(tasks, task)!, args.today),
-        borderBelow: index < list.length - 1,
-      },
-      ...dropTargetsBelow(index),
-      ...dropIndicatorsBelow(index),
-    ]),
+    ...list.flatMap((task, index) => {
+      return [
+        {
+          type: "task" as const,
+          id: task.id,
+          title: task.title,
+          indentation: task.indentation,
+          done: isDone(task),
+          paused: isPaused(tasks, task),
+          badges: badges(tasks, task, {today: args.today}),
+          project: task.type === "project",
+          today: isToday(tasks, task, args.today),
+          borderBelow: index < list.length - 1,
+        },
+        ...dropTargetsBelow(index),
+        ...dropIndicatorsBelow(index),
+      ];
+    }),
   ];
 }
 

@@ -1,9 +1,9 @@
 export type Handle = {id: string};
 
-export type TreeNode<D> = D & Handle & {id: string; children: TreeNode<D>[]};
+export type TreeNode<D> = D & Handle & {children: TreeNode<D>[]};
 export type Tree<D> = TreeNode<D>[];
 
-export type IndentedListItem<D> = D & Handle & {indentation: number};
+export type IndentedListItem<D> = TreeNode<D> & {indentation: number};
 export type IndentedList<D> = IndentedListItem<D>[];
 
 type TreeLocation = {parent: Handle | null; index: number};
