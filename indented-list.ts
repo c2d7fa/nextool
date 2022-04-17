@@ -306,10 +306,8 @@ export function validInsertLocationsBelow<D>(
 }
 
 export function isDescendant<D>(tree: Tree<D>, query: Handle, ancestor: Handle): boolean {
-  const ancestorNode = findNode(tree, ancestor);
-  if (!ancestorNode) return false;
-  if (ancestorNode.children.find((child) => child.id === query.id)) return true;
-  return ancestorNode.children.some((child) => isDescendant(tree, query, child));
+  const ancestorChildren = tree.children[ancestor.id] ?? [];
+  return ancestorChildren.some((child) => child.id === query.id || isDescendant(tree, query, child));
 }
 
 export function anyAncestor<D>(tree: Tree<D>, query: Handle, predicate: (ancestor: D) => boolean): boolean {
