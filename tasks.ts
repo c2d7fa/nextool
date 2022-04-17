@@ -220,8 +220,7 @@ function taskProject(tasks: Tasks, task: Task): null | {id: string} {
 
 function doesSubtaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
   if (filter === "stalled") return IndentedList.anyDescendant(tasks, task, (subtask) => isStalled(tasks, subtask));
-  if (filter === "ready")
-    return IndentedList.anyDescendant(tasks, task, (subtask) => badges(tasks, subtask).includes("ready"));
+  if (filter === "ready") return IndentedList.anyDescendant(tasks, task, (subtask) => isReady(tasks, subtask));
   if (isArchived(tasks, task) && filter !== "archive") return false;
   return true;
 }
