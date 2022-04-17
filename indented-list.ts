@@ -22,10 +22,10 @@ function registerNode<D>(tree: Tree<D>, node: TreeNode<D>, {parent}: {parent: Ha
   function register_(tree: Tree<D>, node: TreeNode<D>, {parent}: {parent: Handle | null}): Tree<D> {
     let result = {...tree, data: {...tree.data, [node.id]: {...node}}};
     result = {...result, parents: {...tree.parents, [node.id]: parent}};
+    result = {...result, children: {...tree.children, [node.id]: node.children.map((x) => ({id: x.id}))}};
     for (const child of node.children) {
       result = register_(result, child, {parent: {id: node.id}});
     }
-    result = {...result, children: {...tree.children, [node.id]: node.children.map((x) => ({id: x.id}))}};
     return result;
   }
   return register_(tree, node, {parent});
