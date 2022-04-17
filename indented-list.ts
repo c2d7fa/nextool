@@ -313,15 +313,11 @@ export function isDescendant<D>(tree: Tree<D>, query: Handle, ancestor: Handle):
   return ancestorNode.children.some((child) => isDescendant(tree, query, child));
 }
 
-export function anyAncestor<D>(
-  tree: Tree<D>,
-  query: Handle,
-  predicate: (ancestor: TreeNode<D>) => boolean,
-): boolean {
-  const node = findNode(tree, query);
+export function anyAncestor<D>(tree: Tree<D>, query: Handle, predicate: (ancestor: D) => boolean): boolean {
+  const node = tree.data[query.id];
   if (!node) return false;
   if (predicate(node)) return true;
-  const parent = findParent(tree, query);
+  const parent = tree.parents[query.id];
   if (!parent) return false;
   return anyAncestor(tree, parent, predicate);
 }
