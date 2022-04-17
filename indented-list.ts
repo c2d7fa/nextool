@@ -1,7 +1,12 @@
 export type Handle = {id: string};
 
 export type TreeNode<D> = D & Handle & {children: TreeNode<D>[]};
-export type Tree<D> = {roots: Handle[]; data: {[id: string]: D}; children: {[id: string]: Handle[]}};
+export type Tree<D> = {
+  roots: Handle[];
+  data: {[id: string]: D};
+  children: {[id: string]: Handle[]};
+  parents: {[id: string]: Handle | null};
+};
 
 export type IndentedListItem<D> = TreeNode<D> & {indentation: number};
 export type IndentedList<D> = IndentedListItem<D>[];
@@ -10,23 +15,24 @@ type TreeLocation = {parent: Handle | null; index: number};
 export type IndentedListInsertLocation = {previousSibling: Handle | null; indentation: number};
 
 export function empty<D>(): Tree<D> {
-  return {roots: [], data: {}, children: {}};
+  return {roots: [], data: {}, children: {}, parents: {}};
 }
 
-function registerNode<D>(tree: Tree<D>, node: TreeNode<D>): Tree<D> {
-  function register_(tree: Tree<D>, node: TreeNode<D>): Tree<D> {
+function registerNode<D>(tree: Tree<D>, node: TreeNode<D>, {parent}: {parent: Handle | null}): Tree<D> {
+  function register_(tree: Tree<D>, node: TreeNode<D>, {parent}: {parent: Handle | null}): Tree<D> {
     let result = {...tree, data: {...tree.data, [node.id]: {...node}}};
+    result = {...result, parents: {...tree.parents, [node.id]: parent}};
     for (const child of node.children) {
-      result = register_(result, child);
+      result = register_(result, child, {parent: {id: node.id}});
     }
     result = {...result, children: {...tree.children, [node.id]: node.children.map((x) => ({id: x.id}))}};
     return result;
   }
-  return register_(tree, node);
+  return register_(tree, node, {parent});
 }
 
 export function insert<D>(tree: Tree<D>, node: TreeNode<D>): Tree<D> {
-  let result = registerNode(tree, node);
+  let result = registerNode(tree, node, {parent: null});
   return {...result, roots: [...result.roots, {id: node.id}]};
 }
 
@@ -98,7 +104,7 @@ export function findNode<D>(tree: Tree<D>, query: Handle): TreeNode<D> | null {
 
 export function updateNode<D>(tree: Tree<D>, query: Handle, update: (x: TreeNode<D>) => TreeNode<D>): Tree<D> {
   // [TODO] Deregister old children
-  return registerNode(tree, update(findNode(tree, query)!));
+  return registerNode(tree, update(findNode(tree, query)!), {parent: tree.parents[query.id] ?? null});
 }
 
 export function roots<D>(tree: Tree<D>): TreeNode<D>[] {
@@ -115,7 +121,7 @@ function updateChildren<D>(
     let result = tree;
     const newRoots = update(roots(tree));
     for (const root of newRoots) {
-      result = registerNode(result, root);
+      result = registerNode(result, root, {parent: null});
     }
     return {...result, roots: newRoots.map((x) => ({id: x.id}))};
   } else {
@@ -137,8 +143,9 @@ function findNodeLocation<D>(tree: Tree<D>, query: Handle): TreeLocation | null 
 }
 
 export function findParent<D>(tree: Tree<D>, query: Handle): TreeNode<D> | null {
-  const parent = findNodeLocation(tree, query)?.parent ?? null;
-  return parent === null ? null : findNode(tree, parent);
+  const parent = tree.parents[query.id];
+  if (!parent) return null;
+  return findNode(tree, parent);
 }
 
 function listInsertLocationToTreeLocation<D>(
