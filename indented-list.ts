@@ -1,13 +1,21 @@
 export type Handle = {id: string};
 
 export type TreeNode<D> = D & Handle & {children: TreeNode<D>[]};
-export type Tree<D> = TreeNode<D>[];
+export type Tree<D> = {nodes: TreeNode<D>[]};
 
 export type IndentedListItem<D> = TreeNode<D> & {indentation: number};
 export type IndentedList<D> = IndentedListItem<D>[];
 
 type TreeLocation = {parent: Handle | null; index: number};
 export type IndentedListInsertLocation = {previousSibling: Handle | null; indentation: number};
+
+export function empty<D>(): Tree<D> {
+  return {nodes: []};
+}
+
+export function insert<D>(tree: Tree<D>, node: TreeNode<D>): Tree<D> {
+  return {...tree, nodes: [...tree.nodes, {...node}]};
+}
 
 function range(start: number, end: number): number[] {
   return Array.from(Array(end - start + 1), (_, i) => i + start);
@@ -31,13 +39,34 @@ function reposition<T>(list: T[], sourceIndex: number, targetIndex: number): T[]
   });
 }
 
+export function searchAndTrim<D>(
+  tree: Tree<D>,
+  {pick, include}: {pick: (node: TreeNode<D>) => boolean; include: (node: TreeNode<D>) => boolean},
+): TreeNode<D>[] {
+  function trim(nodes: TreeNode<D>[]): TreeNode<D>[] {
+    return nodes.flatMap((node) => {
+      if (!include(node)) return [];
+      else return [{...node, children: trim(node.children)}];
+    });
+  }
+
+  function search(nodes: TreeNode<D>[]): TreeNode<D>[] {
+    return nodes.flatMap((node) => {
+      if (pick(node)) return [{...node, children: trim(node.children)}];
+      else return search(node.children);
+    });
+  }
+
+  return search(tree.nodes);
+}
+
 export function filterNodes<D>(tree: Tree<D>, pred: (node: TreeNode<D>) => boolean): TreeNode<D>[] {
   let result: TreeNode<D>[] = [];
   function filter(node: TreeNode<D>): void {
     if (pred(node)) result.push(node);
     node.children.forEach(filter);
   }
-  tree.forEach(filter);
+  tree.nodes.forEach(filter);
   return result;
 }
 
@@ -50,7 +79,7 @@ export function findNode<D>(tree: Tree<D>, query: Handle): TreeNode<D> | null {
     }
     return null;
   }
-  for (const node of tree) {
+  for (const node of tree.nodes) {
     const result = find(node);
     if (result) return result;
   }
@@ -58,12 +87,11 @@ export function findNode<D>(tree: Tree<D>, query: Handle): TreeNode<D> | null {
 }
 
 export function updateNode<D>(tree: Tree<D>, query: Handle, update: (x: TreeNode<D>) => TreeNode<D>): Tree<D> {
-  return tree.map((node) => {
-    if (node.id === query.id) {
-      return {...node, ...update(node)};
-    }
-    return {...node, children: updateNode(node.children, query, update)};
-  });
+  function update_(node: TreeNode<D>): TreeNode<D> {
+    if (node.id === query.id) return update(node);
+    return {...node, children: node.children.map(update_)};
+  }
+  return {...tree, nodes: tree.nodes.map(update_)};
 }
 
 function updateChildren<D>(
@@ -71,20 +99,24 @@ function updateChildren<D>(
   parent: Handle | null,
   update: (x: TreeNode<D>[]) => TreeNode<D>[],
 ): Tree<D> {
-  if (parent === null) return update(tree);
-  return updateNode(tree, parent, (node) => ({...node, children: updateChildren(node.children, null, update)}));
+  if (parent === null) return {...tree, nodes: update(tree.nodes)};
+  else return updateNode(tree, parent, (node) => ({...node, children: update(node.children)}));
 }
 
 function findNodeLocation<D>(tree: Tree<D>, query: Handle): TreeLocation | null {
-  const index = tree.findIndex((node) => node.id === query.id);
-  if (index !== -1) return {parent: null, index};
+  function findLocation_(nodes: TreeNode<D>[], parent: Handle | null): TreeLocation | null {
+    const index = nodes.findIndex((node) => node.id === query.id);
+    if (index !== -1) return {parent: null, index};
 
-  for (const parent of tree) {
-    const location = findNodeLocation(parent.children, query);
-    if (location) return {parent: location.parent ?? parent, index: location.index};
+    for (const parent of nodes) {
+      const location = findLocation_(parent.children, query);
+      if (location) return {parent: location.parent ?? parent, index: location.index};
+    }
+
+    return null;
   }
 
-  return null;
+  return findLocation_(tree.nodes, null);
 }
 
 export function findParent<D>(tree: Tree<D>, query: Handle): TreeNode<D> | null {
@@ -98,7 +130,7 @@ function listInsertLocationToTreeLocation<D>(
 ): TreeLocation | null {
   if (location.previousSibling === null) return {parent: null, index: 0};
 
-  const list = toList(tree);
+  const list = toList(tree.nodes);
 
   const reversedList = list.reverse();
   const listAbove = reversedList.slice(reversedList.findIndex((x) => x.id === location.previousSibling!.id));
@@ -113,7 +145,7 @@ function listInsertLocationToTreeLocation<D>(
       list.find((item) => findNode(tree, item)?.children.find((child) => child.id === previousSibling.id)) ?? null;
 
     const previousSiblingIndex = (
-      (previousSiblingParent && findNode(tree, previousSiblingParent))?.children ?? tree
+      (previousSiblingParent && findNode(tree, previousSiblingParent))?.children ?? tree.nodes
     ).findIndex((child) => child.id === previousSibling.id);
 
     return {parent: previousSiblingParent, index: previousSiblingIndex + 1};
@@ -128,7 +160,8 @@ function moveNodeInTree<D>(tree: Tree<D>, from: TreeLocation, to: TreeLocation):
     return updateChildren(tree, from.parent ?? null, (children) => reposition(children, from.index, to.index));
   }
 
-  const fromNode = from.parent === null ? tree[from.index] : findNode(tree, from.parent)!.children[from.index];
+  const fromNode =
+    from.parent === null ? tree.nodes[from.index] : findNode(tree, from.parent)!.children[from.index];
   if (!fromNode) throw "error";
 
   const removed = updateChildren(tree, from.parent ?? null, (children) =>
@@ -145,13 +178,13 @@ function moveNodeInTree<D>(tree: Tree<D>, from: TreeLocation, to: TreeLocation):
 }
 
 export function moveInto<D>(tree: Tree<D>, node: Handle, parent: Handle): Tree<D> {
-  const from = {parent: null, index: tree.findIndex((x) => x.id === node.id)};
+  const from = {parent: null, index: tree.nodes.findIndex((x) => x.id === node.id)};
   const to = {parent, index: findNode(tree, parent)?.children.length ?? 0};
   return moveNodeInTree(tree, from, to);
 }
 
 function indexInList<D>(tree: Tree<D>, query: Handle): number {
-  const list = toList(tree);
+  const list = toList(tree.nodes);
   return list.findIndex((x) => x.id === query.id);
 }
 
@@ -159,7 +192,7 @@ export function moveItemInTree<D>(tree: Tree<D>, source: Handle, location: Inden
   if (source.id === location.previousSibling?.id) {
     return moveItemInTree(tree, source, {
       ...location,
-      previousSibling: toList(tree)[indexInList(tree, source) - 1] ?? null,
+      previousSibling: toList(tree.nodes)[indexInList(tree, source) - 1] ?? null,
     });
   }
 
@@ -179,7 +212,8 @@ export function moveItemInSublistOfTree<D>(
 ): Tree<D> {
   if (location.previousSibling === null) return moveItemInTree(tree, source, {...location, indentation: 0});
 
-  const realIndentation = toList(tree).find((item) => item.id === location.previousSibling?.id)?.indentation ?? 0;
+  const realIndentation =
+    toList(tree.nodes).find((item) => item.id === location.previousSibling?.id)?.indentation ?? 0;
   const sublistIndentation = list.find((item) => item.id === location.previousSibling?.id)?.indentation ?? 0;
   const indentation = realIndentation - sublistIndentation + location.indentation;
 
@@ -190,7 +224,7 @@ export function merge<D>(tree: Tree<D>, patches: (Handle & Partial<D>)[]): Tree<
   return patches.reduce((result, patch) => updateNode(result, patch, (node) => ({...node, ...patch})), tree);
 }
 
-export function toList<D>(roots: Tree<D>, indentation?: number): IndentedList<D> {
+export function toList<D>(roots: TreeNode<D>[], indentation?: number): IndentedList<D> {
   return roots.reduce(
     (result, node) => [
       ...result,

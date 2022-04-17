@@ -1,5 +1,6 @@
 import * as Tasks from "./tasks";
 import * as App from "./app";
+import * as IndentedList from "./indented-list";
 
 export type Event =
   | {tag: "storage"; type: "clickSaveButton"}
@@ -25,7 +26,7 @@ function has<Type extends keyof TypeNames, K extends string>(
 }
 
 function convertTasks(data: unknown): Tasks.Tasks | null {
-  function convertTask(data: unknown): Tasks.Tasks[number] | null {
+  function convertTask(data: unknown): Tasks.Task | null {
     if (typeof data !== "object" || data === null) return null;
     if (!has(data, "id", "string")) return null;
     if (!has(data, "title", "string")) return null;
@@ -33,7 +34,7 @@ function convertTasks(data: unknown): Tasks.Tasks | null {
     const children = (() => {
       if (!has(data, "children", "object")) return [];
       if (!(data.children instanceof Array)) return null;
-      let result: Tasks.Tasks[number][] = [];
+      let result: Tasks.Task[] = [];
       for (const child of data.children) {
         const converted = convertTask(child);
         if (converted === null) return null;
@@ -94,12 +95,12 @@ function convertTasks(data: unknown): Tasks.Tasks | null {
 
   if (typeof data !== "object" || !(data instanceof Array)) return null;
 
-  let tasks: Tasks.Tasks = [];
+  let tasks: Tasks.Tasks = IndentedList.empty();
 
   for (const taskData of data) {
     const task = convertTask(taskData);
     if (task === null) return null;
-    tasks.push(task);
+    tasks = IndentedList.insert(tasks, task);
   }
 
   return tasks;
@@ -118,7 +119,7 @@ export function loadString(data: string | null): App.State {
 }
 
 export function saveString(tasks: Tasks.Tasks): string {
-  return JSON.stringify(tasks);
+  return JSON.stringify(tasks.nodes);
 }
 
 export function loadState(): App.State {

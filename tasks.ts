@@ -13,7 +13,7 @@ type TaskData = {
   planned: Date | null;
 };
 
-type Task = IndentedList.TreeNode<TaskData>;
+export type Task = IndentedList.TreeNode<TaskData>;
 export type Tasks = IndentedList.Tree<TaskData>;
 
 export type DropTargetHandle = {
@@ -51,6 +51,8 @@ export type TaskListView = {
   rows: (DropTargetView | DropIndicatorView | TaskView)[];
 }[];
 
+export const empty: Tasks = IndentedList.empty<TaskData>();
+
 export function merge(tasks: Tasks, updates: ({id: string} & Partial<Task>)[]): Tasks {
   return IndentedList.merge(tasks, updates);
 }
@@ -62,19 +64,16 @@ export function add({tasks, filter}: {tasks: Tasks; filter: FilterId}, values: P
 
   const id = randomId();
 
-  const result: Tasks = [
-    ...tasks,
-    {
-      id,
-      title: values.title ?? "",
-      action: false,
-      status: "active",
-      type: "task",
-      archived: false,
-      children: [],
-      planned: null,
-    },
-  ];
+  const result: Tasks = IndentedList.insert(tasks, {
+    id,
+    title: values.title ?? "",
+    action: false,
+    status: "active",
+    type: "task",
+    archived: false,
+    children: [],
+    planned: null,
+  });
 
   return edit({tasks: result, filter}, id, {type: "moveToFilter", filter});
 }
@@ -243,22 +242,11 @@ function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
   else return true;
 }
 
-function filterTasks(tasks: Tasks, filter: FilterId): Tasks {
-  function trim(subtasks: IndentedList.TreeNode<TaskData>[]): IndentedList.TreeNode<TaskData>[] {
-    return subtasks.flatMap((subtask) => {
-      if (!doesSubtaskMatch(tasks, subtask, filter)) return [];
-      else return [{...subtask, children: trim(subtask.children)}];
-    });
-  }
-
-  function search(tasks_: IndentedList.TreeNode<TaskData>[]): IndentedList.TreeNode<TaskData>[] {
-    return tasks_.flatMap((task) => {
-      if (doesTaskMatch(tasks, task, filter)) return [{...task, children: trim(task.children)}];
-      return search(task.children);
-    });
-  }
-
-  return search(tasks);
+function filterTasks(tasks: Tasks, filter: FilterId): IndentedList.TreeNode<TaskData>[] {
+  return IndentedList.searchAndTrim(tasks, {
+    pick: (task) => doesTaskMatch(tasks, task, filter),
+    include: (task) => doesSubtaskMatch(tasks, task, filter),
+  });
 }
 
 export function activeProjects(
