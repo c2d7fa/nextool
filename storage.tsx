@@ -119,7 +119,7 @@ export function loadString(data: string | null): App.State {
 }
 
 export function saveString(tasks: Tasks.Tasks): string {
-  return JSON.stringify(tasks.nodes);
+  return JSON.stringify(IndentedList.roots(tasks));
 }
 
 export function loadState(): App.State {
