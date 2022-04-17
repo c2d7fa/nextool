@@ -2038,6 +2038,33 @@ describe("saving and loading files", () => {
       expect(view(step4)).toEqual(view(step1));
     });
   });
+
+  describe("loading file with three levels of children", () => {
+    const step1 = updateAll(empty, [{tag: "storage", type: "clickLoadButton"}]);
+    const step1e = effects(empty, {tag: "storage", type: "clickLoadButton"});
+
+    test("clicking load button triggers a file upload effect", () => {
+      expect(step1e).toEqual([{type: "fileUpload"}]);
+    });
+
+    const step2 = updateAll(step1, [
+      {
+        tag: "storage",
+        type: "loadFile",
+        name: "tasks.json",
+        contents: `[{"id":"0","title":"Task 1","status":"active","action":false,"children":[{"id":"1","title":"Task 2","status":"done","action":true,"children":[{"id":"2","title":"Task 3","status":"done","action":true}]}]}]`,
+      },
+      ...switchToFilter("all"),
+    ]);
+
+    test("the correct tasks are shown", () => {
+      expect(tasks(step2, ["title", "indentation"])).toEqual([
+        {title: "Task 1", indentation: 0},
+        {title: "Task 2", indentation: 1},
+        {title: "Task 3", indentation: 2},
+      ]);
+    });
+  });
 });
 
 describe("planning", () => {
@@ -2136,23 +2163,23 @@ describe("performance", () => {
     );
   }
 
-  test.skip("[TODO] the `view` function is not much worse than linear with respect to tasks shown", () => {
-    const e1 = exampleWithNTasks(500);
+  test("the `view` function is not much worse than linear with respect to tasks shown", () => {
+    const e1 = exampleWithNTasks(100);
     const t1 = measureSeconds(() => view(e1));
 
-    const e2 = exampleWithNTasks(1000);
+    const e2 = exampleWithNTasks(500);
     const t2 = measureSeconds(() => view(e2));
 
-    expect(t2 / t1).toBeLessThanOrEqual(2.2);
+    expect(t2 / t1).toBeLessThan(5.5);
   });
 
-  test.skip("[TODO] the `view` function is not much worse than constant with respect to archived tasks", () => {
+  test("the `view` function is not much worse than constant with respect to archived tasks", () => {
     const e1 = exampleWithNArchivedTasks(100);
     const t1 = measureSeconds(() => view(e1));
 
     const e2 = exampleWithNArchivedTasks(500);
     const t2 = measureSeconds(() => view(e2));
 
-    expect(t2 / t1).toBeLessThanOrEqual(5.2);
+    expect(t2 / t1).toBeLessThan(5.5);
   });
 });

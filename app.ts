@@ -41,7 +41,7 @@ export type State = {
 };
 
 export const empty: State = {
-  tasks: [],
+  tasks: Tasks.empty,
   textFields: {addTitle: ""},
   editor: TaskEditor.empty,
   filter: "ready",
