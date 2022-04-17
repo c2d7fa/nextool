@@ -202,8 +202,9 @@ function moveNodeInTree<D>(tree: Tree<D>, from: TreeLocation, to: TreeLocation):
 }
 
 export function moveInto<D>(tree: Tree<D>, node: Handle, parent: Handle): Tree<D> {
-  const from = {parent: null, index: roots(tree).findIndex((x) => x.id === node.id)};
-  const to = {parent, index: findNode(tree, parent)?.children.length ?? 0};
+  const from = findNodeLocation(tree, node);
+  const to = {parent, index: tree.children[parent.id]?.length ?? 0};
+  if (!from) throw {error: "Unable to move node, because it does not exist."};
   return moveNodeInTree(tree, from, to);
 }
 

@@ -92,6 +92,14 @@ function switchToFilter(filter: FilterId): Event[] {
   return [{tag: "selectFilter", filter}];
 }
 
+function switchToFilterCalled(label: string) {
+  return (view: View) => {
+    const filter = view.sideBar.flatMap((section) => section.filters).find((row) => row.label === label);
+    if (!filter) throw "no such filter";
+    return switchToFilter(filter.filter);
+  };
+}
+
 function openNth(n: number) {
   return (view: View) => [{tag: "selectEditingTask", id: nthTask(view, n).id} as const];
 }
@@ -736,6 +744,40 @@ describe("nesting tasks with drag and drop", () => {
       test("the task is now indented under the parent", () => {
         expect(tasks(step2, ["title", "indentation"])).toEqual([
           {title: "Task 0", indentation: 0},
+          {title: "Task 2", indentation: 1},
+        ]);
+      });
+    });
+  });
+
+  describe("inside a project filter", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Project"),
+      ...addTask("Task 1"),
+      ...addTask("Task 2"),
+      openNth(0),
+      setComponentValue("Type", "project"),
+      ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+      ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
+      switchToFilterCalled("Project"),
+    ]);
+
+    describe("initially", () => {
+      test("the tasks are indented correctly", () => {
+        expect(tasks(step1, ["title", "indentation"])).toEqual([
+          {title: "Task 1", indentation: 0},
+          {title: "Task 2", indentation: 0},
+        ]);
+      });
+    });
+
+    const step2 = updateAll(step1, [...dragAndDropNth(1, 0, {side: "below", indentation: 1})]);
+
+    describe("after dragging second task into first task", () => {
+      test("the indentation is updated", () => {
+        expect(tasks(step2, ["title", "indentation"])).toEqual([
+          {title: "Task 1", indentation: 0},
           {title: "Task 2", indentation: 1},
         ]);
       });
@@ -2164,22 +2206,22 @@ describe("performance", () => {
   }
 
   test("the `view` function is not much worse than linear with respect to tasks shown", () => {
-    const e1 = exampleWithNTasks(100);
+    const e1 = exampleWithNTasks(500);
     const t1 = measureSeconds(() => view(e1));
 
-    const e2 = exampleWithNTasks(500);
+    const e2 = exampleWithNTasks(1000);
     const t2 = measureSeconds(() => view(e2));
 
-    expect(t2 / t1).toBeLessThan(5.5);
+    expect(t2 / t1).toBeLessThan(2.3);
   });
 
   test("the `view` function is not much worse than constant with respect to archived tasks", () => {
-    const e1 = exampleWithNArchivedTasks(100);
+    const e1 = exampleWithNArchivedTasks(500);
     const t1 = measureSeconds(() => view(e1));
 
-    const e2 = exampleWithNArchivedTasks(500);
+    const e2 = exampleWithNArchivedTasks(1000);
     const t2 = measureSeconds(() => view(e2));
 
-    expect(t2 / t1).toBeLessThan(5.5);
+    expect(t2 / t1).toBeLessThan(2.3);
   });
 });
