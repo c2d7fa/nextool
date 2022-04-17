@@ -131,7 +131,7 @@ function execute(effects: App.Effect[], send: App.Send) {
 }
 
 function Main() {
-  const [app, setApp] = React.useState<App.State>(loadState());
+  const [app, setApp] = React.useState<App.State>(() => loadState());
 
   const view = App.view(app, {today: new Date()});
 
