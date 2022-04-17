@@ -71,27 +71,25 @@ export function filterNodes<D>(tree: Tree<D>, pred: (node: TreeNode<D>) => boole
 }
 
 export function findNode<D>(tree: Tree<D>, query: Handle): TreeNode<D> | null {
-  function find(node: TreeNode<D>): TreeNode<D> | null {
-    if (node.id === query.id) return node;
-    for (const child of node.children) {
-      const result = find(child);
+  function find(nodes: TreeNode<D>[]): TreeNode<D> | null {
+    for (const node of nodes) {
+      if (node.id === query.id) return node;
+      const result = find(node.children);
       if (result) return result;
     }
     return null;
   }
-  for (const node of tree.nodes) {
-    const result = find(node);
-    if (result) return result;
-  }
-  return null;
+  return find(tree.nodes);
 }
 
 export function updateNode<D>(tree: Tree<D>, query: Handle, update: (x: TreeNode<D>) => TreeNode<D>): Tree<D> {
-  function update_(node: TreeNode<D>): TreeNode<D> {
-    if (node.id === query.id) return update(node);
-    return {...node, children: node.children.map(update_)};
+  function update_(nodes: TreeNode<D>[]): TreeNode<D>[] {
+    return nodes.map((node) => {
+      if (node.id === query.id) return update(node);
+      return {...node, children: update_(node.children)};
+    });
   }
-  return {...tree, nodes: tree.nodes.map(update_)};
+  return {...tree, nodes: update_(tree.nodes)};
 }
 
 function updateChildren<D>(
@@ -105,14 +103,11 @@ function updateChildren<D>(
 
 function findNodeLocation<D>(tree: Tree<D>, query: Handle): TreeLocation | null {
   function findLocation_(nodes: TreeNode<D>[], parent: Handle | null): TreeLocation | null {
-    const index = nodes.findIndex((node) => node.id === query.id);
-    if (index !== -1) return {parent: null, index};
-
-    for (const parent of nodes) {
-      const location = findLocation_(parent.children, query);
-      if (location) return {parent: location.parent ?? parent, index: location.index};
+    for (const [index, node] of nodes.entries()) {
+      if (node.id === query.id) return {parent, index};
+      const result = findLocation_(node.children, node);
+      if (result) return result;
     }
-
     return null;
   }
 
