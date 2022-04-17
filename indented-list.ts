@@ -1,7 +1,7 @@
 export type Handle = {id: string};
 
 export type TreeNode<D> = D & Handle & {children: TreeNode<D>[]};
-export type Tree<D> = {roots: Handle[]; data: {[id: string]: D & {children: Handle[]}}};
+export type Tree<D> = {roots: Handle[]; data: {[id: string]: D}; children: {[id: string]: Handle[]}};
 
 export type IndentedListItem<D> = TreeNode<D> & {indentation: number};
 export type IndentedList<D> = IndentedListItem<D>[];
@@ -10,7 +10,7 @@ type TreeLocation = {parent: Handle | null; index: number};
 export type IndentedListInsertLocation = {previousSibling: Handle | null; indentation: number};
 
 export function empty<D>(): Tree<D> {
-  return {roots: [], data: {}};
+  return {roots: [], data: {}, children: {}};
 }
 
 function registerNode<D>(tree: Tree<D>, node: TreeNode<D>): Tree<D> {
@@ -19,6 +19,7 @@ function registerNode<D>(tree: Tree<D>, node: TreeNode<D>): Tree<D> {
     for (const child of node.children) {
       result = register_(result, child);
     }
+    result = {...result, children: {...tree.children, [node.id]: node.children.map((x) => ({id: x.id}))}};
     return result;
   }
   return register_(tree, node);
@@ -89,7 +90,7 @@ export function findNode<D>(tree: Tree<D>, query: Handle): TreeNode<D> | null {
   function find(handle: Handle): TreeNode<D> | null {
     const data = tree.data[handle.id];
     if (!data) return null;
-    const children = data.children.map((child) => find(child)!);
+    const children = (tree.children[handle.id] ?? []).map((child) => find(child)!);
     return {...data, id: handle.id, children};
   }
   return find(query);
