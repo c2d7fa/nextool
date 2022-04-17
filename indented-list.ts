@@ -62,23 +62,21 @@ export function searchAndTrim<D>(
   tree: Tree<D>,
   {pick, include}: {pick: (node: TreeNode<D>) => boolean; include: (node: TreeNode<D>) => boolean},
 ): TreeNode<D>[] {
-  function trim(nodes: Handle[]): TreeNode<D>[] {
-    return nodes.flatMap((handle) => {
-      const node = findNode(tree, handle)!;
+  function trim(nodes: TreeNode<D>[]): TreeNode<D>[] {
+    return nodes.flatMap((node) => {
       if (!include(node)) return [];
       else return [{...node, children: trim(node.children)}];
     });
   }
 
-  function search(nodes: Handle[]): TreeNode<D>[] {
-    return nodes.flatMap((handle) => {
-      const node = findNode(tree, handle)!;
+  function search(nodes: TreeNode<D>[]): TreeNode<D>[] {
+    return nodes.flatMap((node) => {
       if (pick(node)) return [{...node, children: trim(node.children)}];
       else return search(node.children);
     });
   }
 
-  return search(tree.roots);
+  return search(roots(tree));
 }
 
 export function filterNodes<D>(tree: Tree<D>, pred: (node: TreeNode<D>) => boolean): TreeNode<D>[] {
