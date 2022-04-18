@@ -26,13 +26,13 @@
       "main": "start.js"
     },
     "files": [
-      "dist/**/*",
+      "build/**/*",
       "start.js"
     ]    
   },
   "scripts": {
     "dev": "yarn parcel index.html",
     "watch-tests": "yarn jest --watch-all --verbose",
-    "build": "yarn parcel build index.html --public-url ./ && yarn electron-builder"
+    "build": "yarn parcel build index.html --dist-dir build --public-url ./ && yarn electron-builder"
   }
 }
