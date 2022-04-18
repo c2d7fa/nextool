@@ -34,3 +34,8 @@ Generate screenshot above:
     $ gem install bundler
     $ bundle install
     $ ruby screenshot.rb
+
+Build Electron application:
+
+    $ yarn build
+    $ cp dist/gtdtool-0.1.0.AppImage ~/bin/nextool
