@@ -281,7 +281,7 @@ export function validInsertLocationsBelow<D>(
       previousSibling: {id: targetItem.id},
     }));
 
-  const sourceItem = list.find((item) => item.id === source.id)!;
+  const sourceItem = list.find((item) => item.id === source.id);
 
   const preceedingItem = list[targetIndex - 1];
   const preceedingItemIndentation = preceedingItem?.indentation ?? -1;
@@ -294,7 +294,7 @@ export function validInsertLocationsBelow<D>(
 
   const minIndentation = followingNonChildIndentation;
   const maxIndentation = isDescendant(tree, targetItem, source)
-    ? sourceItem.indentation
+    ? sourceItem?.indentation ?? 0
     : isSource
     ? Math.max(preceedingItemIndentation + 1, targetItem.indentation)
     : targetItem.indentation + 1;
