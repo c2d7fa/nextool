@@ -6,12 +6,14 @@ inspired by [MyLifeOrganized](https://www.mylifeorganized.net/),
 [OmniFocus](https://www.omnigroup.com/omnifocus/), [Amazing
 Marvin](https://amazingmarvin.com/) and [Everdo](https://everdo.net/).
 
-**This project isn't in a usable state yet.**
-
-It'll most likely be licensed in a similar way to
-[Thinktool](https://github.com/c2d7fa/thinktool) (i.e. AGPL).
-
 ![Screenshot](/screenshot.png?raw=true)
+
+This project is a work-in-progress. Expect bugs, and make sure to manually save
+your work with the buttons on the top bar, even in the Electron-based desktop
+application.
+
+Nextool is licensed under the terms of the GNU AGPLv3 or any later version as
+described in the file `LICENSE.md`.
 
 ## Development
 
