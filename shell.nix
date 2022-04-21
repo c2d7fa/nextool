@@ -16,13 +16,17 @@ let session = writeText "session.tmuxp.yaml" ''
 (buildFHSUserEnv {
   name = "fhs";
   targetPkgs = pkgs: with pkgs; [
+    # Web and Electron
     yarn
+    zlib
+
+    # Screenshot
+    chromium
+    chromedriver
     ruby
     bundler
 
-    chromium
-    chromedriver
-
+    # Utilities
     nomacs
     tmux tmuxp
     git

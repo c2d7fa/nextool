@@ -1,0 +1,23 @@
+name: Release Electron application for Linux when version is published
+on:
+  push:
+    tags:
+      - "v*.*.*"
+jobs:
+  electron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v1
+      - name: Set up Node 14.18.1
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.18.1'
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Build Electron application
+        run: yarn build
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "dist/*.AppImage"
