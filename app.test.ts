@@ -2014,6 +2014,13 @@ describe("archiving tasks", () => {
 });
 
 describe("saving and loading files", () => {
+  describe("the controls for managing files", () => {
+    test("in the default view, there are separate 'Save' and 'Load' buttons", () => {
+      const example = updateAll(empty, []);
+      expect(view(example).fileControls).toEqual("saveLoad");
+    });
+  });
+
   describe("loading a file from an empty state replaces the current state", () => {
     const step1 = updateAll(empty, [{tag: "storage", type: "clickLoadButton"}]);
     const step1e = effects(empty, {tag: "storage", type: "clickLoadButton"});

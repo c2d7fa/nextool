@@ -58,7 +58,10 @@ export type FilterView = {
 
 export type SideBarSectionView = {title: string; filter: FilterId; filters: FilterView[]};
 
+export type FileControlsView = "saveLoad" | null;
+
 export type View = {
+  fileControls: FileControlsView;
   addTask: {value: string};
   sideBar: SideBarSectionView[];
   taskList: TaskListView;
@@ -80,6 +83,7 @@ export function view(app: State, {today}: {today: Date}): View {
   }
 
   return {
+    fileControls: "saveLoad",
     addTask: {value: textFieldValue(app.textFields, "addTitle")},
     sideBar: [
       {

@@ -130,6 +130,26 @@ function execute(effects: App.Effect[], send: App.Send) {
   return effects.forEach(execute_);
 }
 
+function FileControls(props: {view: App.FileControlsView; send: App.Send}) {
+  if (props.view === "saveLoad") {
+    return (
+      <>
+        <TopBarButton send={props.send} event={{tag: "storage", type: "clickLoadButton"}}>
+          Load
+        </TopBarButton>
+        <TopBarButton send={props.send} event={{tag: "storage", type: "clickSaveButton"}}>
+          Save
+        </TopBarButton>
+      </>
+    );
+  } else if (props.view === null) {
+    return null;
+  } else {
+    const unreachable: never = props.view;
+    return unreachable;
+  }
+}
+
 function Main() {
   const [app, setApp] = React.useState<App.State>(() => loadState());
 
@@ -153,12 +173,7 @@ function Main() {
           <AddTask view={view.addTask} send={send} />
         </div>
         <div className={style.right}>
-          <TopBarButton send={send} event={{tag: "storage", type: "clickLoadButton"}}>
-            Load
-          </TopBarButton>
-          <TopBarButton send={send} event={{tag: "storage", type: "clickSaveButton"}}>
-            Save
-          </TopBarButton>
+          <FileControls view={view.fileControls} send={send} />
         </div>
       </div>
       <SideBar sections={view.sideBar} send={send} />
