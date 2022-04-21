@@ -38,4 +38,10 @@ Generate screenshot above:
 Build Electron application:
 
     $ yarn build
-    $ cp dist/gtdtool-0.1.0.AppImage ~/bin/nextool
+    $ cp dist/gtdtool-*.AppImage ~/bin/nextool
+
+Release new version:
+
+1. Update version number in `package.json`
+2. Run `git tag vX.X.X` and `git push --tags`
+3. Check that GitHub Actions workflow has created new release on GitHub
