@@ -121,11 +121,3 @@ export function loadString(data: string | null): App.State {
 export function saveString(tasks: Tasks.Tasks): string {
   return JSON.stringify(IndentedList.roots(tasks));
 }
-
-export function loadState(): App.State {
-  return loadString(window.localStorage.getItem("tasks"));
-}
-
-export function saveTasks(tasks: Tasks.Tasks) {
-  window.localStorage.setItem("tasks", saveString(tasks));
-}

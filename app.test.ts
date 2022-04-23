@@ -7,11 +7,25 @@ function view(state: State): View {
 }
 
 function updateAll(state: State, events: (Event | ((view: View) => Event[]))[]): State {
-  return events.reduce(
-    (state, event) =>
-      typeof event === "function" ? updateAll(state, event(view(state))) : updateApp(state, event),
-    state,
-  );
+  return stateAndEffectsAfter(state, events)[0];
+}
+
+function stateAndEffectsAfter(state: State, events: (Event | ((view: View) => Event[]))[]): [State, Effect[]] {
+  let resultState = state;
+  let resultEffects: Effect[] = [];
+
+  for (const event of events) {
+    if (typeof event === "function") {
+      const [state, effects] = stateAndEffectsAfter(resultState, event(view(resultState)));
+      resultState = state;
+      resultEffects = effects;
+    } else {
+      resultEffects = [...resultEffects, ...effects(resultState, event)];
+      resultState = updateApp(resultState, event);
+    }
+  }
+
+  return [resultState, resultEffects];
 }
 
 function addTask(title: string): Event[] {
@@ -2014,6 +2028,13 @@ describe("archiving tasks", () => {
 });
 
 describe("saving and loading files", () => {
+  describe("the controls for managing files", () => {
+    test("in the default view, there are separate 'Save' and 'Load' buttons", () => {
+      const example = updateAll(empty, []);
+      expect(view(example).fileControls).toEqual("saveLoad");
+    });
+  });
+
   describe("loading a file from an empty state replaces the current state", () => {
     const step1 = updateAll(empty, [{tag: "storage", type: "clickLoadButton"}]);
     const step1e = effects(empty, {tag: "storage", type: "clickLoadButton"});
@@ -2105,6 +2126,40 @@ describe("saving and loading files", () => {
         {title: "Task 2", indentation: 1},
         {title: "Task 3", indentation: 2},
       ]);
+    });
+  });
+
+  describe("automatically saving to local storage", () => {
+    describe("after moving a task, the file is saved to local storage", () => {
+      const step1 = updateAll(empty, [...addTask("Task 0"), ...addTask("Task 1"), ...addTask("Task 2")]);
+
+      const [step2, step2e] = stateAndEffectsAfter(step1, [
+        ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
+      ]);
+
+      const saveEffect = step2e.reverse().find((e) => e.type === "saveLocalStorage");
+
+      describe("there is an effect of saving to local storage", () => {
+        expect(saveEffect).toBeTruthy();
+      });
+
+      const step3 = updateAll(step2, [
+        {
+          tag: "storage",
+          type: "loadFile",
+          name: "tasks.json",
+          contents: (saveEffect as typeof saveEffect & {type: "saveLocalStorage"}).value,
+        },
+        ...switchToFilter("all"),
+      ]);
+
+      describe("loading the contents of the locally stored file loads the correct tasks", () => {
+        expect(tasks(step3, ["title", "indentation"])).toEqual([
+          {title: "Task 0", indentation: 0},
+          {title: "Task 1", indentation: 0},
+          {title: "Task 2", indentation: 1},
+        ]);
+      });
     });
   });
 });

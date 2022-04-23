@@ -1,7 +1,7 @@
 import * as React from "react";
-import * as ReactDOMClient from "react-dom/client";
 import * as App from "./app";
-import {loadState, saveTasks} from "./storage";
+import * as ReactDOMClient from "react-dom/client";
+import {loadString, saveString} from "./storage";
 import {TaskEditor} from "./task-editor";
 import {TextField, TextFieldButton, value as textFieldValue} from "./text-field";
 import * as Drag from "./drag";
@@ -101,26 +101,24 @@ function TopBarButton(props: {children: React.ReactNode; event: App.Event; send:
   );
 }
 
-function execute(effects: App.Effect[], send: App.Send) {
+export type Platform = {
+  readLocalStorage(): Promise<string | null>;
+  saveLocalStorage(value: string): Promise<void>;
+  fileDownload(args: {name: string; contents: string}): Promise<void>;
+  fileUpload(): Promise<{name: string; contents: string} | null>;
+};
+
+function execute(effects: App.Effect[], send: App.Send, platform: Platform) {
   function execute_(effect: App.Effect) {
     if (effect.type === "fileDownload") {
-      const downloadLinkElement = document.createElement("a");
-      downloadLinkElement.setAttribute("href", URL.createObjectURL(new Blob([effect.contents])));
-      downloadLinkElement.setAttribute("download", effect.name);
-      downloadLinkElement.click();
+      platform.fileDownload({name: effect.name, contents: effect.contents});
     } else if (effect.type === "fileUpload") {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.onchange = (ev) => {
-        const file = (ev.target as HTMLInputElement).files![0]!;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const contents = (ev.target as FileReader).result as string;
-          send({tag: "storage", type: "loadFile", name: file.name, contents});
-        };
-        reader.readAsText(file);
-      };
-      input.click();
+      platform.fileUpload().then((file) => {
+        if (file === null) return;
+        send({tag: "storage", type: "loadFile", name: file.name, contents: file.contents});
+      });
+    } else if (effect.type === "saveLocalStorage") {
+      platform.saveLocalStorage(effect.value);
     } else {
       const unreachable: never = effect;
       return unreachable;
@@ -130,21 +128,47 @@ function execute(effects: App.Effect[], send: App.Send) {
   return effects.forEach(execute_);
 }
 
-function Main() {
-  const [app, setApp] = React.useState<App.State>(() => loadState());
+function FileControls(props: {view: App.FileControlsView; send: App.Send}) {
+  if (props.view === "saveLoad") {
+    return (
+      <>
+        <TopBarButton send={props.send} event={{tag: "storage", type: "clickLoadButton"}}>
+          Load
+        </TopBarButton>
+        <TopBarButton send={props.send} event={{tag: "storage", type: "clickSaveButton"}}>
+          Save
+        </TopBarButton>
+      </>
+    );
+  } else if (props.view === null) {
+    return null;
+  } else {
+    const unreachable: never = props.view;
+    return unreachable;
+  }
+}
+
+function Main(props: {platform: Platform}) {
+  const [pendingEffects, setPendingEffects] = React.useState<App.Effect[]>([]);
+
+  const [app, send] = React.useReducer((app: App.State, ev: App.Event) => {
+    setPendingEffects((effects) => [...effects, ...App.effects(app, ev)]);
+    return App.updateApp(app, ev);
+  }, App.empty);
+
+  React.useEffect(() => {
+    if (pendingEffects.length === 0) return;
+    execute(pendingEffects, send, props.platform);
+    setPendingEffects([]);
+  }, [pendingEffects]);
+
+  React.useEffect(() => {
+    props.platform.readLocalStorage().then((localStorage) => {
+      send({tag: "storage", type: "loadFile", name: "localStorage", contents: localStorage ?? ""});
+    });
+  }, []);
 
   const view = App.view(app, {today: new Date()});
-
-  const send = (ev: App.Event) => {
-    const effects = App.effects(app, ev);
-    execute(effects, send);
-
-    setApp((app) => {
-      const app_ = App.updateApp(app, ev);
-      saveTasks(app_.tasks);
-      return app_;
-    });
-  };
 
   return (
     <div className={style.outerContainer}>
@@ -153,12 +177,7 @@ function Main() {
           <AddTask view={view.addTask} send={send} />
         </div>
         <div className={style.right}>
-          <TopBarButton send={send} event={{tag: "storage", type: "clickLoadButton"}}>
-            Load
-          </TopBarButton>
-          <TopBarButton send={send} event={{tag: "storage", type: "clickSaveButton"}}>
-            Save
-          </TopBarButton>
+          <FileControls view={view.fileControls} send={send} />
         </div>
       </div>
       <SideBar sections={view.sideBar} send={send} />
@@ -174,9 +193,11 @@ function Main() {
   );
 }
 
-const root = ReactDOMClient.createRoot(document.getElementById("root")!);
-root.render(
-  <React.StrictMode>
-    <Main />
-  </React.StrictMode>,
-);
+export function start(platform: Platform) {
+  const root = ReactDOMClient.createRoot(document.getElementById("root")!);
+  root.render(
+    <React.StrictMode>
+      <Main platform={platform} />
+    </React.StrictMode>,
+  );
+}
