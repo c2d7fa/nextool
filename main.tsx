@@ -163,11 +163,9 @@ function Main(props: {platform: Platform}) {
   }, [pendingEffects]);
 
   React.useEffect(() => {
-    props.platform
-      .readLocalStorage()
-      .then((localStorage) =>
-        send({tag: "storage", type: "loadFile", name: "localStorage", contents: localStorage ?? ""}),
-      );
+    props.platform.readLocalStorage().then((localStorage) => {
+      send({tag: "storage", type: "loadFile", name: "localStorage", contents: localStorage ?? ""});
+    });
   }, []);
 
   const view = App.view(app, {today: new Date()});

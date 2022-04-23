@@ -1,5 +1,6 @@
 const electron = require("electron");
 const path = require("path");
+const fs = require("fs");
 
 console.log("Waiting for Electron...");
 
@@ -31,10 +32,23 @@ electron.app.whenReady().then(async () => {
       filters: [{name: "JSON Files", extensions: ["json"]}, {name: "All Files", extensions: ["*"]}],
       properties: ["openFile"],
     });
-
     if (result.filePaths.length === 0) return null;
+    const data = await fs.promises.readFile(result.filePaths[0], "utf8");
+    return {name: result.filePaths[0], contents: data.toString()};
+  });
 
-    return result.filePaths[0];
+  electron.ipcMain.handle("writeUserData", async (ev, fileName, data) => {
+    const filePath = path.join(electron.app.getPath("userData"), fileName);
+    return await fs.promises.writeFile(filePath, data);
+  });
+
+  electron.ipcMain.handle("readUserData", async (ev, fileName) => {
+    const filePath = path.join(electron.app.getPath("userData"), fileName);
+    try {
+      return (await fs.promises.readFile(filePath)).toString();
+    } catch (e) {
+      return null;
+    }
   });
 
   window.setTitle("Nextool");

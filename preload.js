@@ -10,10 +10,10 @@ electron.contextBridge.exposeInMainWorld("platform", {
   },
 
   async readLocalStorage() {
-    return localStorage.getItem("tasks");
+    return await electron.ipcRenderer.invoke("readUserData", "tasks.json");
   },
 
   async saveLocalStorage(value) {
-    return localStorage.setItem("tasks", value);
+    return await electron.ipcRenderer.invoke("writeUserData", "tasks.json", value);
   },
 });
