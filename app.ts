@@ -100,7 +100,7 @@ export function view(app: State, {today}: {today: Date}): View {
       {
         title: "Tasks",
         filter: {type: "section", section: "tasks"},
-        filters: [filterView("all"), filterView("not-done"), filterView("done")],
+        filters: [filterView("all"), filterView("not-done"), filterView("done"), filterView("paused")],
       },
       {
         title: "Active projects",

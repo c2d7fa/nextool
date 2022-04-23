@@ -208,6 +208,7 @@ export type FilterId =
   | "stalled"
   | "not-done"
   | "archive"
+  | "paused"
   | {type: "project"; project: {id: string}}
   | {type: "section"; section: FilterSectionId};
 
@@ -238,6 +239,7 @@ function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
   else if (filter === "stalled") return isStalled(tasks, task);
   else if (filter === "not-done") return !isDone(task);
   else if (filter === "archive") return task.archived;
+  else if (filter === "paused") return isPaused(tasks, task);
   else return true;
 }
 
@@ -333,7 +335,7 @@ function viewRows(args: {
 
 function subfilters(tasks: Tasks, section: FilterSectionId): FilterId[] {
   if (section === "actions") return ["ready", "stalled"];
-  else if (section === "tasks") return ["all", "not-done", "done"];
+  else if (section === "tasks") return ["all", "not-done", "done", "paused"];
   else if (section === "activeProjects")
     return activeProjects(tasks).map((project) => ({type: "project", project: {id: project.id}}));
   else if (section === "archive") return ["archive"];
@@ -384,6 +386,7 @@ export function filterTitle(tasks: Tasks, filter: FilterId): string {
   else if (filter === "not-done") return "Unfinished";
   else if (filter === "archive") return "Archive";
   else if (filter === "all") return "All";
+  else if (filter === "paused") return "Paused";
   else {
     const unreachable: never = filter;
     return unreachable;

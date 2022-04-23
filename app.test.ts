@@ -1166,6 +1166,32 @@ describe("filtered views of tasks", () => {
       });
     });
   });
+
+  describe("the paused filter shows paused tasks", () => {
+    const step1 = updateAll(empty, [...switchToFilter("stalled"), ...addTask("Task 0"), ...addTask("Task 1")]);
+
+    describe("initially", () => {
+      test("both tasks are shown in stalled filter", () => {
+        expect(tasks(step1, "title")).toEqual(["Task 0", "Task 1"]);
+      });
+
+      test("neither task is shown in paused filter", () => {
+        expect(tasks(updateAll(step1, switchToFilter("paused")), "title")).toEqual([]);
+      });
+    });
+
+    const step2 = updateAll(step1, [openNth(0), setComponentValue("Status", "paused")]);
+
+    describe("after marking first task as paused", () => {
+      test("only the second task is shown in stalled filter", () => {
+        expect(tasks(step2, "title")).toEqual(["Task 1"]);
+      });
+
+      test("the first task is shown in paused filter", () => {
+        expect(tasks(updateAll(step2, switchToFilter("paused")), "title")).toEqual(["Task 0"]);
+      });
+    });
+  });
 });
 
 describe("section filters", () => {
@@ -1196,6 +1222,34 @@ describe("section filters", () => {
           expect(filtersInSection(step2, "Actions")).toEqual([
             {label: "Ready", selected: true},
             {label: "Stalled", selected: true},
+          ]);
+        });
+      });
+    });
+
+    describe("for the tasks section", () => {
+      const step1 = updateAll(empty, []);
+
+      describe("initially", () => {
+        test("no filters are active", () => {
+          expect(filtersInSection(step1, "Tasks")).toEqual([
+            {label: "All", selected: false},
+            {label: "Unfinished", selected: false},
+            {label: "Completed", selected: false},
+            {label: "Paused", selected: false},
+          ]);
+        });
+      });
+
+      const step2 = updateAll(step1, [{tag: "selectFilter", filter: {type: "section", section: "tasks"}}]);
+
+      describe("after selecting the tasks section filter", () => {
+        test("all filters in the 'tasks' section become active", () => {
+          expect(filtersInSection(step2, "Tasks")).toEqual([
+            {label: "All", selected: true},
+            {label: "Unfinished", selected: true},
+            {label: "Completed", selected: true},
+            {label: "Paused", selected: true},
           ]);
         });
       });
