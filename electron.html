@@ -7,15 +7,7 @@
     <div id="root"></div>
     <script type="module">
       import {start} from "./main.tsx";
-
-      console.log(window.platform);
-      console.log(window.platform.test);
-
-      start({
-        async log(message) {
-          console.log(message);
-        },
-      });
+      start(window.platform);
     </script>
   </body>
 </html>

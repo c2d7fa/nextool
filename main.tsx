@@ -102,29 +102,19 @@ function TopBarButton(props: {children: React.ReactNode; event: App.Event; send:
 }
 
 export type Platform = {
-  introduce(): Promise<void>;
+  fileDownload(args: {name: string; contents: string}): Promise<void>;
+  fileUpload(): Promise<{name: string; contents: string} | null>;
 };
 
 function execute(effects: App.Effect[], send: App.Send, platform: Platform) {
   function execute_(effect: App.Effect) {
     if (effect.type === "fileDownload") {
-      const downloadLinkElement = document.createElement("a");
-      downloadLinkElement.setAttribute("href", URL.createObjectURL(new Blob([effect.contents])));
-      downloadLinkElement.setAttribute("download", effect.name);
-      downloadLinkElement.click();
+      platform.fileDownload({name: effect.name, contents: effect.contents});
     } else if (effect.type === "fileUpload") {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.onchange = (ev) => {
-        const file = (ev.target as HTMLInputElement).files![0]!;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const contents = (ev.target as FileReader).result as string;
-          send({tag: "storage", type: "loadFile", name: file.name, contents});
-        };
-        reader.readAsText(file);
-      };
-      input.click();
+      platform.fileUpload().then((file) => {
+        if (file === null) return;
+        send({tag: "storage", type: "loadFile", name: file.name, contents: file.contents});
+      });
     } else {
       const unreachable: never = effect;
       return unreachable;
@@ -156,10 +146,6 @@ function FileControls(props: {view: App.FileControlsView; send: App.Send}) {
 
 function Main(props: {platform: Platform}) {
   const [app, setApp] = React.useState<App.State>(() => loadState());
-
-  React.useEffect(() => {
-    props.platform.introduce();
-  });
 
   const view = App.view(app, {today: new Date()});
 

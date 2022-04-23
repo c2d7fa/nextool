@@ -17,13 +17,26 @@ electron.app.whenReady().then(async () => {
     },
   });
 
-  electron.ipcMain.handle("showMessageBox", async (ev, message) => {
-    electron.dialog.showMessageBox(window, {
-      message,
+  electron.ipcMain.handle("fileDownload", async (ev, args) => {
+    await electron.dialog.showSaveDialog(window, {
+      title: "Load tasks",
+      filters: [{name: "JSON Files", extensions: ["json"]}, {name: "All Files", extensions: ["*"]}],
+      defaultPath: args.name,
     });
   });
 
-  window.webContents.openDevTools();
+  electron.ipcMain.handle("fileUpload", async (ev, args) => {
+    const result = await electron.dialog.showOpenDialog(window, {
+      title: "Save tasks",
+      filters: [{name: "JSON Files", extensions: ["json"]}, {name: "All Files", extensions: ["*"]}],
+      properties: ["openFile"],
+    });
+
+    if (result.filePaths.length === 0) return null;
+
+    return result.filePaths[0];
+  });
+
   window.setTitle("Nextool");
   window.removeMenu();
   window.loadFile("build/electron.html");
