@@ -28,7 +28,10 @@ export type Event =
   | Drag.DragEvent<DragId, DropId>
   | Storage.Event;
 
-export type Effect = {type: "fileDownload"; name: string; contents: string} | {type: "fileUpload"};
+export type Effect =
+  | {type: "fileDownload"; name: string; contents: string}
+  | {type: "fileUpload"}
+  | {type: "saveLocalStorage"; value: string};
 
 export type Send = (event: Event) => void;
 
@@ -141,7 +144,7 @@ export function effects(app: State, event: Event): Effect[] {
     return [{type: "fileUpload"}];
   }
 
-  return [];
+  return [{type: "saveLocalStorage", value: Storage.saveString(updateApp(app, event).tasks)}];
 }
 
 export function updateApp(app: State, ev: Event): State {

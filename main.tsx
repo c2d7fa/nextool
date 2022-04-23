@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as App from "./app";
 import * as ReactDOMClient from "react-dom/client";
-import {loadState, saveTasks} from "./storage";
+import {loadString, saveString} from "./storage";
 import {TaskEditor} from "./task-editor";
 import {TextField, TextFieldButton, value as textFieldValue} from "./text-field";
 import * as Drag from "./drag";
@@ -102,6 +102,8 @@ function TopBarButton(props: {children: React.ReactNode; event: App.Event; send:
 }
 
 export type Platform = {
+  readLocalStorage(): Promise<string | null>;
+  saveLocalStorage(value: string): Promise<void>;
   fileDownload(args: {name: string; contents: string}): Promise<void>;
   fileUpload(): Promise<{name: string; contents: string} | null>;
 };
@@ -115,6 +117,8 @@ function execute(effects: App.Effect[], send: App.Send, platform: Platform) {
         if (file === null) return;
         send({tag: "storage", type: "loadFile", name: file.name, contents: file.contents});
       });
+    } else if (effect.type === "saveLocalStorage") {
+      platform.saveLocalStorage(effect.value);
     } else {
       const unreachable: never = effect;
       return unreachable;
@@ -145,20 +149,28 @@ function FileControls(props: {view: App.FileControlsView; send: App.Send}) {
 }
 
 function Main(props: {platform: Platform}) {
-  const [app, setApp] = React.useState<App.State>(() => loadState());
+  const [pendingEffects, setPendingEffects] = React.useState<App.Effect[]>([]);
+
+  const [app, send] = React.useReducer((app: App.State, ev: App.Event) => {
+    setPendingEffects((effects) => [...effects, ...App.effects(app, ev)]);
+    return App.updateApp(app, ev);
+  }, App.empty);
+
+  React.useEffect(() => {
+    if (pendingEffects.length === 0) return;
+    execute(pendingEffects, send, props.platform);
+    setPendingEffects([]);
+  }, [pendingEffects]);
+
+  React.useEffect(() => {
+    props.platform
+      .readLocalStorage()
+      .then((localStorage) =>
+        send({tag: "storage", type: "loadFile", name: "localStorage", contents: localStorage ?? ""}),
+      );
+  }, []);
 
   const view = App.view(app, {today: new Date()});
-
-  const send = (ev: App.Event) => {
-    const effects = App.effects(app, ev);
-    execute(effects, send, props.platform);
-
-    setApp((app) => {
-      const app_ = App.updateApp(app, ev);
-      saveTasks(app_.tasks);
-      return app_;
-    });
-  };
 
   return (
     <div className={style.outerContainer}>

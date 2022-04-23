@@ -1,5 +1,3 @@
-console.log("preload");
-
 const electron = require("electron");
 
 electron.contextBridge.exposeInMainWorld("platform", {
@@ -9,5 +7,13 @@ electron.contextBridge.exposeInMainWorld("platform", {
 
   async fileUpload(args) {
     return await electron.ipcRenderer.invoke("fileUpload", args);
+  },
+
+  async readLocalStorage() {
+    return localStorage.getItem("tasks");
+  },
+
+  async saveLocalStorage(value) {
+    return localStorage.setItem("tasks", value);
   },
 });

@@ -8,6 +8,14 @@
     <script type="module">
       import {start} from "./main.tsx";
       start({
+        async readLocalStorage() {
+          return localStorage.getItem("tasks");
+        },
+
+        async saveLocalStorage(value) {
+          return localStorage.setItem("tasks", value);
+        },
+
         async fileDownload({name, contents}) {
           const downloadLinkElement = document.createElement("a");
           downloadLinkElement.setAttribute("href", URL.createObjectURL(new Blob([contents])));
