@@ -213,9 +213,15 @@ $project-hue: shared.$project-hue;
     right: 0;
 
     height: 2px;
-    border-radius: 2px;
+    border-radius: 1px;
 
     background-color: #00000080;
+  }
+
+  &:first-child {
+    .dropIndicator {
+      bottom: -2px;
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "gtdtool",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "devDependencies": {
     "@parcel/transformer-raw": "^2.5.0",
     "@parcel/transformer-sass": "2.5.0",
