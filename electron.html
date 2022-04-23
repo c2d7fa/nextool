@@ -7,10 +7,14 @@
     <div id="root"></div>
     <script type="module">
       import {start} from "./main.tsx";
+
+      console.log(window.platform);
+      console.log(window.platform.test);
+
       start({
-        async introduce() {
-          console.log("Running on web.");
-        }
+        async log(message) {
+          console.log(message);
+        },
       });
     </script>
   </body>

@@ -1,6 +1,6 @@
 import * as React from "react";
-import * as ReactDOMClient from "react-dom/client";
 import * as App from "./app";
+import * as ReactDOMClient from "react-dom/client";
 import {loadState, saveTasks} from "./storage";
 import {TaskEditor} from "./task-editor";
 import {TextField, TextFieldButton, value as textFieldValue} from "./text-field";
@@ -101,7 +101,11 @@ function TopBarButton(props: {children: React.ReactNode; event: App.Event; send:
   );
 }
 
-function execute(effects: App.Effect[], send: App.Send) {
+export type Platform = {
+  introduce(): Promise<void>;
+};
+
+function execute(effects: App.Effect[], send: App.Send, platform: Platform) {
   function execute_(effect: App.Effect) {
     if (effect.type === "fileDownload") {
       const downloadLinkElement = document.createElement("a");
@@ -150,14 +154,18 @@ function FileControls(props: {view: App.FileControlsView; send: App.Send}) {
   }
 }
 
-function Main() {
+function Main(props: {platform: Platform}) {
   const [app, setApp] = React.useState<App.State>(() => loadState());
+
+  React.useEffect(() => {
+    props.platform.introduce();
+  });
 
   const view = App.view(app, {today: new Date()});
 
   const send = (ev: App.Event) => {
     const effects = App.effects(app, ev);
-    execute(effects, send);
+    execute(effects, send, props.platform);
 
     setApp((app) => {
       const app_ = App.updateApp(app, ev);
@@ -189,9 +197,11 @@ function Main() {
   );
 }
 
-const root = ReactDOMClient.createRoot(document.getElementById("root")!);
-root.render(
-  <React.StrictMode>
-    <Main />
-  </React.StrictMode>,
-);
+export function start(platform: Platform) {
+  const root = ReactDOMClient.createRoot(document.getElementById("root")!);
+  root.render(
+    <React.StrictMode>
+      <Main platform={platform} />
+    </React.StrictMode>,
+  );
+}
