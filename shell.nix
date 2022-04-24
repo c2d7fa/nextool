@@ -5,8 +5,8 @@ let session = writeText "session.tmuxp.yaml" ''
   windows:
     - layout: even-vertical
       panes:
-        - yarn parcel index.html
-        - yarn jest --watch-all --verbose
+        - npm run watch
+        - npm run watch-tests
         - rg -F '## Development' -A 999 README.md
 ''; in
 
@@ -17,7 +17,7 @@ let session = writeText "session.tmuxp.yaml" ''
   name = "fhs";
   targetPkgs = pkgs: with pkgs; [
     # Web and Electron
-    yarn
+    nodejs
     zlib
 
     # Screenshot
@@ -51,7 +51,7 @@ let session = writeText "session.tmuxp.yaml" ''
   ];
   runScript = ''
     #!/usr/bin/env bash
-    yarn install --frozen-lockfile
+    npm ci
     bundle install
     tmuxp load /opt/nextool/session.tmuxp.yaml
   '';

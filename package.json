@@ -29,11 +29,18 @@
       "build/**/*",
       "start.js",
       "preload.js"
-    ]
+    ],
+    "win": {
+      "target": "portable"
+    }
   },
   "scripts": {
-    "dev": "yarn parcel index.html",
-    "watch-tests": "yarn jest --watch-all --verbose",
-    "build": "yarn parcel build electron.html --dist-dir build --public-url ./ && yarn electron-builder --publish=never -l"
+    "watch": "parcel index.html",
+    "test": "jest --verbose",
+    "watch-tests": "jest --watch-all --verbose",
+    "prepare-build": "parcel build electron.html --dist-dir build --public-url ./",
+    "build-linux": "npm run prepare-build && npx electron-builder --publish=never -l",
+    "build-macos": "npm run prepare-build && npx electron-builder --publish=never -m",
+    "build-windows": "npm run prepare-build && npx electron-builder --publish=never -w"
   }
 }

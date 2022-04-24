@@ -15,6 +15,11 @@ data in `~/.config/gtdtool/tasks.json`, and the web client uses local storage.
 Nextool is licensed under the terms of the GNU AGPLv3 or any later version as
 described in the file `LICENSE.md`.
 
+**[Download the latest release here.](https://github.com/c2d7fa/nextool/releases/latest)**
+On Windows and macOS, you may need to do something special to convince them to
+run the program, since we don't sign the file. On Linux, just run `chmod +x <filename>.AppImage`
+to make it executable.
+
 ## Development
 
 Run the client on a local development server:
@@ -39,11 +44,11 @@ Generate screenshot above:
 
 Build Electron application:
 
-    $ yarn build
-    $ cp dist/gtdtool-*.AppImage ~/bin/nextool
+    $ yarn build-linux # or build-macos, build-windows
+    $ cp dist/gtdtool-*.AppImage ~/bin/nextool # or dist/gtdtool-*.dmg, dist/gtdtool-*.exe
 
 Release new version:
 
 1. Update version number in `package.json`
 2. Run `git tag vX.X.X` and `git push --tags`
-3. Check that GitHub Actions workflow has created new release on GitHub
+3. Write description for release on GitHub

@@ -11,6 +11,6 @@ jobs:
         with:
           node-version: '14.18.1'
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
       - name: Run test suite
-        run: yarn jest --verbose
+        run: npm run test
