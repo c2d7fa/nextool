@@ -29,7 +29,10 @@
       "build/**/*",
       "start.js",
       "preload.js"
-    ]
+    ],
+    "win": {
+      "target": "portable"
+    }
   },
   "scripts": {
     "watch": "parcel index.html",
