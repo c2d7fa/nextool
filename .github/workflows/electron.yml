@@ -14,9 +14,9 @@ jobs:
         with:
           node-version: '14.18.1'
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
       - name: Build Electron application
-        run: yarn build
+        run: npm run build
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:

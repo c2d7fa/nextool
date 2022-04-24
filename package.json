@@ -32,8 +32,11 @@
     ]
   },
   "scripts": {
-    "dev": "yarn parcel index.html",
-    "watch-tests": "yarn jest --watch-all --verbose",
-    "build": "yarn parcel build electron.html --dist-dir build --public-url ./ && yarn electron-builder --publish=never -l"
+    "watch": "parcel index.html",
+    "test": "jest --verbose",
+    "watch-tests": "jest --watch-all --verbose",
+    "build1": "parcel build electron.html --dist-dir build --public-url ./",
+    "build2": "electron-builder --publish=never -l",
+    "build": "npm run build1 && npm run build2"
   }
 }
