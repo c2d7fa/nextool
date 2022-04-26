@@ -17,6 +17,8 @@ export default function Index() {
           <Link href="/download">Download</Link>
         </p>
       </main>
+
+      <script data-goatcounter="https://nextool.goatcounter.com/count" async src="//gc.zgo.at/count.js" />
     </>
   );
 }
