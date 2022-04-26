@@ -1,6 +1,9 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+module.exports = {
   reactStrictMode: true,
-}
 
-module.exports = nextConfig
+  async redirects() {
+    return [
+      {source: "/download", destination: "https://github.com/c2d7fa/nextool/releases/latest", permanent: false},
+    ];
+  }
+};
