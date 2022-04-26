@@ -1,4 +1,30 @@
 .main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
   padding: 1em;
-  text-align: center;
+
+  row-gap: 1em;
+
+  h1 {
+    margin: 0;
+    margin: 1em;
+    font-size: 2em;
+    font-family: "Roboto Condensed";
+    text-transform: uppercase;
+    letter-spacing: 0.2ex;
+    font-weight: normal;
+  }  
+
+  p {
+    margin: 0;
+    width: 30em;
+    line-height: 1.5;
+  }
+
+  img {
+    margin: 2em;
+    max-width: 60%;
+  }
 }
