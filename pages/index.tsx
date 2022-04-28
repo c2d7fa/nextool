@@ -16,15 +16,11 @@ export default function Index() {
           Nextool is a GTD-oriented task manager with support for nested tasks and a focus on finding actionable
           tasks. It's a work-in-progress that's currently usable but not yet useful.
         </p>
-        <p>
-          For now, see <a href="https://github.com/c2d7fa/nextool">the GitHub repository</a> for more information.
-        </p>
-        <p>
-          <Link href="/download">Download for Linux, macOS or Windows.</Link>
-        </p>
         <img src="https://raw.githubusercontent.com/c2d7fa/nextool/main/screenshot.png" />
-
-        <h2>The Five Steps of GTD in Nextool</h2>
+        <p>
+          <Link href="/download">Download for Linux, macOS or Windows.</Link> For now, see{" "}
+          <a href="https://github.com/c2d7fa/nextool">the GitHub repository</a> for more information.
+        </p>
         <GtdSteps />
       </main>
 

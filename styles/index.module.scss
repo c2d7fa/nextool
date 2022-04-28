@@ -10,23 +10,22 @@
   row-gap: 1em;
 
   a {
-    color: #3f5a88;
+    color: #a84bb1;
     font-weight: 500;
     text-decoration: none;
 
     &:hover {
-      color: #62779d;
+      color: #ba5cbc;
     }
 
     &:active {
-      color: #374a6d;
+      color: #7d3a7c;
     }
   }
 
   & > h1 {
     color: #666;
     margin: 0;
-    margin: 1em;
     font-size: 2em;
     font-family: "Roboto Condensed";
     text-transform: uppercase;
@@ -37,7 +36,6 @@
   & > h2 {
     color: #666;
     margin: 0;
-    margin: 1em;
     font-size: 1.5em;
     font-family: "Roboto Condensed";
     font-weight: normal;
@@ -50,11 +48,10 @@
   }
 
   & > img {
-    margin: 2em;
     max-width: 60%;
-    border-radius: 6px;
+    border-radius: 12px;
     padding: 1px;
-    border: 1px solid #666;
-    box-shadow: 0 6px 6px -6px #aaa;
+    border: 1px solid #bd5391;
+    box-shadow: 0 6px 6px -6px #926a82;
   }
 }
