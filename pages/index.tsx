@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
+import {GtdSteps} from "../lib/gtd-steps";
 import styles from "../styles/index.module.scss";
 
 export default function Index() {
@@ -22,6 +23,9 @@ export default function Index() {
           <Link href="/download">Download for Linux, macOS or Windows.</Link>
         </p>
         <img src="https://raw.githubusercontent.com/c2d7fa/nextool/main/screenshot.png" />
+
+        <h2>The Five Steps of GTD in Nextool</h2>
+        <GtdSteps />
       </main>
 
       <script data-goatcounter="https://nextool.goatcounter.com/count" async src="//gc.zgo.at/count.js" />

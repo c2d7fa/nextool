@@ -1,0 +1,44 @@
+.container {
+  padding: 0 2em;
+
+  box-sizing: border-box;
+
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  column-gap: 1em;
+
+  .step {
+    box-sizing: border-box;
+    max-width: 40ex;
+
+    color: #6a445b;
+
+    border: 1px solid #db9bc3;
+    background: linear-gradient(155deg, #fccae9, #fce9f4 3em, #fbf9fa);
+    border-radius: 12px;
+    box-shadow: 0 6px 6px -6px #dac4d1;
+
+    padding: 1em;
+    display: flex;
+    flex-direction: column;
+    row-gap: 1em;
+
+    overflow: auto;
+
+    h1 {
+      color: #8b637c;
+
+      text-align: center;
+      margin: 0;
+      font-size: 1em;
+      font-family: "Roboto Condensed";
+      text-transform: uppercase;
+      letter-spacing: 0.2ex;
+      font-weight: normal;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+}

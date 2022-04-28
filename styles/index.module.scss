@@ -23,7 +23,7 @@
     }
   }
 
-  h1 {
+  & > h1 {
     color: #666;
     margin: 0;
     margin: 1em;
@@ -34,7 +34,7 @@
     font-weight: normal;
   }
 
-  h2 {
+  & > h2 {
     color: #666;
     margin: 0;
     margin: 1em;
@@ -43,13 +43,13 @@
     font-weight: normal;
   }
 
-  p {
+  & > p {
     margin: 0;
     width: 30em;
     line-height: 1.5;
   }
 
-  img {
+  & > img {
     margin: 2em;
     max-width: 60%;
     border-radius: 6px;
