@@ -1,7 +1,6 @@
 import * as React from "react";
 import * as App from "./app";
 import * as ReactDOMClient from "react-dom/client";
-import {loadString, saveString} from "./storage";
 import {TaskEditor} from "./task-editor";
 import {TextField, TextFieldButton, value as textFieldValue} from "./text-field";
 import * as Drag from "./drag";

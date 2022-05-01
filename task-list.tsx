@@ -12,7 +12,7 @@ type TaskListViewRow = TaskListViewSection["rows"][number];
 function CheckBox(props: {checked: boolean; id: string; send: Send}) {
   return (
     <div
-      className={[style.checkBox, props.checked ? style.checked : style.unchecked].join(" ")}
+      className={[style.checkBox, props.checked ? style.checked : ""].join(" ")}
       onClick={() => props.send({tag: "check", id: props.id})}
     />
   );
@@ -48,7 +48,7 @@ function Title(props: {task: TaskView}) {
     <span
       className={[
         style.task,
-        props.task.done ? style.done : style.todo,
+        props.task.done ? style.done : "",
         props.task.paused ? style.paused : "",
         props.task.project ? style.project : "",
       ].join(" ")}

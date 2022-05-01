@@ -1,44 +1,48 @@
 {
-  "name": "gtdtool",
-  "version": "1.4.0",
+  "name": "nextool",
+  "version": "1.4.1",
   "devDependencies": {
-    "@parcel/transformer-raw": "^2.5.0",
-    "@parcel/transformer-sass": "2.5.0",
     "@types/jest": "^27.4.1",
     "@types/react": "^18.0.5",
     "@types/react-dom": "^18.0.1",
+    "css-loader": "^6.7.1",
     "date-fns": "^2.28.0",
     "date-fns-tz": "^1.3.3",
     "electron": "^18.1.0",
     "electron-builder": "^23.0.3",
-    "identity-obj-proxy": "^3.0.0",
+    "html-webpack-plugin": "^5.5.0",
     "jest": "^27.5.1",
-    "parcel": "^2.5.0",
-    "path-browserify": "^1.0.1",
-    "process": "^0.11.10",
+    "postcss": "^8.4.13",
+    "postcss-loader": "^6.2.1",
+    "postcss-preset-env": "^7.4.4",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
+    "sass-loader": "^12.6.0",
+    "style-loader": "^3.3.1",
     "ts-jest": "^27.1.3",
-    "typescript": "^4.6.2"
+    "ts-loader": "^9.3.0",
+    "typescript": "^4.6.2",
+    "webpack": "^5.72.0",
+    "webpack-cli": "^4.9.2"
   },
   "build": {
+    "appId": "dk.johv.nextool",
+    "productName": "Nextool",
     "extraMetadata": {
-      "main": "start.js"
+      "main": "dist/electron/main.bundle.js"
     },
     "files": [
-      "build/**/*",
-      "start.js",
-      "preload.js"
+      "dist/electron/**/*"
     ],
     "win": {
       "target": "portable"
     }
   },
   "scripts": {
-    "watch": "parcel index.html",
+    "watch": "webpack -wc browser.config.js",
     "test": "jest --verbose",
     "watch-tests": "jest --watch-all --verbose",
-    "prepare-build": "parcel build electron.html --dist-dir build --public-url ./",
+    "prepare-build": "webpack -c webpack-electron.config.js",
     "build-linux": "npm run prepare-build && npx electron-builder --publish=never -l",
     "build-macos": "npm run prepare-build && npx electron-builder --publish=never -m",
     "build-windows": "npm run prepare-build && npx electron-builder --publish=never -w"

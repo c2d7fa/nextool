@@ -10,7 +10,7 @@ Marvin](https://amazingmarvin.com/) and [Everdo](https://everdo.net/).
 
 This project is a work-in-progress. Expect bugs, and make sure to manually back
 up your work with the buttons on the top bar. The Electron application saves
-data in `~/.config/gtdtool/tasks.json`, and the web client uses local storage.
+data in `~/.config/nextool/tasks.json`, and the web client uses local storage.
 
 Nextool is licensed under the terms of the GNU AGPLv3 or any later version as
 described in the file `LICENSE.md`.
@@ -24,28 +24,35 @@ to make it executable.
 
 Run the client on a local development server:
 
-    $ yarn parcel index.html
+    $ npx webpack -wc browser.config.js
+    $ open dist/browser/index.html
 
 Watch unit tests:
 
-    $ yarn jest --watch-all --verbose
+    $ npx jest --watch-all --verbose
 
 Run unit tests with coverage:
 
-    $ yarn jest --verbose --coverage=true --collectCoverageFrom=*.ts
+    $ npx jest --verbose --coverage=true --collectCoverageFrom=*.ts
     $ open ./coverage/lcov-report/index.html
 
 Generate screenshot above:
 
-    $ yarn parcel index.html &
+    $ npx webpack -c browser.config.js &
     $ gem install bundler
     $ bundle install
     $ ruby screenshot.rb
 
+Watch Electron application:
+
+    $ npx webpack -wc electron.config.js
+    $ npx electron dist/electron/main.bundle.js
+    [Press F12 to show dev tools, F5 to reload.]
+
 Build Electron application:
 
-    $ yarn build-linux # or build-macos, build-windows
-    $ cp dist/gtdtool-*.AppImage ~/bin/nextool # or dist/gtdtool-*.dmg, dist/gtdtool-*.exe
+    $ npm run build-linux # or build-macos, build-windows
+    $ cp dist/Nextool-*.AppImage ~/bin/nextool # or dist/Nextool-*.dmg, dist/Nextool-*.exe
 
 Release new version:
 
