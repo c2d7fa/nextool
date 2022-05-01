@@ -24,7 +24,8 @@ to make it executable.
 
 Run the client on a local development server:
 
-    $ npx parcel index.html
+    $ npx webpack -wc browser.config.js
+    $ open dist/browser/index.html
 
 Watch unit tests:
 
@@ -37,14 +38,14 @@ Run unit tests with coverage:
 
 Generate screenshot above:
 
-    $ npx parcel index.html &
+    $ npx webpack -c browser.config.js &
     $ gem install bundler
     $ bundle install
     $ ruby screenshot.rb
 
 Watch Electron application:
 
-    $ npx webpack -wc webpack-electron.config.js
+    $ npx webpack -wc electron.config.js
     $ npx electron dist/electron/main.bundle.js
     [Press F12 to show dev tools, F5 to reload.]
 
