@@ -1,3 +1,5 @@
+@use "./shared";
+
 .container {
   padding: 0 2em;
 
@@ -11,12 +13,19 @@
     box-sizing: border-box;
     max-width: 40ex;
 
-    color: #6a445b;
+    $hue: shared.$branding-hue;
 
-    border: 1px solid #bd5391;
-    background: linear-gradient(155deg, #fdbbe2, #efcbdf 3em, #fee7f4);
+    color: lch(30% 20 $hue);
+
+    border: 1px solid lch(40% 20 $hue);
+
+    $bg1: lch(90% 25 $hue);
+    $bg2: lch(88% 15 $hue);
+    $bg3: lch(95% 10 $hue);
+    background: linear-gradient(155deg, $bg1, $bg2 2em, $bg3);
+
     border-radius: 12px;
-    box-shadow: 0 6px 6px -6px #926a82;
+    box-shadow: 0 6px 6px -6px $bg2;
 
     padding: 1em;
     display: flex;
@@ -26,7 +35,7 @@
     overflow: auto;
 
     h1 {
-      color: #974a79;
+      color: lch(40% 20 $hue);
 
       text-align: center;
       margin: 0;

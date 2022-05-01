@@ -1,3 +1,5 @@
+@use "../lib/shared";
+
 .main {
   color: #333;
 
@@ -10,16 +12,16 @@
   row-gap: 1em;
 
   a {
-    color: #a84bb1;
+    color: lch(45% 30 shared.$branding-hue);
     font-weight: 500;
     text-decoration: none;
 
     &:hover {
-      color: #ba5cbc;
+      color: lch(55% 30 shared.$branding-hue);
     }
 
     &:active {
-      color: #7d3a7c;
+      color: lch(30% 30 shared.$branding-hue);
     }
   }
 
