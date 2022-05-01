@@ -1,5 +1,9 @@
 @use "../lib/shared";
 
+@import "sass-planifolia/sass/math";
+@import "sass-planifolia/sass/color";
+@import "sass-planifolia/sass/contrast";
+
 .main {
   color: #333;
 
@@ -12,16 +16,16 @@
   row-gap: 1em;
 
   a {
-    color: lch(45% 30 shared.$branding-hue);
+    color: lch(45, 30, shared.$branding-hue);
     font-weight: 500;
     text-decoration: none;
 
     &:hover {
-      color: lch(55% 30 shared.$branding-hue);
+      color: lch(55, 30, shared.$branding-hue);
     }
 
     &:active {
-      color: lch(30% 30 shared.$branding-hue);
+      color: lch(30, 30, shared.$branding-hue);
     }
   }
 

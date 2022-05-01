@@ -1,12 +1,16 @@
 @use "./shared";
 
+@import "sass-planifolia/sass/math";
+@import "sass-planifolia/sass/color";
+@import "sass-planifolia/sass/contrast";
+
 .todo {
   padding: 0 3px;
   border-radius: 3px;
-  border: 1px solid lch(40% 50 70 / 0.6);
-  color: lch(40% 20 70);
-  box-shadow: 0 3px 3px -3px lch(20% 50 70 / 0.3) inset;
-  background-color: lch(80% 50 70 / 0.3);
+  border: 1px solid lcha(40, 50, 70deg, 0.6);
+  color: lch(40, 20, 70deg);
+  box-shadow: 0 3px 3px -3px lcha(20, 50, 70deg, 0.3) inset;
+  background-color: lcha(80, 50, 70deg, 0.3);
 
   &::after {
     content: "WIP";
@@ -29,14 +33,14 @@
     box-sizing: border-box;
     max-width: 40ex;
 
-    color: lch(30% 20 $hue);
+    border: 1px solid lch(40, 20, $hue);
 
-    border: 1px solid lch(40% 20 $hue);
-
-    $bg1: lch(90% 25 $hue);
-    $bg2: lch(88% 15 $hue);
-    $bg3: lch(95% 10 $hue);
+    $bg1: lch(90, 25, $hue);
+    $bg2: lch(88, 15, $hue);
+    $bg3: lch(95, 10, $hue);
     background: linear-gradient(155deg, $bg1, $bg2 2em, $bg3);
+
+    color: contrast-stretch($bg2, $bg2, 8);
 
     border-radius: 12px;
     box-shadow: 0 6px 6px -6px $bg2;
@@ -49,8 +53,7 @@
     overflow: auto;
 
     h1 {
-      color: lch(40% 20 $hue);
-
+      color: contrast-stretch($bg2, $bg2, 5);
       text-align: center;
       margin: 0;
       font-size: 1em;
@@ -71,12 +74,12 @@
   }
 
   .step {
-    $g: 12;
+    $g: 12deg;
 
-    &:nth-child(1) { @include step(shared.$branding-hue - ($g * 5)); }
-    &:nth-child(2) { @include step(shared.$branding-hue - ($g * 4)); }
-    &:nth-child(3) { @include step(shared.$branding-hue - ($g * 3)); }
-    &:nth-child(4) { @include step(shared.$branding-hue - ($g * 2)); }
-    &:nth-child(5) { @include step(shared.$branding-hue - ($g * 1)); }
+    &:nth-child(1) { @include step(shared.$branding_hue - $g * 5); }
+    &:nth-child(2) { @include step(shared.$branding_hue - $g * 4); }
+    &:nth-child(3) { @include step(shared.$branding_hue - $g * 3); }
+    &:nth-child(4) { @include step(shared.$branding_hue - $g * 2); }
+    &:nth-child(5) { @include step(shared.$branding_hue - $g * 1); }
   }
 }

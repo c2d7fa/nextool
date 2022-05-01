@@ -1,7 +1,11 @@
-$branding-hue: 350;
-$red-hue: 30;
-$orange-hue: 70;
-$green-hue: 135;
-$project-hue: 300;
+@import "sass-planifolia/sass/math";
+@import "sass-planifolia/sass/color";
+@import "sass-planifolia/sass/contrast";
 
-$branding-color: lch(75% 30 $branding-hue);
+$branding-hue: 350deg;
+$red-hue: 30deg;
+$orange-hue: 70deg;
+$green-hue: 135deg;
+$project-hue: 300deg;
+
+$branding-color: lch(75, 30, $branding-hue);
