@@ -1,5 +1,21 @@
 @use "./shared";
 
+.todo {
+  padding: 0 3px;
+  border-radius: 3px;
+  border: 1px solid lch(40% 50 70 / 0.6);
+  color: lch(40% 20 70);
+  box-shadow: 0 3px 3px -3px lch(20% 50 70 / 0.3) inset;
+  background-color: lch(80% 50 70 / 0.3);
+
+  &::after {
+    content: "WIP";
+    font-size: 0.55em;
+    vertical-align: text-top;
+    font-weight: bold;
+  }
+}
+
 .container {
   padding: 0 2em;
 
@@ -45,7 +61,13 @@
     }
 
     p {
+      line-height: 1.5;
       margin: 0;
+
+      @supports (hyphens: auto) {
+        hyphens: auto;
+        text-align: justify;
+      }
     }
   }
 
