@@ -1,3 +1,5 @@
+@use "../lib/shared";
+
 .main {
   color: #333;
 
@@ -10,23 +12,22 @@
   row-gap: 1em;
 
   a {
-    color: #3f5a88;
+    color: lch(45% 30 shared.$branding-hue);
     font-weight: 500;
     text-decoration: none;
 
     &:hover {
-      color: #62779d;
+      color: lch(55% 30 shared.$branding-hue);
     }
 
     &:active {
-      color: #374a6d;
+      color: lch(30% 30 shared.$branding-hue);
     }
   }
 
-  h1 {
+  & > h1 {
     color: #666;
     margin: 0;
-    margin: 1em;
     font-size: 2em;
     font-family: "Roboto Condensed";
     text-transform: uppercase;
@@ -34,27 +35,25 @@
     font-weight: normal;
   }
 
-  h2 {
+  & > h2 {
     color: #666;
     margin: 0;
-    margin: 1em;
     font-size: 1.5em;
     font-family: "Roboto Condensed";
     font-weight: normal;
   }
 
-  p {
+  & > p {
     margin: 0;
     width: 30em;
     line-height: 1.5;
   }
 
-  img {
-    margin: 2em;
+  & > img {
     max-width: 60%;
-    border-radius: 6px;
+    border-radius: 12px;
     padding: 1px;
-    border: 1px solid #666;
-    box-shadow: 0 6px 6px -6px #aaa;
+    border: 1px solid #bd5391;
+    box-shadow: 0 6px 6px -6px #926a82;
   }
 }
