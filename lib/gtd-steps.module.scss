@@ -9,11 +9,9 @@
   grid-template-columns: repeat(5, 1fr);
   column-gap: 1em;
 
-  .step {
+  @mixin step($hue) {
     box-sizing: border-box;
     max-width: 40ex;
-
-    $hue: shared.$branding-hue;
 
     color: lch(30% 20 $hue);
 
@@ -49,5 +47,15 @@
     p {
       margin: 0;
     }
+  }
+
+  .step {
+    $g: 12;
+
+    &:nth-child(1) { @include step(shared.$branding-hue - ($g * 5)); }
+    &:nth-child(2) { @include step(shared.$branding-hue - ($g * 4)); }
+    &:nth-child(3) { @include step(shared.$branding-hue - ($g * 3)); }
+    &:nth-child(4) { @include step(shared.$branding-hue - ($g * 2)); }
+    &:nth-child(5) { @include step(shared.$branding-hue - ($g * 1)); }
   }
 }
