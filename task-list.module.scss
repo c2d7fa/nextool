@@ -1,5 +1,9 @@
 @use "./shared";
 
+@import "node_modules/sass-planifolia/sass/math";
+@import "node_modules/sass-planifolia/sass/contrast";
+@import "node_modules/sass-planifolia/sass/color";
+
 $project-hue: shared.$project-hue;
 
 .task {
@@ -156,17 +160,17 @@ $project-hue: shared.$project-hue;
     &.project {
       background: linear-gradient(
         45deg,
-        color-mix(in lch, lch(95% 5 $project-hue), red 5%),
-        lch(97% 5 $project-hue) 1em,
+        pf-mix(lch(95, 5, $project-hue), red, 95%),
+        lch(97, 5, $project-hue) 1em,
         white 10em
       );
 
       &:hover {
         background: linear-gradient(
           45deg,
-          color-mix(in lch, lch(80% 30 $project-hue) 10%, color-mix(in lch, lch(95% 5 $project-hue), red 5%)),
-          color-mix(in lch, lch(80% 30 $project-hue) 10%, lch(97% 5 $project-hue)) 1em,
-          color-mix(in lch, lch(80% 30 $project-hue) 10%, white) 10em
+          pf-mix(pf-mix(lch(80, 30, $project-hue), lch(95, 5, $project-hue), 10%), red, 95%),
+          pf-mix(lch(80, 30, $project-hue), lch(97, 5, $project-hue), 10%) 1em,
+          pf-mix(lch(80, 30, $project-hue), white, 10%) 10em
         );
       }
     }
@@ -174,17 +178,17 @@ $project-hue: shared.$project-hue;
     &.today {
       background: linear-gradient(
         45deg,
-        lch(89% 20 shared.$red-hue),
-        lch(95% 20 shared.$red-hue) 1em,
+        lch(89, 20, shared.$red-hue),
+        lch(95, 20, shared.$red-hue) 1em,
         white 10em
       );
 
       &:hover {
         background: linear-gradient(
           45deg,
-          color-mix(in lch, lch(80% 30 shared.$red-hue) 10%, color-mix(in lch, lch(95% 5 shared.$red-hue), red 5%)),
-          color-mix(in lch, lch(80% 30 shared.$red-hue) 10%, lch(97% 5 shared.$red-hue)) 1em,
-          color-mix(in lch, lch(80% 30 shared.$red-hue) 10%, white) 10em
+          pf-mix(pf-mix(lch(80, 30, shared.$red-hue), lch(95, 5, shared.$red-hue), 10%), red, 95%),
+          pf-mix(lch(80, 30, shared.$red-hue), lch(97, 5, shared.$red-hue), 10%) 1em,
+          pf-mix(lch(80, 30, shared.$red-hue), white, 10%) 10em
         );
       }
     }

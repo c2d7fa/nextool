@@ -1,19 +1,23 @@
 @import "https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;1,400;1,500&display=swap";
 @import "https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,400;0,500;1,400;1,500&display=swap";
 
-$branding-hue: 350;
-$red-hue: 30;
-$orange-hue: 70;
-$green-hue: 135;
-$project-hue: 300;
+@import "node_modules/sass-planifolia/sass/math";
+@import "node_modules/sass-planifolia/sass/contrast";
+@import "node_modules/sass-planifolia/sass/color";
 
-$branding-color: lch(75% 30 $branding-hue);
+$branding-hue: 350deg;
+$red-hue: 30deg;
+$orange-hue: 70deg;
+$green-hue: 135deg;
+$project-hue: 300deg;
+
+$branding-color: lch(75, 30, $branding-hue);
 
 @mixin badge-like($hue) {
-  border: 1px solid lch(50% 10 $hue);
-  background: linear-gradient(to top, lch(89% 30 $hue), lch(91% 30 $hue));
-  color: lch(40% 10 $hue);
-  box-shadow: 0 2px 0px -1px lch(87% 30 $hue);
+  border: 1px solid lch(50, 10, $hue);
+  background: linear-gradient(to top, lch(89, 30, $hue), lch(91, 30, $hue));
+  color: lch(40, 10, $hue);
+  box-shadow: 0 2px 0px -1px lch(87, 30, $hue);
   font-family: 'Roboto Condensed';
 }
 
@@ -97,42 +101,42 @@ $padding-y: 0.3em;
 }
 
 @mixin button-color($hue) {
-  border: 1px solid lch(55% 30 $hue);
+  border: 1px solid lch(55, 30, $hue);
   background: linear-gradient(
     to bottom,
-    lch(82% 30 $hue),
-    lch(78% 30 $hue)
+    lch(82, 30, $hue),
+    lch(78, 30, $hue)
   );
-  color: lch(40% 30 $hue);
-  box-shadow: 0 3px 3px -3px lch(60% 30 $hue);
+  color: lch(40, 30, $hue);
+  box-shadow: 0 3px 3px -3px lch(60, 30, $hue);
 
   &:hover {
-    border-color: lch(30% 30 $hue);
+    border-color: lch(30, 30, $hue);
   }
 }
 
 @mixin text-field-color($hue) {
-  border: 1px solid lch(55% 30 $hue);
-  background: lch(84% 30 $hue);
-  color: lch(40% 30 $hue);
-  box-shadow: 0 3px 3px -3px lch(60% 30 $hue) inset;
+  border: 1px solid lch(55, 30, $hue);
+  background: lch(84, 30, $hue);
+  color: lch(40, 30, $hue);
+  box-shadow: 0 3px 3px -3px lch(60, 30, $hue) inset;
 
   &::placeholder {
-    color: lch(65% 30 $hue);
+    color: lch(65, 30, $hue);
   }
 
   &:hover {
-    border-color: lch(30% 30 $hue);
+    border-color: lch(30, 30, $hue);
   }
 
   &:focus {
-    border-color: lch(30% 10 $hue);
-    background: lch(94% 10 $hue);
+    border-color: lch(30, 10, $hue);
+    background: lch(94, 10, $hue);
 
-    color: lch(40% 10 $hue);
+    color: lch(40, 10, $hue);
     
     &::placeholder {
-      color: lch(80% 10 $hue);
+      color: lch(80, 10, $hue);
     }
   }
 }

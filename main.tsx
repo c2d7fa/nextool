@@ -147,7 +147,7 @@ function FileControls(props: {view: App.FileControlsView; send: App.Send}) {
   }
 }
 
-function Main(props: {platform: Platform}) {
+export function Main(props: {platform: Platform}) {
   const [pendingEffects, setPendingEffects] = React.useState<App.Effect[]>([]);
 
   const [app, send] = React.useReducer((app: App.State, ev: App.Event) => {
