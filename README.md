@@ -24,28 +24,34 @@ to make it executable.
 
 Run the client on a local development server:
 
-    $ yarn parcel index.html
+    $ npx parcel index.html
 
 Watch unit tests:
 
-    $ yarn jest --watch-all --verbose
+    $ npx jest --watch-all --verbose
 
 Run unit tests with coverage:
 
-    $ yarn jest --verbose --coverage=true --collectCoverageFrom=*.ts
+    $ npx jest --verbose --coverage=true --collectCoverageFrom=*.ts
     $ open ./coverage/lcov-report/index.html
 
 Generate screenshot above:
 
-    $ yarn parcel index.html &
+    $ npx parcel index.html &
     $ gem install bundler
     $ bundle install
     $ ruby screenshot.rb
 
+Watch Electron application:
+
+    $ npx webpack -wc webpack-electron.config.js
+    $ npx electron dist/electron/main.bundle.js
+    [Press F12 to show dev tools, F5 to reload.]
+
 Build Electron application:
 
-    $ yarn build-linux # or build-macos, build-windows
-    $ cp dist/gtdtool-*.AppImage ~/bin/nextool # or dist/gtdtool-*.dmg, dist/gtdtool-*.exe
+    $ npm run build-linux # or build-macos, build-windows
+    $ cp dist/Nextool-*.AppImage ~/bin/nextool # or dist/Nextool-*.dmg, dist/Nextool-*.exe
 
 Release new version:
 
