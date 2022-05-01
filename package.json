@@ -45,7 +45,7 @@
     }
   },
   "scripts": {
-    "watch": "parcel index.html",
+    "watch": "webpack -wc browser.config.js",
     "test": "jest --verbose",
     "watch-tests": "jest --watch-all --verbose",
     "prepare-build": "webpack -c webpack-electron.config.js",
