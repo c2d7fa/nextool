@@ -18,7 +18,7 @@ export function GtdSteps() {
   return (
     <div className={styles.container} lang="en-US">
       <Step title="1. Capture">
-        Capture everything to the <TodoFeature>Inbox</TodoFeature> immediately, so you never have to remember
+        Capture everything to the <TodoFeature>inbox</TodoFeature> immediately, so you never have to remember
         anything for longer than it takes to write it down.
       </Step>
       <Step title="2. Clarify">
@@ -27,7 +27,7 @@ export function GtdSteps() {
       </Step>
       <Step title="3. Organize">
         Keep track of projects, use <TodoFeature>due dates</TodoFeature> and <TodoFeature>planning</TodoFeature> to
-        schedule tasks, track <TodoFeature>delegated tasks</TodoFeature>.
+        schedule tasks, and track <TodoFeature>delegated tasks</TodoFeature>.
       </Step>
       <Step title="4. Review">
         Nextool automatically marks tasks as stalled when there's nothing to do. As long as there aren't any
