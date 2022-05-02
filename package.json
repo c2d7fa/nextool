@@ -1,6 +1,6 @@
 {
   "name": "nextool",
-  "version": "1.4.1",
+  "version": "2.0.0",
   "devDependencies": {
     "@types/jest": "^27.4.1",
     "@types/react": "^18.0.5",
@@ -13,12 +13,12 @@
     "html-webpack-plugin": "^5.5.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^27.5.1",
-    "mini-css-extract-plugin": "^2.6.0",
     "postcss": "^8.4.13",
     "postcss-loader": "^6.2.1",
     "postcss-preset-env": "^7.4.4",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
+    "sass": "^1.51.0",
     "sass-loader": "^12.6.0",
     "sass-planifolia": "^0.6.0",
     "style-loader": "^3.3.1",
@@ -45,7 +45,7 @@
     "watch": "webpack -wc browser.config.js",
     "test": "jest --verbose",
     "watch-tests": "jest --watch-all --verbose",
-    "prepare-build": "webpack -c webpack-electron.config.js",
+    "prepare-build": "webpack -c electron.config.js",
     "build-linux": "npm run prepare-build && npx electron-builder --publish=never -l",
     "build-macos": "npm run prepare-build && npx electron-builder --publish=never -m",
     "build-windows": "npm run prepare-build && npx electron-builder --publish=never -w"
