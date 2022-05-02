@@ -1,8 +1,5 @@
 @use "../lib/shared";
-
-@import "sass-planifolia/sass/math";
-@import "sass-planifolia/sass/color";
-@import "sass-planifolia/sass/contrast";
+@use "~@johv/sass-labmix" as *;
 
 .main {
   color: #333;

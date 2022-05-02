@@ -1,6 +1,4 @@
-@import "sass-planifolia/sass/math";
-@import "sass-planifolia/sass/color";
-@import "sass-planifolia/sass/contrast";
+@use "~@johv/sass-labmix" as *;
 
 $branding-hue: 350deg;
 $red-hue: 30deg;
