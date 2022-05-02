@@ -1,9 +1,7 @@
+@use "~@johv/sass-labmix/index.scss" as *;
+
 @import "https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;1,400;1,500&display=swap";
 @import "https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,400;0,500;1,400;1,500&display=swap";
-
-@import "node_modules/sass-planifolia/sass/math";
-@import "node_modules/sass-planifolia/sass/contrast";
-@import "node_modules/sass-planifolia/sass/color";
 
 $branding-hue: 350deg;
 $red-hue: 30deg;
