@@ -1,4 +1,4 @@
-import {start} from "../main";
+import {start} from "../app/main";
 
 start({
   async readLocalStorage() {
