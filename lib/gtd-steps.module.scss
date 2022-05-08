@@ -71,12 +71,8 @@
   }
 
   .step {
-    $g: 12deg;
-
-    &:nth-child(1) { @include step(shared.$branding_hue - $g * 5); }
-    &:nth-child(2) { @include step(shared.$branding_hue - $g * 4); }
-    &:nth-child(3) { @include step(shared.$branding_hue - $g * 3); }
-    &:nth-child(4) { @include step(shared.$branding_hue - $g * 2); }
-    &:nth-child(5) { @include step(shared.$branding_hue - $g * 1); }
+    @for $i from 0 to 5 {
+      &:nth-child(#{$i + 1}) { @include step(shared.$branding_hue - 12deg * (5 - $i)); }
+    }
   }
 }
