@@ -1,6 +1,12 @@
 {
   "name": "nextool",
   "version": "2.0.0",
+  "main": "dist/index.js",
+  "files": ["dist"],
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
   "devDependencies": {
     "@johv/sass-labmix": "^1.0.1",
     "@types/jest": "^27.4.1",
@@ -14,6 +20,7 @@
     "html-webpack-plugin": "^5.5.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^27.5.1",
+    "mini-css-extract-plugin": "^2.6.0",
     "postcss": "^8.4.13",
     "postcss-loader": "^6.2.1",
     "postcss-preset-env": "^7.4.4",
@@ -28,26 +35,9 @@
     "webpack": "^5.72.0",
     "webpack-cli": "^4.9.2"
   },
-  "build": {
-    "appId": "dk.johv.nextool",
-    "productName": "Nextool",
-    "extraMetadata": {
-      "main": "dist/electron/main.bundle.js"
-    },
-    "files": [
-      "dist/electron/**/*"
-    ],
-    "win": {
-      "target": "portable"
-    }
-  },
   "scripts": {
-    "watch": "webpack -wc browser.config.js",
     "test": "jest --verbose",
     "watch-tests": "jest --watch-all --verbose",
-    "prepare-build": "webpack -c electron.config.js",
-    "build-linux": "npm run prepare-build && npx electron-builder --publish=never -l",
-    "build-macos": "npm run prepare-build && npx electron-builder --publish=never -m",
-    "build-windows": "npm run prepare-build && npx electron-builder --publish=never -w"
+    "build": "webpack"
   }
 }
