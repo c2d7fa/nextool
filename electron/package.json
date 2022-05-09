@@ -1,8 +1,6 @@
 {
   "name": "nextool",
   "version": "2.0.0",
-  "main": "dist/index.js",
-  "files": ["dist"],
   "peerDependencies": {
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
@@ -35,10 +33,22 @@
     "webpack": "^5.72.0",
     "webpack-cli": "^4.9.2"
   },
+  "build": {
+    "appId": "dk.johv.nextool",
+    "productName": "Nextool",
+    "extraMetadata": {
+      "main": "dist/main.js"
+    },
+    "files": ["dist/**/*"],
+    "win": {
+      "target": "portable"
+    }
+  },
   "scripts": {
-    "test": "jest --verbose",
-    "watch-tests": "jest --watch-all --verbose",
-    "build": "webpack",
-    "prepack": "npm ci && npm run build"
+    "postinstall": "cd ../app && npm pack && cd ../electron && npm install --ignore-scripts --no-save ../app/nextool-*.tgz",
+    "prepare-build": "npx webpack",
+    "build-linux": "npm run prepare-build && npx electron-builder --publish=never -l",
+    "build-windows": "npm run prepare-build && npx electron-builder --publish=never -w",
+    "build-macos": "npm run prepare-build && npx electron-builder --publish=never -m"
   }
 }

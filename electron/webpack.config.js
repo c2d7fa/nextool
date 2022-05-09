@@ -4,25 +4,25 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 module.exports = [
   {
     mode: "development",
-    entry: "./electron/main/index.js",
+    entry: "./main/index.js",
     target: "electron-main",
     output: {
-      path: path.resolve(__dirname, "dist/electron"),
-      filename: "main.bundle.js",
+      path: path.resolve(__dirname, "dist"),
+      filename: "main.js",
     },
   },
   {
     mode: "development",
-    entry: "./electron/preload/index.js",
+    entry: "./preload/index.js",
     target: "electron-preload",
     output: {
-      path: path.resolve(__dirname, "dist/electron"),
-      filename: "preload.bundle.js",
+      path: path.resolve(__dirname, "dist"),
+      filename: "preload.js",
     },
   },
   {
     mode: "development",
-    entry: "./electron/renderer/index.js",
+    entry: "./renderer/index.js",
     target: "electron-renderer",
     module: {
       rules: [
@@ -66,12 +66,12 @@ module.exports = [
       ],
     },
     output: {
-      path: path.resolve(__dirname, "dist/electron"),
-      filename: "renderer.bundle.js",
+      path: path.resolve(__dirname, "dist"),
+      filename: "renderer.js",
     },
     plugins: [
       new HtmlWebpackPlugin({
-        template: "./electron/renderer/index.html",
+        template: "./renderer/index.html",
         filename: "index.html",
       }),
     ],
