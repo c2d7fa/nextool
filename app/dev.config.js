@@ -1,16 +1,12 @@
 const path = require("path");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
-  mode: "production",
-  entry: "./main.tsx",
-  target: "electron-main",
+  mode: "development",
+  entry: "./dev.tsx",
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "index.js",
-    library: {
-      type: "commonjs",
-    },
   },
   module: {
     rules: [
@@ -22,7 +18,7 @@ module.exports = {
       {
         test: /\.s?css$/,
         use: [
-          MiniCssExtractPlugin.loader,
+          "style-loader",
           {
             loader: "css-loader",
             options: {
@@ -54,14 +50,12 @@ module.exports = {
     ],
   },
   plugins: [
-    new MiniCssExtractPlugin({
-      filename: "index.css",
+    new HtmlWebpackPlugin({
+      template: "./dev.html",
+      filename: "index.html",
     }),
   ],
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
-  },
-  externals: {
-    "react": "react",
   },
 };

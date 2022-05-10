@@ -29,8 +29,8 @@ application. These clients share most of their code, but they plug in different
 platform-specefic functions, and they each have their own build process.
 
 The shared code is its own NPM package, which resides in the `app/` directory.
-The Electron client is in the `electron/` directory, and the web client does not
-yet exist.
+The Electron client is in the `electron/` directory. The web client does not yet
+exist.
 
 Unfortunately, working on a project that consists of multiple NPM packages can
 be a bit painful. In theory, NPM will let you add a local dependency with `npm
@@ -49,12 +49,26 @@ package to build a clean release (using `npm pack`) of the shared code package,
 and then install that at runtime. The disadvantage of this approach is that we
 have to rebuild the entire thing each time we make a change.
 
+### Working on the shared code
+
+This is the main way of doing development on Nextool. To watch for changes and
+continually generate an example of the app (according to `dev.tsx`) in
+`dist/index.html`, run:
+
+    $ cd app
+    $ npx webpack -wc dev.config.js
+
+Then, run a server in the `dist/` directory:
+
+    $ cd app/dist
+    $ python -m http.server 3000
+
 ### Working on the Electron client
 
-To get around the problems described above, we can add yet another hack on top
-of this build process, where we manually symlink `node_modules/nextool/dist` to
-the true `dist/` directory inside the shared code package, but without
-symlinking anything else.
+To get around the fact that we need to rebuild the entire `app` package each
+time we make a change, we can add yet another hack on top of this build process,
+where we manually symlink `node_modules/nextool/dist` to the true `dist/`
+directory inside the shared code package, but without symlinking anything else.
 
 Thus, to work on the Electron client in development, while seeing updates made
 in the shared code package, we first build the dependencies (which automatically
@@ -104,8 +118,8 @@ Run unit tests with coverage:
 ### Take screenshot
 
 The screenshot above can be generated automatically. First, start the
-application on `localhost:1234`. **(TODO: This currently isn't possible.)** Then
-run:
+application on `localhost:3000` as described in *Working on the shared code*
+above. Then run:
 
     $ npx webpack -c browser.config.js &
     $ gem install bundler
