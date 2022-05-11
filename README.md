@@ -102,7 +102,7 @@ To refresh, press F5, and to show the developer tools, press F12.
 Run test suite:
 
     $ cd app
-    $ npx jest --`erbose
+    $ npx jest --verbose
 
 Watch unit tests:
 
@@ -121,7 +121,6 @@ The screenshot above can be generated automatically. First, start the
 application on `localhost:3000` as described in *Working on the shared code*
 above. Then run:
 
-    $ npx webpack -c browser.config.js &
     $ gem install bundler
     $ bundle install
     $ ruby screenshot.rb

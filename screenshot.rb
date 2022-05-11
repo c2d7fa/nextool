@@ -12,7 +12,7 @@ driver.find_element(:xpath, "//*[contains(text(), 'Task 1')]").click
 driver.find_element(:xpath, "//*[contains(text(), 'Planned')]/following::input[@type = 'date']").send_keys(date)
 
 driver.find_element(:xpath, "//*[contains(text(), 'Actions')]").click
-main = driver.find_element(:xpath, "//*[@id = 'root']")
+main = driver.find_element(:xpath, "//*[contains(@class, 'outerContainer')]")
 driver.execute_script("arguments[0].style.maxWidth = '1000px'", main)
 driver.execute_script("arguments[0].style.maxHeight = '550px'", main)
 driver.execute_script("arguments[0].style.minHeight = 'auto'", main)
