@@ -1,4 +1,4 @@
-import {start} from "../main";
+import {start} from "./main";
 
 start({
   async readLocalStorage() {
@@ -21,10 +21,10 @@ start({
       const input = document.createElement("input");
       input.type = "file";
       input.onchange = (ev) => {
-        const file = ev.target.files[0];
+        const file = (ev.target as any).files[0];
         const reader = new FileReader();
         reader.onload = (ev) => {
-          const contents = ev.target.result;
+          const contents = (ev.target as any).result;
           resolve({name: file.name, contents});
         };
         reader.readAsText(file);

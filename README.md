@@ -22,40 +22,120 @@ to make it executable.
 
 ## Development
 
-Run the client on a local development server:
+### Package structure
 
-    $ npx webpack -wc browser.config.js
-    $ open dist/browser/index.html
+Nextool has two clients, an Electron-based desktop application, and a web
+application. These clients share most of their code, but they plug in different
+platform-specefic functions, and they each have their own build process.
+
+The shared code is its own NPM package, which resides in the `app/` directory.
+The Electron client is in the `electron/` directory. The web client does not yet
+exist.
+
+Unfortunately, working on a project that consists of multiple NPM packages can
+be a bit painful. In theory, NPM will let you add a local dependency with `npm
+install ../app` (for example). However, the problem with this is that it just
+adds a symbolic link.
+
+When the bundler for the Electron client (for example) tries to look up
+dependencies, it will find the `node_modules` folder of the package for the
+shared code. However, when we build the shared code package in production, it
+builds a clean package that consists of just `package.json` and the output
+that's built into `dist/` (see the `package.json`). This gives different results
+in development and production.
+
+Instead, we use a somewhat hacky approach where we have configured the Electron
+package to build a clean release (using `npm pack`) of the shared code package,
+and then install that at runtime. The disadvantage of this approach is that we
+have to rebuild the entire thing each time we make a change.
+
+### Working on the shared code
+
+This is the main way of doing development on Nextool. To watch for changes and
+continually generate an example of the app (according to `dev.tsx`) in
+`dist/index.html`, run:
+
+    $ cd app
+    $ npx webpack -wc dev.config.js
+
+Then, run a server in the `dist/` directory:
+
+    $ cd app/dist
+    $ python -m http.server 3000
+
+### Working on the Electron client
+
+To get around the fact that we need to rebuild the entire `app` package each
+time we make a change, we can add yet another hack on top of this build process,
+where we manually symlink `node_modules/nextool/dist` to the true `dist/`
+directory inside the shared code package, but without symlinking anything else.
+
+Thus, to work on the Electron client in development, while seeing updates made
+in the shared code package, we first build the dependencies (which automatically
+runs `npm pack` on the shared code package), and then we symlink `dist/` inside
+the package:
+
+    $ cd electron
+    $ npm ci
+    $ ln -sf $PWD/../app/dist node_modules/nextool/dist
+
+Then, we run `webpack -w` in the shared code package to continually rebuild
+changes:
+
+    $ cd app
+    $ npx webpack -w
+
+And then we also watch for changes in the Electron client package:
+
+    $ cd electron
+    $ npx webpack -w
+
+Finally, we can open the Electron application:
+
+    $ cd electron
+    $ npx electron dist/main.js
+
+To refresh, press F5, and to show the developer tools, press F12.
+
+### Running tests
+
+Run test suite:
+
+    $ cd app
+    $ npx jest --verbose
 
 Watch unit tests:
 
+    $ cd app
     $ npx jest --watch-all --verbose
 
 Run unit tests with coverage:
 
+    $ cd app
     $ npx jest --verbose --coverage=true --collectCoverageFrom=*.ts
     $ open ./coverage/lcov-report/index.html
 
-Generate screenshot above:
+### Take screenshot
 
-    $ npx webpack -c browser.config.js &
+The screenshot above can be generated automatically. First, start the
+application on `localhost:3000` as described in *Working on the shared code*
+above. Then run:
+
     $ gem install bundler
     $ bundle install
     $ ruby screenshot.rb
 
-Watch Electron application:
+### Build Electron application
 
-    $ npx webpack -wc electron.config.js
-    $ npx electron dist/electron/main.bundle.js
-    [Press F12 to show dev tools, F5 to reload.]
+To build a production release of the Electron application, run:
 
-Build Electron application:
-
+    $ cd electron
+    $ npm ci
     $ npm run build-linux # or build-macos, build-windows
     $ cp dist/Nextool-*.AppImage ~/bin/nextool # or dist/Nextool-*.dmg, dist/Nextool-*.exe
 
-Release new version:
+### Release new version
 
-1. Update version number in `package.json`
+1. Update version number in `app/package.json` and `electron/package.json`
 2. Run `git tag vX.X.X` and `git push --tags`
 3. Write description for release on GitHub

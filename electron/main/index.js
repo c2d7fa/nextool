@@ -14,7 +14,7 @@ if (process.argv[1] !== "--safe") {
 electron.app.whenReady().then(async () => {
   const window = new electron.BrowserWindow({
     webPreferences: {
-      preload: path.join(__dirname, "preload.bundle.js"),
+      preload: path.join(__dirname, "preload.js"),
     },
   });
 
