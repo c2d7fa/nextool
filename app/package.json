@@ -38,8 +38,7 @@
   "scripts": {
     "test": "jest --verbose",
     "watch-tests": "jest --watch-all --verbose",
-    "build-declarations": "npx tsc --strict --jsx react --target es2016 --esModuleInterop --noUncheckedIndexedAccess --moduleResolution node --emitDeclarationOnly --declaration --outFile dist/index.d.ts declaration.d.ts main.tsx",
-    "build": "webpack && npm run build-declarations",
+    "build": "webpack",
     "prepack": "npm ci && npm run build"
   }
 }
