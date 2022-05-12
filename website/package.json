@@ -1,6 +1,7 @@
 {
   "private": true,
   "scripts": {
+    "postinstall": "cd ../app && npm pack && cd ../website && npm install --ignore-scripts --no-save ../app/nextool-*.tgz",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
