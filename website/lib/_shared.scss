@@ -1,0 +1,9 @@
+@use "~@johv/sass-labmix" as *;
+
+$branding-hue: 350deg;
+$red-hue: 30deg;
+$orange-hue: 70deg;
+$green-hue: 135deg;
+$project-hue: 300deg;
+
+$branding-color: lch(75, 30, $branding-hue);
