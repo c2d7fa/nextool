@@ -26,26 +26,30 @@ function AddTask(props: {view: App.View["addTask"]; send(ev: App.Event): void}) 
   );
 }
 
+function Indicator(props: {indicator: App.FilterIndicator}) {
+  if (props.indicator === null) return null;
+  else if ("text" in props.indicator) {
+    return (
+      <span className={[style.indicator, style[props.indicator.color]].join(" ")}>
+        <span className={style.text}>{props.indicator.text}</span>
+      </span>
+    );
+  } else {
+    return <span className={[style.indicator, style.small].join(" ")} />;
+  }
+}
+
 function Filter(props: {
   filter: App.FilterView;
   send(ev: App.SelectFilterEvent | Drag.DragEvent<never, App.DropId>): void;
 }) {
-  const indicator =
-    props.filter.indicator === null ? null : "text" in props.filter.indicator ? (
-      <span className={style.indicator}>
-        <span className={style.text}>{props.filter.indicator.text}</span>
-      </span>
-    ) : (
-      <span className={[style.indicator, style.small].join(" ")} />
-    );
-
   const inner = (
     <button
       onClick={() => props.send({tag: "selectFilter", filter: props.filter.filter})}
       className={props.filter.selected ? style.selected : ""}
     >
       <span className={style.label}>{props.filter.label}</span>
-      {indicator}
+      <Indicator indicator={props.filter.indicator} />
     </button>
   );
 
@@ -151,8 +155,8 @@ export function Main(props: {platform: Platform}) {
   const [pendingEffects, setPendingEffects] = React.useState<App.Effect[]>([]);
 
   const [app, send] = React.useReducer((app: App.State, ev: App.Event) => {
-    setPendingEffects((effects) => [...effects, ...App.effects(app, ev)]);
-    return App.updateApp(app, ev);
+    setPendingEffects((effects) => [...effects, ...App.effects(app, ev, {today: new Date()})]);
+    return App.updateApp(app, ev, {today: new Date()});
   }, App.empty);
 
   React.useEffect(() => {
@@ -203,8 +207,8 @@ export function SmallDemo(props: {}) {
   const [pendingEffects, setPendingEffects] = React.useState<App.Effect[]>([]);
 
   const [app, send] = React.useReducer((app: App.State, ev: App.Event) => {
-    setPendingEffects((effects) => [...effects, ...App.effects(app, ev)]);
-    return App.updateApp(app, ev);
+    setPendingEffects((effects) => [...effects, ...App.effects(app, ev, {today: new Date()})]);
+    return App.updateApp(app, ev, {today: new Date()});
   }, App.empty);
 
   React.useEffect(() => {

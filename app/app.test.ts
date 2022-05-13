@@ -20,8 +20,8 @@ function stateAndEffectsAfter(state: State, events: (Event | ((view: View) => Ev
       resultState = state;
       resultEffects = effects;
     } else {
-      resultEffects = [...resultEffects, ...effects(resultState, event)];
-      resultState = updateApp(resultState, event);
+      resultEffects = [...resultEffects, ...effects(resultState, event, {today: new Date("2020-03-15")})];
+      resultState = updateApp(resultState, event, {today: new Date("2020-03-15")});
     }
   }
 
@@ -186,6 +186,12 @@ function dropTargetsAfter_(view: View | State, n: number): DropTargetView[] {
 
 function dropTargetsAfter(view: View | State, n: number) {
   return dropTargetsAfter_(view, n).map((dropTarget) => select(dropTarget, ["width", "indentation"]));
+}
+
+function indicatorForFilter(view: View | State, label: string) {
+  return viewed(view)
+    .sideBar.flatMap((section) => section.filters)
+    .find((filter) => filter.label === label)?.indicator;
 }
 
 // -----
@@ -1209,6 +1215,7 @@ describe("section filters", () => {
       describe("initially", () => {
         test("only the 'ready' filter is active", () => {
           expect(filtersInSection(step1, "Actions")).toEqual([
+            {label: "Today", selected: false},
             {label: "Ready", selected: true},
             {label: "Stalled", selected: false},
           ]);
@@ -1220,6 +1227,7 @@ describe("section filters", () => {
       describe("after selecting the actions section filter", () => {
         test("all filters in the 'actions' section become active", () => {
           expect(filtersInSection(step2, "Actions")).toEqual([
+            {label: "Today", selected: true},
             {label: "Ready", selected: true},
             {label: "Stalled", selected: true},
           ]);
@@ -1298,6 +1306,7 @@ describe("section filters", () => {
         ...addTask("Ready 2"),
         ...addTask("Stalled 1"),
         ...addTask("Stalled 2"),
+        dragToFilter(0, "today"),
         dragToFilter(0, "ready"),
         dragToFilter(1, "ready"),
         ...switchToFilter({type: "section", section: "actions"}),
@@ -1305,8 +1314,12 @@ describe("section filters", () => {
 
       const taskListHeadings = (view: View | State) => viewed(view).taskList.map((section) => section.title);
 
-      test("has sections titled 'Ready' and 'Stalled'", () => {
-        expect(taskListHeadings(example)).toEqual(["Ready", "Stalled"]);
+      test("has sections titled 'Today', 'Ready' and 'Stalled'", () => {
+        expect(taskListHeadings(example)).toEqual(["Today", "Ready", "Stalled"]);
+      });
+
+      test("the 'Today' section has the task that are planned today", () => {
+        expect(tasksInSection(example, "Today", "title")).toEqual(["Ready 1"]);
       });
 
       test("the 'Ready' section has the two tasks that are ready", () => {
@@ -1623,11 +1636,6 @@ describe("paused tasks", () => {
 
 describe("the stalled filter", () => {
   describe("its counter", () => {
-    function indicatorForFilter(view: View, label: string) {
-      return view.sideBar.flatMap((section) => section.filters).find((filter) => filter.label === label)
-        ?.indicator;
-    }
-
     describe("the counter shows stalled tasks", () => {
       const step1 = updateAll(empty, []);
 
@@ -1638,7 +1646,7 @@ describe("the stalled filter", () => {
       const step2 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task")]);
 
       test("after adding task, the counter is shown", () => {
-        expect(indicatorForFilter(view(step2), "Stalled")).toEqual({text: "1"});
+        expect(indicatorForFilter(view(step2), "Stalled")).toEqual({text: "1", color: "orange"});
       });
 
       const step3 = updateAll(step2, [dragToFilter(0, "ready")]);
@@ -1667,7 +1675,7 @@ describe("the stalled filter", () => {
       });
 
       test("but the counter only shows one task", () => {
-        expect(indicatorForFilter(view(example), "Stalled")).toEqual({text: "1"});
+        expect(indicatorForFilter(view(example), "Stalled")).toEqual({text: "1", color: "orange"});
       });
     });
   });
@@ -2090,8 +2098,7 @@ describe("saving and loading files", () => {
   });
 
   describe("loading a file from an empty state replaces the current state", () => {
-    const step1 = updateAll(empty, [{tag: "storage", type: "clickLoadButton"}]);
-    const step1e = effects(empty, {tag: "storage", type: "clickLoadButton"});
+    const [step1, step1e] = stateAndEffectsAfter(empty, [{tag: "storage", type: "clickLoadButton"}]);
 
     test("clicking load button triggers a file upload effect", () => {
       expect(step1e).toEqual([{type: "fileUpload"}]);
@@ -2130,8 +2137,7 @@ describe("saving and loading files", () => {
       ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
     ]);
 
-    const step2 = updateAll(step1, [{tag: "storage", type: "clickSaveButton"}]);
-    const step2Effects = effects(step2, {tag: "storage", type: "clickSaveButton"});
+    const [step2, step2Effects] = stateAndEffectsAfter(step1, [{tag: "storage", type: "clickSaveButton"}]);
 
     test("clicking save button triggers a file download effect", () => {
       expect(step2Effects[0]).toMatchObject({type: "fileDownload", name: "tasks.json"});
@@ -2139,8 +2145,7 @@ describe("saving and loading files", () => {
 
     const fileContents = (step2Effects[0] as Effect & {type: "fileDownload"}).contents;
 
-    const step3 = updateAll(step2, [{tag: "storage", type: "clickLoadButton"}]);
-    const step3Effects = effects(step3, {tag: "storage", type: "clickLoadButton"});
+    const [step3, step3Effects] = stateAndEffectsAfter(step2, [{tag: "storage", type: "clickLoadButton"}]);
 
     test("clicking load button triggers a file upload effect", () => {
       expect(step3Effects[0]).toMatchObject({type: "fileUpload"});
@@ -2157,8 +2162,7 @@ describe("saving and loading files", () => {
   });
 
   describe("loading file with three levels of children", () => {
-    const step1 = updateAll(empty, [{tag: "storage", type: "clickLoadButton"}]);
-    const step1e = effects(empty, {tag: "storage", type: "clickLoadButton"});
+    const [step1, step1e] = stateAndEffectsAfter(empty, [{tag: "storage", type: "clickLoadButton"}]);
 
     test("clicking load button triggers a file upload effect", () => {
       expect(step1e).toEqual([{type: "fileUpload"}]);
@@ -2236,7 +2240,7 @@ describe("planning", () => {
       });
     });
 
-    const savedEffects = effects(step2, {tag: "storage", type: "clickSaveButton"});
+    const [_, savedEffects] = stateAndEffectsAfter(step2, [{tag: "storage", type: "clickSaveButton"}]);
     const savedContents = (savedEffects[0] as Effect & {type: "fileDownload"}).contents;
 
     const loaded = updateAll(empty, [
@@ -2288,6 +2292,76 @@ describe("planning", () => {
 
     test("clearing the date removes the today badge", () => {
       expect(tasks(step2, "badges")).toEqual([["stalled"]]);
+    });
+  });
+
+  describe("tasks planned before today also have badge", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Task 1"),
+      openNth(0),
+      setComponentValue("Planned", "2020-03-10"),
+    ]);
+
+    test("the task has the today badge", () => {
+      expect(tasks(step1, "badges")).toEqual([["today", "stalled"]]);
+    });
+
+    test("the task has the 'today' property set in the task list", () => {
+      expect(tasks(step1, "today")).toEqual([true]);
+    });
+
+    const step2 = updateAll(step1, [...switchToFilter("today")]);
+
+    test("the task is shown in the today tab", () => {
+      expect(tasks(step2, "title")).toEqual(["Task 1"]);
+    });
+
+    test("the today tab has an indicator", () => {
+      expect(indicatorForFilter(step2, "Today")).toEqual({text: "1", color: "red"});
+    });
+  });
+
+  describe("today tab", () => {
+    describe("dragging task to the today tab", () => {
+      const step1 = updateAll(empty, [
+        ...switchToFilter("all"),
+        ...addTask("Task 1"),
+        ...addTask("Task 2"),
+        openNth(0),
+        dragToFilter(0, "today"),
+      ]);
+
+      test("adds the today badge to the task", () => {
+        expect(tasks(step1, "badges")).toEqual([["today", "stalled"], ["stalled"]]);
+      });
+
+      test("updates the planned date", () => {
+        expect(componentTitled(step1, "Planned")).toMatchObject({type: "date", value: "2020-03-15"});
+      });
+
+      test("adds the task to the filter", () => {
+        const step2 = updateAll(step1, [...switchToFilter("today")]);
+        expect(tasks(step2, "title")).toEqual(["Task 1"]);
+      });
+    });
+
+    describe("inicator", () => {
+      const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1")]);
+
+      describe("when there are no tasks planned today", () => {
+        test("the indicator is not visible", () => {
+          expect(indicatorForFilter(step1, "Today")).toBeNull();
+        });
+      });
+
+      const step2 = updateAll(step1, [dragToFilter(0, "today")]);
+
+      describe("after planning a task today", () => {
+        test("the indicator shows the number of tasks", () => {
+          expect(indicatorForFilter(step2, "Today")).toMatchObject({text: "1", color: "red"});
+        });
+      });
     });
   });
 });

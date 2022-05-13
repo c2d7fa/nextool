@@ -201,7 +201,8 @@
       min-width: 1em;
       padding: 0 0.5ex;
 
-      @include shared.badge-like(shared.$orange-hue);
+      &.orange { @include shared.badge-like(shared.$orange-hue); }
+      &.red { @include shared.badge-like(shared.$red-hue); }
 
       .text {
         font-size: 0.9em;
