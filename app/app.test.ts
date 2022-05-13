@@ -1015,6 +1015,64 @@ describe("drag and drop with multiple sections shown", () => {
       });
     });
   });
+
+  describe("when the same task is shown in multiple sections", () => {
+    describe("a task planned today that is also ready or stalled", () => {
+      const example = updateAll(empty, [
+        ...switchToFilter("all"),
+        ...addTask("Task 0"),
+        ...addTask("Task 1"),
+        dragToTab(0, "Today"),
+        dragToTab(0, "Ready"),
+        ...switchToFilter({type: "section", section: "actions"}),
+      ]);
+
+      describe("initially", () => {
+        test("the example is set up as expected", () => {
+          expect(tasksInSection(example, "Today", "title")).toEqual(["Task 0"]);
+          expect(tasksInSection(example, "Ready", "title")).toEqual(["Task 0"]);
+          expect(tasksInSection(example, "Stalled", "title")).toEqual(["Task 1"]);
+        });
+      });
+
+      describe("dragging ready task", () => {
+        describe.each([
+          {section: "today", i: 0},
+          {section: "ready", i: 1},
+        ])("from $section section", ({i}) => {
+          describe("into today section", () => {
+            const step1 = updateAll(example, [...dragAndDropNth(i, 0, {side: "below", indentation: 0})]);
+
+            test("changes nothing", () => {
+              expect(tasksInSection(step1, "Today", "title")).toEqual(["Task 0"]);
+              expect(tasksInSection(step1, "Ready", "title")).toEqual(["Task 0"]);
+              expect(tasksInSection(step1, "Stalled", "title")).toEqual(["Task 1"]);
+            });
+          });
+
+          describe("into ready section", () => {
+            const step1 = updateAll(example, [...dragAndDropNth(i, 1, {side: "below", indentation: 0})]);
+
+            test("changes nothing", () => {
+              expect(tasksInSection(step1, "Today", "title")).toEqual(["Task 0"]);
+              expect(tasksInSection(step1, "Ready", "title")).toEqual(["Task 0"]);
+              expect(tasksInSection(step1, "Stalled", "title")).toEqual(["Task 1"]);
+            });
+          });
+
+          describe("into stalled section", () => {
+            const step1 = updateAll(example, [...dragAndDropNth(i, 2, {side: "below", indentation: 0})]);
+
+            test("moves it to the stalled section", () => {
+              expect(tasksInSection(step1, "Today", "title")).toEqual(["Task 0"]);
+              expect(tasksInSection(step1, "Ready", "title")).toEqual([]);
+              expect(tasksInSection(step1, "Stalled", "title")).toEqual(["Task 1", "Task 0"]);
+            });
+          });
+        });
+      });
+    });
+  });
 });
 
 describe("a task that has an unfinished child task isn't stalled", () => {
