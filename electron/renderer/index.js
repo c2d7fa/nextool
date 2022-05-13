@@ -1,3 +1,3 @@
-import {start} from "nextool";
-import "nextool/dist/index.css";
+import {start} from "nextool-app";
+import "nextool-app/dist/index.css";
 start(window.platform);

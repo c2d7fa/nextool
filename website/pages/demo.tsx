@@ -1,7 +1,7 @@
 import Head from "next/head";
 
-import * as Nextool from "nextool";
-import "nextool/dist/index.css";
+import * as Nextool from "nextool-app";
+import "nextool-app/dist/index.css";
 
 export default function Index() {
   return (

@@ -1,6 +1,6 @@
 {
-  "name": "nextool",
-  "version": "0.0.0+app",
+  "name": "nextool-app",
+  "version": "0.0.0+noversion",
   "main": "dist/index.js",
   "files": ["dist"],
   "peerDependencies": {
