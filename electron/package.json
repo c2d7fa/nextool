@@ -45,7 +45,7 @@
     }
   },
   "scripts": {
-    "postinstall": "cd ../app && npm pack && cd ../electron && npm install --ignore-scripts --no-save ../app/nextool-*.tgz",
+    "postinstall": "cd ../app && npm pack && cd ../electron && npm install --ignore-scripts --no-save ../app/nextool-app-0.0.0.tgz",
     "prepare-build": "npx webpack",
     "build-linux": "npm run prepare-build && npx electron-builder --publish=never -l",
     "build-windows": "npm run prepare-build && npx electron-builder --publish=never -w",
