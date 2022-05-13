@@ -24,13 +24,14 @@ to make it executable.
 
 ### Package structure
 
-Nextool has two clients, an Electron-based desktop application, and a web
-application. These clients share most of their code, but they plug in different
-platform-specefic functions, and they each have their own build process.
+Nextool has two clients, an Electron-based desktop application, and a website
+which contains a web-based version of the application. These clients share most
+of their code, but they plug in different platform-specefic functions, and they
+each have their own build process.
 
 The shared code is its own NPM package, which resides in the `app/` directory.
-The Electron client is in the `electron/` directory. The web client does not yet
-exist.
+The Electron client is in the `electron/` directory. The code for the website is
+in `website/`.
 
 Unfortunately, working on a project that consists of multiple NPM packages can
 be a bit painful. In theory, NPM will let you add a local dependency with `npm
@@ -96,6 +97,20 @@ Finally, we can open the Electron application:
     $ npx electron dist/main.js
 
 To refresh, press F5, and to show the developer tools, press F12.
+
+### Working on the website
+
+The website is automatically deployed to https://nextool.app/ from
+[Vercel](https://vercel.com/) whenever this repository is updated.
+
+To serve the website locally, run:
+
+    $ cd website
+    $ npm run dev
+
+Apparently, Next.js doesn't like the approach described above for linking the
+shared code package, so you just have to recompile the `app` package whenever
+you change it.
 
 ### Running tests
 
