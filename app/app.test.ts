@@ -114,6 +114,14 @@ function switchToFilterCalled(label: string) {
   };
 }
 
+function dragToTab(n: number, label: string) {
+  return (view: View) => {
+    const filter = view.sideBar.flatMap((section) => section.filters).find((row) => row.label === label);
+    if (!filter || !filter.dropTarget) throw "no such filter";
+    return dragAndDrop({type: "task", id: nthTask(view, n).id}, filter.dropTarget);
+  };
+}
+
 function openNth(n: number) {
   return (view: View) => [{tag: "selectEditingTask", id: nthTask(view, n).id} as const];
 }
@@ -328,6 +336,25 @@ describe("dragging tasks to filters", () => {
     test("dragging a task marked done to unfinished marks it as unfinished again", () => {
       const unfinished = updateAll(done, [dragToFilter(0, "not-done")]);
       expect(tasks(unfinished, "done")).toEqual([false, false, false]);
+    });
+  });
+
+  describe("project filter", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Project"),
+      ...addTask("Task 1"),
+      openNth(0),
+      setComponentValue("Type", "project"),
+    ]);
+
+    const step2 = updateAll(step1, [dragToTab(1, "Project")]);
+
+    test("dragging a task to a project filter nests it under that project", () => {
+      expect(tasks(step2, ["title", "indentation"])).toEqual([
+        {title: "Project", indentation: 0},
+        {title: "Task 1", indentation: 1},
+      ]);
     });
   });
 });

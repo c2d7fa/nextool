@@ -83,7 +83,7 @@ export function view(app: State, args: {today: Date}): View {
       label: Tasks.filterTitle(app.tasks, filter),
       filter,
       selected: Tasks.isSubfilter(app.tasks, app.filter, filter),
-      dropTarget: typeof filter === "string" ? {type: "filter", id: filter} : null,
+      dropTarget: {type: "filter", id: filter},
       indicator: null,
     };
   }
