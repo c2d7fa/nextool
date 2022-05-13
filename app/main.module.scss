@@ -18,8 +18,15 @@
   display: grid;
   grid: "top-bar top-bar" auto "sidebar main" 1fr / 18em 1fr;
 
-  height: 100vh;
-  width: 100vw;
+  &:not(.smallDemo) {
+    height: 100vh;
+    width: 100vw;
+  }
+
+  &.smallDemo {
+    flex: 1;
+    border-radius: 6px;
+  }
 
   overflow: hidden;
 
@@ -54,6 +61,8 @@
     grid-area: sidebar;
     background-color: #f0f0f0;
     border-right: 1px solid #00000020;
+    
+    padding-bottom: 1em;
 
     .sectionTitle {
       font-family: "Roboto Condensed", sans-serif;
@@ -85,6 +94,8 @@
     display: grid;
     grid: "left right" 1fr / 1fr 18em;
     column-gap: 1em;
+
+    padding-bottom: 1em;
 
     .left {
       grid-area: left;

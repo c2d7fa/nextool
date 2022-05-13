@@ -192,6 +192,58 @@ export function Main(props: {platform: Platform}) {
   );
 }
 
+const demoPlatform: Platform = {
+  readLocalStorage: () => Promise.resolve(""),
+  saveLocalStorage: () => Promise.resolve(),
+  fileDownload: () => Promise.resolve(),
+  fileUpload: () => Promise.resolve(null),
+};
+
+export function SmallDemo(props: {}) {
+  const [pendingEffects, setPendingEffects] = React.useState<App.Effect[]>([]);
+
+  const [app, send] = React.useReducer((app: App.State, ev: App.Event) => {
+    setPendingEffects((effects) => [...effects, ...App.effects(app, ev)]);
+    return App.updateApp(app, ev);
+  }, App.empty);
+
+  React.useEffect(() => {
+    if (pendingEffects.length === 0) return;
+    execute(pendingEffects, send, demoPlatform);
+    setPendingEffects([]);
+  }, [pendingEffects]);
+
+  React.useEffect(() => {
+    demoPlatform.readLocalStorage().then((localStorage) => {
+      send({tag: "storage", type: "loadFile", name: "localStorage", contents: localStorage ?? ""});
+    });
+  }, []);
+
+  const view = App.view(app, {today: new Date()});
+
+  return (
+    <div className={[style.outerContainer, style.smallDemo].join(" ")}>
+      <div className={style.topBar}>
+        <div className={style.middle}>
+          <AddTask view={view.addTask} send={send} />
+        </div>
+        <div className={style.right}>
+          <FileControls view={view.fileControls} send={send} />
+        </div>
+      </div>
+      <SideBar sections={view.sideBar} send={send} />
+      <div className={style.innerContainer}>
+        <div className={style.left}>
+          <TaskList view={view.taskList} send={send} />
+        </div>
+        <div className={style.right}>
+          <TaskEditor view={view.editor} send={send} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function start(platform: Platform) {
   const root = ReactDOMClient.createRoot(document.getElementById("root")!);
   root.render(
