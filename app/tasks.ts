@@ -276,8 +276,8 @@ function isStalled(tasks: Tasks, task: Task): boolean {
   return !isReady(tasks, task) && isStalledAssumingNotReady(tasks, task);
 }
 
-export function countStalledTasks(tasks: Tasks, args: {today: Date}): number {
-  return filterTasks(tasks, "stalled", args).length;
+export function count(tasks: Tasks, filter: FilterId, args: {today: Date}): number {
+  return filterTasks(tasks, filter, args).length;
 }
 
 function viewRows(args: {

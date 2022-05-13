@@ -51,12 +51,14 @@ export const empty: State = {
   taskDrag: {dragging: null, hovering: null},
 };
 
+export type FilterIndicator = null | {text: string; color: "red" | "orange"} | {};
+
 export type FilterView = {
   label: string;
   filter: FilterId;
   selected: boolean;
   dropTarget: DropId | null;
-  indicator: null | {text: string} | {};
+  indicator: FilterIndicator;
 };
 
 export type SideBarSectionView = {title: string; filter: FilterId; filters: FilterView[]};
@@ -72,7 +74,8 @@ export type View = {
 };
 
 export function view(app: State, args: {today: Date}): View {
-  const stalledTasks = Tasks.countStalledTasks(app.tasks, args);
+  const stalledTasks = Tasks.count(app.tasks, "stalled", args);
+  const todayTasks = Tasks.count(app.tasks, "today", args);
   const activeProjects = Tasks.activeProjects(app.tasks);
 
   function filterView(filter: FilterId): FilterView {
@@ -93,9 +96,15 @@ export function view(app: State, args: {today: Date}): View {
         title: "Actions",
         filter: {type: "section", section: "actions"},
         filters: [
-          filterView("today"),
+          {
+            ...filterView("today"),
+            indicator: todayTasks === 0 ? null : {text: `${todayTasks}`, color: "red"},
+          },
           filterView("ready"),
-          {...filterView("stalled"), indicator: stalledTasks === 0 ? null : {text: `${stalledTasks}`}},
+          {
+            ...filterView("stalled"),
+            indicator: stalledTasks === 0 ? null : {text: `${stalledTasks}`, color: "orange"},
+          },
         ],
       },
       {

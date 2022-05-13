@@ -188,6 +188,12 @@ function dropTargetsAfter(view: View | State, n: number) {
   return dropTargetsAfter_(view, n).map((dropTarget) => select(dropTarget, ["width", "indentation"]));
 }
 
+function indicatorForFilter(view: View | State, label: string) {
+  return viewed(view)
+    .sideBar.flatMap((section) => section.filters)
+    .find((filter) => filter.label === label)?.indicator;
+}
+
 // -----
 
 describe("adding tasks", () => {
@@ -1630,11 +1636,6 @@ describe("paused tasks", () => {
 
 describe("the stalled filter", () => {
   describe("its counter", () => {
-    function indicatorForFilter(view: View, label: string) {
-      return view.sideBar.flatMap((section) => section.filters).find((filter) => filter.label === label)
-        ?.indicator;
-    }
-
     describe("the counter shows stalled tasks", () => {
       const step1 = updateAll(empty, []);
 
@@ -1645,7 +1646,7 @@ describe("the stalled filter", () => {
       const step2 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task")]);
 
       test("after adding task, the counter is shown", () => {
-        expect(indicatorForFilter(view(step2), "Stalled")).toEqual({text: "1"});
+        expect(indicatorForFilter(view(step2), "Stalled")).toEqual({text: "1", color: "orange"});
       });
 
       const step3 = updateAll(step2, [dragToFilter(0, "ready")]);
@@ -1674,7 +1675,7 @@ describe("the stalled filter", () => {
       });
 
       test("but the counter only shows one task", () => {
-        expect(indicatorForFilter(view(example), "Stalled")).toEqual({text: "1"});
+        expect(indicatorForFilter(view(example), "Stalled")).toEqual({text: "1", color: "orange"});
       });
     });
   });
@@ -2315,6 +2316,24 @@ describe("planning", () => {
       test("adds the task to the filter", () => {
         const step2 = updateAll(step1, [...switchToFilter("today")]);
         expect(tasks(step2, "title")).toEqual(["Task 1"]);
+      });
+    });
+
+    describe("inicator", () => {
+      const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1")]);
+
+      describe("when there are no tasks planned today", () => {
+        test("the indicator is not visible", () => {
+          expect(indicatorForFilter(step1, "Today")).toBeNull();
+        });
+      });
+
+      const step2 = updateAll(step1, [dragToFilter(0, "today")]);
+
+      describe("after planning a task today", () => {
+        test("the indicator shows the number of tasks", () => {
+          expect(indicatorForFilter(step2, "Today")).toMatchObject({text: "1", color: "red"});
+        });
       });
     });
   });
