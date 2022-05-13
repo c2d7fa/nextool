@@ -324,16 +324,19 @@ function viewRows(args: {
     ...dropIndicatorsBelow(-1),
     ...dropTargetsBelow(-1),
     ...list.flatMap((task, index) => {
+      const done = isDone(task);
+      const paused = isPaused(tasks, task);
+
       return [
         {
           type: "task" as const,
           id: task.id,
           title: task.title,
           indentation: task.indentation,
-          done: isDone(task),
-          paused: isPaused(tasks, task),
+          done,
+          paused,
           badges: badges(tasks, task, {today: args.today}),
-          project: task.type === "project",
+          project: task.type === "project" && !done && !paused,
           today: isToday(task, args.today),
           borderBelow: index < list.length - 1,
         },

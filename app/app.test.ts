@@ -1921,8 +1921,8 @@ describe("projects", () => {
         expect(sideBarActiveProjects(view(step3a))).toEqual([]);
       });
 
-      test("but the item is still shown as a project in the task list", () => {
-        expect(tasks(step3a, "project")).toEqual([true]);
+      test("but the item still has project badge in the task list", () => {
+        expect(tasks(step3a, "badges")).toEqual([["project"]]);
       });
     });
 
@@ -1933,8 +1933,8 @@ describe("projects", () => {
         expect(sideBarActiveProjects(view(step3b))).toEqual([]);
       });
 
-      test("but the item is still shown as a project in the task list", () => {
-        expect(tasks(step3b, "project")).toEqual([true]);
+      test("but the item still has project badge in the task list", () => {
+        expect(tasks(step3b, "badges")).toEqual([["project"]]);
       });
     });
   });
@@ -2011,6 +2011,31 @@ describe("projects", () => {
       test("only one task (which is in the project) is shown now", () => {
         expect(tasks(step2, []).length).toEqual(1);
       });
+    });
+  });
+
+  describe("active projects are highlighted in task list", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Project"),
+      openNth(0),
+      setComponentValue("Type", "project"),
+    ]);
+
+    const step2a = updateAll(step1, [setComponentValue("Status", "paused")]);
+
+    const step2b = updateAll(step1, [setComponentValue("Status", "done")]);
+
+    test("active project has project decoration and badge", () => {
+      expect(tasks(step1, ["project", "badges"])).toEqual([{project: true, badges: ["project", "stalled"]}]);
+    });
+
+    test("paused project has no decoration but still has badge", () => {
+      expect(tasks(step2a, ["project", "badges"])).toEqual([{project: false, badges: ["project"]}]);
+    });
+
+    test("completed project has no decoration but still has badge", () => {
+      expect(tasks(step2b, ["project", "badges"])).toEqual([{project: false, badges: ["project"]}]);
     });
   });
 });
