@@ -15,6 +15,9 @@ data in `~/.config/nextool/tasks.json`, and the web client uses local storage.
 Nextool is licensed under the terms of the GNU AGPLv3 or any later version as
 described in the file `LICENSE.md`.
 
+**[Try it in your browser here.](https://nextool.app/demo)** Data is saved
+locally in your browser. Use the buttons in the top bar to back up your data.
+
 **[Download the latest release here.](https://github.com/c2d7fa/nextool/releases/latest)**
 On Windows and macOS, you may need to do something special to convince them to
 run the program, since we don't sign the file. On Linux, just run `chmod +x <filename>.AppImage`
