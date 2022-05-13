@@ -110,7 +110,12 @@ To serve the website locally, run:
 
 Apparently, Next.js doesn't like the approach described above for linking the
 shared code package, so you just have to recompile the `app` package whenever
-you change it.
+you change it:
+
+    $ cd website
+    $ npm ci
+    $ rm -r .next
+    $ npm run dev
 
 ### Running tests
 
