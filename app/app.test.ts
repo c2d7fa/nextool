@@ -2299,16 +2299,22 @@ describe("planning", () => {
       const step1 = updateAll(empty, [
         ...switchToFilter("all"),
         ...addTask("Task 1"),
+        ...addTask("Task 2"),
         openNth(0),
         dragToFilter(0, "today"),
       ]);
 
       test("adds the today badge to the task", () => {
-        expect(tasks(step1, "badges")).toEqual([["today", "stalled"]]);
+        expect(tasks(step1, "badges")).toEqual([["today", "stalled"], ["stalled"]]);
       });
 
       test("updates the planned date", () => {
         expect(componentTitled(step1, "Planned")).toMatchObject({type: "date", value: "2020-03-15"});
+      });
+
+      test("adds the task to the filter", () => {
+        const step2 = updateAll(step1, [...switchToFilter("today")]);
+        expect(tasks(step2, "title")).toEqual(["Task 1"]);
       });
     });
   });
