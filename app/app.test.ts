@@ -1752,6 +1752,20 @@ describe("the stalled filter", () => {
   });
 });
 
+describe("the indicator for the ready filter", () => {
+  const step1 = updateAll(empty, []);
+
+  test("with no tasks, the counter isn't shown", () => {
+    expect(indicatorForFilter(view(step1), "Ready")).toEqual(null);
+  });
+
+  const step2 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task"), dragToTab(0, "Ready")]);
+
+  test("after adding task, the counter is shown", () => {
+    expect(indicatorForFilter(view(step2), "Ready")).toEqual({text: "1", color: "green"});
+  });
+});
+
 describe("projects", () => {
   describe("marking a task as a project in the task list updates type", () => {
     const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Project"), openNth(0)]);

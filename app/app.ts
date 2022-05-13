@@ -51,7 +51,7 @@ export const empty: State = {
   taskDrag: {dragging: null, hovering: null},
 };
 
-export type FilterIndicator = null | {text: string; color: "red" | "orange"} | {};
+export type FilterIndicator = null | {text: string; color: "red" | "orange" | "green"} | {};
 
 export type FilterView = {
   label: string;
@@ -74,17 +74,26 @@ export type View = {
 };
 
 export function view(app: State, args: {today: Date}): View {
-  const stalledTasks = Tasks.count(app.tasks, "stalled", args);
-  const todayTasks = Tasks.count(app.tasks, "today", args);
   const activeProjects = Tasks.activeProjects(app.tasks);
 
-  function filterView(filter: FilterId): FilterView {
+  function filterView(
+    filter: FilterId,
+    opts?: {counter: "small" | "red" | "orange" | "green"; count?: number},
+  ): FilterView {
+    function indicator() {
+      if (!opts?.counter) return null;
+      const count = opts.count ?? Tasks.count(app.tasks, filter, args);
+      if (count === 0) return null;
+      if (opts.counter === "small") return {};
+      return {text: count.toString(), color: opts.counter};
+    }
+
     return {
       label: Tasks.filterTitle(app.tasks, filter),
       filter,
       selected: Tasks.isSubfilter(app.tasks, app.filter, filter),
       dropTarget: {type: "filter", id: filter},
-      indicator: null,
+      indicator: indicator(),
     };
   }
 
@@ -96,15 +105,9 @@ export function view(app: State, args: {today: Date}): View {
         title: "Actions",
         filter: {type: "section", section: "actions"},
         filters: [
-          {
-            ...filterView("today"),
-            indicator: todayTasks === 0 ? null : {text: `${todayTasks}`, color: "red"},
-          },
-          filterView("ready"),
-          {
-            ...filterView("stalled"),
-            indicator: stalledTasks === 0 ? null : {text: `${stalledTasks}`, color: "orange"},
-          },
+          filterView("today", {counter: "red"}),
+          filterView("ready", {counter: "green"}),
+          filterView("stalled", {counter: "orange"}),
         ],
       },
       {
@@ -115,10 +118,9 @@ export function view(app: State, args: {today: Date}): View {
       {
         title: "Active projects",
         filter: {type: "section", section: "activeProjects"},
-        filters: activeProjects.map((project) => ({
-          ...filterView({type: "project", project}),
-          indicator: project.stalled ? {} : null,
-        })),
+        filters: activeProjects.map((project) =>
+          filterView({type: "project", project}, {counter: "small", count: project.stalled ? 1 : 0}),
+        ),
       },
       {
         title: "Archive",

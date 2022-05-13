@@ -202,6 +202,7 @@
       padding: 0 0.5ex;
 
       &.orange { @include shared.badge-like(shared.$orange-hue); }
+      &.green { @include shared.badge-like(shared.$green-hue); }
       &.red { @include shared.badge-like(shared.$red-hue); }
 
       .text {
