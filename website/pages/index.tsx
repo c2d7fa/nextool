@@ -3,8 +3,8 @@ import Link from "next/link";
 import {GtdSteps} from "../lib/gtd-steps";
 import styles from "../styles/index.module.scss";
 
-import * as Nextool from "nextool";
-import "nextool/dist/index.css";
+import * as Nextool from "nextool-app";
+import "nextool-app/dist/index.css";
 
 export default function Index() {
   return (
