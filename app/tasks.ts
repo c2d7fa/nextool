@@ -1,4 +1,4 @@
-import {isSameDay} from "date-fns";
+import {isBefore, isSameDay} from "date-fns";
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
 import * as IndentedList from "./indented-list";
@@ -165,7 +165,7 @@ function isArchived(tasks: Tasks, task: TaskData): boolean {
 }
 
 function isToday(task: Task, today: Date) {
-  return (task.planned && isSameDay(task.planned, today)) ?? false;
+  return (task.planned && (isSameDay(task.planned, today) || isBefore(task.planned, today))) ?? false;
 }
 
 function isInactive(tasks: Tasks, task: Task): boolean {

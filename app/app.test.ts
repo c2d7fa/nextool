@@ -2295,6 +2295,33 @@ describe("planning", () => {
     });
   });
 
+  describe("tasks planned before today also have badge", () => {
+    const step1 = updateAll(empty, [
+      ...switchToFilter("all"),
+      ...addTask("Task 1"),
+      openNth(0),
+      setComponentValue("Planned", "2020-03-10"),
+    ]);
+
+    test("the task has the today badge", () => {
+      expect(tasks(step1, "badges")).toEqual([["today", "stalled"]]);
+    });
+
+    test("the task has the 'today' property set in the task list", () => {
+      expect(tasks(step1, "today")).toEqual([true]);
+    });
+
+    const step2 = updateAll(step1, [...switchToFilter("today")]);
+
+    test("the task is shown in the today tab", () => {
+      expect(tasks(step2, "title")).toEqual(["Task 1"]);
+    });
+
+    test("the today tab has an indicator", () => {
+      expect(indicatorForFilter(step2, "Today")).toEqual({text: "1", color: "red"});
+    });
+  });
+
   describe("today tab", () => {
     describe("dragging task to the today tab", () => {
       const step1 = updateAll(empty, [
