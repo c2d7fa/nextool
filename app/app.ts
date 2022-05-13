@@ -71,8 +71,8 @@ export type View = {
   editor: TaskEditor.View;
 };
 
-export function view(app: State, {today}: {today: Date}): View {
-  const stalledTasks = Tasks.countStalledTasks(app.tasks);
+export function view(app: State, args: {today: Date}): View {
+  const stalledTasks = Tasks.countStalledTasks(app.tasks, args);
   const activeProjects = Tasks.activeProjects(app.tasks);
 
   function filterView(filter: FilterId): FilterView {
@@ -93,6 +93,7 @@ export function view(app: State, {today}: {today: Date}): View {
         title: "Actions",
         filter: {type: "section", section: "actions"},
         filters: [
+          filterView("today"),
           filterView("ready"),
           {...filterView("stalled"), indicator: stalledTasks === 0 ? null : {text: `${stalledTasks}`}},
         ],
@@ -116,7 +117,7 @@ export function view(app: State, {today}: {today: Date}): View {
         filters: [filterView("archive")],
       },
     ],
-    taskList: Tasks.view({...app, today}),
+    taskList: Tasks.view({...app, today: args.today}),
     editor: TaskEditor.view(app.editor),
   };
 }
@@ -129,7 +130,7 @@ function always<T>(x: T): (...args: unknown[]) => T {
   return () => x;
 }
 
-export function effects(app: State, event: Event): Effect[] {
+export function effects(app: State, event: Event, args: {today: Date}): Effect[] {
   if (event.tag === "storage" && event.type === "clickSaveButton") {
     return [
       {
@@ -144,10 +145,10 @@ export function effects(app: State, event: Event): Effect[] {
     return [{type: "fileUpload"}];
   }
 
-  return [{type: "saveLocalStorage", value: Storage.saveString(updateApp(app, event).tasks)}];
+  return [{type: "saveLocalStorage", value: Storage.saveString(updateApp(app, event, args).tasks)}];
 }
 
-export function updateApp(app: State, ev: Event): State {
+export function updateApp(app: State, ev: Event, args: {today: Date}): State {
   function handleDrop(app: State, ev: Event) {
     if (ev.tag !== "drag") return app;
 
@@ -157,10 +158,10 @@ export function updateApp(app: State, ev: Event): State {
     const [drag, drop] = dropped_;
 
     if (drop.type === "filter") {
-      const app_ = {...app, tasks: edit(app, drag.id, {type: "moveToFilter", filter: drop.id})};
+      const app_ = {...app, tasks: edit(app, drag.id, [{type: "moveToFilter", filter: drop.id}], args)};
       return {...app_, editor: TaskEditor.reload(app_)};
     } else if (drop.type === "list") {
-      return {...app, tasks: edit(app, drag.id, {type: "move", target: drop.target})};
+      return {...app, tasks: edit(app, drag.id, [{type: "move", target: drop.target}], args)};
     } else {
       const unreachable: never = drop;
       return unreachable;
@@ -181,7 +182,7 @@ export function updateApp(app: State, ev: Event): State {
     if (ev.tag !== "textField") return app;
     const result = {...app, textFields: updateTextFields(app.textFields, ev)};
     if (ev.type === "submit") {
-      return {...result, tasks: add(app, {title: textFieldValue(app.textFields, "addTitle")})};
+      return {...result, tasks: add(app, {title: textFieldValue(app.textFields, "addTitle")}, args)};
     } else {
       return result;
     }
@@ -189,14 +190,14 @@ export function updateApp(app: State, ev: Event): State {
 
   function handleEdit(app: State, ev: Event) {
     if (ev.tag !== "editor") return app;
-    const tasks = edit(app, ev.component.id.taskId, ...TaskEditor.editOperationsFor(app.editor, ev));
+    const tasks = edit(app, ev.component.id.taskId, TaskEditor.editOperationsFor(app.editor, ev), args);
     return {...app, editor: TaskEditor.load({tasks}, app.editor!.id), tasks};
   }
 
   function handleCheck(app: State, ev: Event) {
     if (ev.tag !== "check") return app;
     const value = Tasks.find(app.tasks, ev.id)?.status === "done" ? "active" : "done";
-    const tasks = edit(app, ev.id, {type: "set", property: "status", value});
+    const tasks = edit(app, ev.id, [{type: "set", property: "status", value}], args);
     return {...app, tasks, editor: TaskEditor.reload({...app, tasks})};
   }
 

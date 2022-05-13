@@ -57,7 +57,11 @@ export function merge(tasks: Tasks, updates: ({id: string} & Partial<Task>)[]): 
   return IndentedList.merge(tasks, updates);
 }
 
-export function add({tasks, filter}: {tasks: Tasks; filter: FilterId}, values: Partial<Task>): Tasks {
+export function add(
+  {tasks, filter}: {tasks: Tasks; filter: FilterId},
+  values: Partial<Task>,
+  args: {today: Date},
+): Tasks {
   function randomId() {
     return Math.floor(Math.random() * 36 ** 8).toString(36);
   }
@@ -75,7 +79,7 @@ export function add({tasks, filter}: {tasks: Tasks; filter: FilterId}, values: P
     planned: null,
   });
 
-  return edit({tasks: result, filter}, id, {type: "moveToFilter", filter});
+  return edit({tasks: result, filter}, id, [{type: "moveToFilter", filter}], args);
 }
 
 export function find(tasks: Tasks, id: string): TaskData | null {
@@ -95,7 +99,8 @@ export type EditOperation =
 export function edit(
   {tasks, filter}: {tasks: Tasks; filter: FilterId},
   id: string,
-  ...operations: EditOperation[]
+  operations: EditOperation[],
+  args: {today: Date},
 ): Tasks {
   function edit_(tasks: Tasks, operation: EditOperation): Tasks {
     if (operation === null) return tasks;
@@ -120,19 +125,21 @@ export function edit(
           ? ({type: "set", property: "status", value: "active"} as const)
           : filter === "archive"
           ? ({type: "set", property: "archived", value: true} as const)
+          : filter === "today"
+          ? ({type: "set", property: "planned", value: args.today} as const)
           : null;
 
       const archiveUpdate =
         filter !== "archive" ? ({type: "set", property: "archived", value: false} as const) : null;
 
-      return edit({tasks, filter}, id, update, archiveUpdate);
+      return edit({tasks, filter}, id, [update, archiveUpdate], args);
     } else if (operation.type === "move") {
       const tasks_ = operation.target.filter
-        ? edit({tasks, filter}, id, {type: "moveToFilter", filter: operation.target.filter})
+        ? edit({tasks, filter}, id, [{type: "moveToFilter", filter: operation.target.filter}], args)
         : tasks;
 
       return IndentedList.moveItemInSublistOfTree(
-        {tree: tasks_, list: IndentedList.toList(filterTasks(tasks, operation.target.filter ?? filter))},
+        {tree: tasks_, list: IndentedList.toList(filterTasks(tasks, operation.target.filter ?? filter, args))},
         {id},
         operation.target.location,
       );
@@ -203,6 +210,7 @@ type FilterSectionId = "actions" | "tasks" | "activeProjects" | "archive";
 
 export type FilterId =
   | "all"
+  | "today"
   | "ready"
   | "done"
   | "stalled"
@@ -226,7 +234,7 @@ function doesSubtaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
   return true;
 }
 
-function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
+function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId, {today}: {today: Date}): boolean {
   if (!doesSubtaskMatch(tasks, task, filter)) return false;
 
   if (typeof filter === "object") {
@@ -240,12 +248,13 @@ function doesTaskMatch(tasks: Tasks, task: Task, filter: FilterId): boolean {
   else if (filter === "not-done") return !isDone(task);
   else if (filter === "archive") return task.archived;
   else if (filter === "paused") return isPaused(tasks, task);
+  else if (filter === "today") return isToday(task, today);
   else return true;
 }
 
-function filterTasks(tasks: Tasks, filter: FilterId): IndentedList.TreeNode<TaskData>[] {
+function filterTasks(tasks: Tasks, filter: FilterId, args: {today: Date}): IndentedList.TreeNode<TaskData>[] {
   return IndentedList.searchAndTrim(tasks, {
-    pick: (task) => doesTaskMatch(tasks, task, filter),
+    pick: (task) => doesTaskMatch(tasks, task, filter, args),
     include: (task) => doesSubtaskMatch(tasks, task, filter),
   });
 }
@@ -267,8 +276,8 @@ function isStalled(tasks: Tasks, task: Task): boolean {
   return !isReady(tasks, task) && isStalledAssumingNotReady(tasks, task);
 }
 
-export function countStalledTasks(tasks: Tasks): number {
-  return filterTasks(tasks, "stalled").length;
+export function countStalledTasks(tasks: Tasks, args: {today: Date}): number {
+  return filterTasks(tasks, "stalled", args).length;
 }
 
 function viewRows(args: {
@@ -279,7 +288,7 @@ function viewRows(args: {
 }): TaskListView[number]["rows"] {
   const {tasks, filter, taskDrag} = args;
 
-  const filtered = filterTasks(tasks, filter);
+  const filtered = filterTasks(tasks, filter, args);
   const list = IndentedList.toList(filtered);
 
   function dropIndicatorsBelow(taskIndex: number) {
@@ -334,7 +343,7 @@ function viewRows(args: {
 }
 
 function subfilters(tasks: Tasks, section: FilterSectionId): FilterId[] {
-  if (section === "actions") return ["ready", "stalled"];
+  if (section === "actions") return ["today", "ready", "stalled"];
   else if (section === "tasks") return ["all", "not-done", "done", "paused"];
   else if (section === "activeProjects")
     return activeProjects(tasks).map((project) => ({type: "project", project: {id: project.id}}));
@@ -387,6 +396,7 @@ export function filterTitle(tasks: Tasks, filter: FilterId): string {
   else if (filter === "archive") return "Archive";
   else if (filter === "all") return "All";
   else if (filter === "paused") return "Paused";
+  else if (filter === "today") return "Today";
   else {
     const unreachable: never = filter;
     return unreachable;

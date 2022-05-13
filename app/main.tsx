@@ -151,8 +151,8 @@ export function Main(props: {platform: Platform}) {
   const [pendingEffects, setPendingEffects] = React.useState<App.Effect[]>([]);
 
   const [app, send] = React.useReducer((app: App.State, ev: App.Event) => {
-    setPendingEffects((effects) => [...effects, ...App.effects(app, ev)]);
-    return App.updateApp(app, ev);
+    setPendingEffects((effects) => [...effects, ...App.effects(app, ev, {today: new Date()})]);
+    return App.updateApp(app, ev, {today: new Date()});
   }, App.empty);
 
   React.useEffect(() => {
@@ -203,8 +203,8 @@ export function SmallDemo(props: {}) {
   const [pendingEffects, setPendingEffects] = React.useState<App.Effect[]>([]);
 
   const [app, send] = React.useReducer((app: App.State, ev: App.Event) => {
-    setPendingEffects((effects) => [...effects, ...App.effects(app, ev)]);
-    return App.updateApp(app, ev);
+    setPendingEffects((effects) => [...effects, ...App.effects(app, ev, {today: new Date()})]);
+    return App.updateApp(app, ev, {today: new Date()});
   }, App.empty);
 
   React.useEffect(() => {
