@@ -127,6 +127,8 @@ export function edit(
           ? ({type: "set", property: "archived", value: true} as const)
           : filter === "today"
           ? ({type: "set", property: "planned", value: args.today} as const)
+          : filter === "paused"
+          ? ({type: "set", property: "status", value: "paused"} as const)
           : null;
 
       const archiveUpdate =

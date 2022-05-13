@@ -357,6 +357,20 @@ describe("dragging tasks to filters", () => {
       ]);
     });
   });
+
+  describe("paused filter", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1")]);
+
+    test("initially, the task is not paused", () => {
+      expect(tasks(step1, "paused")).toEqual([false]);
+    });
+
+    const step2 = updateAll(step1, [dragToTab(0, "Paused")]);
+
+    test("dragging a task to the paused filter marks it as paused", () => {
+      expect(tasks(step2, "paused")).toEqual([true]);
+    });
+  });
 });
 
 describe("reordering tasks with drag and drop", () => {
