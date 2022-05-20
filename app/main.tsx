@@ -155,7 +155,7 @@ function FilterButton(props: {filter: App.FilterBarView["filters"][number]; send
   return (
     <button
       className={[style.filterButton, style[props.filter.state]].join(" ")}
-      onClick={() => {
+      onMouseDown={() => {
         props.send({tag: "filterBar", type: "set", id: props.filter.id, state: "include"});
       }}
       onContextMenu={(ev) => {
