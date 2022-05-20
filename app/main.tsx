@@ -155,13 +155,15 @@ function FilterButton(props: {filter: App.FilterBarView["filters"][number]; send
   return (
     <button
       className={[style.filterButton, style[props.filter.state]].join(" ")}
-      onMouseDown={() => {
-        props.send({tag: "filterBar", type: "set", id: props.filter.id, state: "include"});
+      onMouseUp={(ev) => {
+        props.send({
+          tag: "filterBar",
+          type: "set",
+          id: props.filter.id,
+          state: ev.button === 0 ? "include" : "exclude",
+        });
       }}
-      onContextMenu={(ev) => {
-        props.send({tag: "filterBar", type: "set", id: props.filter.id, state: "exclude"});
-        ev.preventDefault();
-      }}
+      onContextMenu={(ev) => ev.preventDefault()}
     >
       {props.filter.label}
     </button>
