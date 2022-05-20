@@ -2521,3 +2521,34 @@ describe("performance", () => {
     expect(t2 / t1).toBeLessThan(1.2);
   });
 });
+
+describe("filter bar", () => {
+  describe("paused filter", () => {
+    describe("is shown if and only if there are both paused and non-paused items", () => {
+      const step1 = updateAll(empty, [
+        ...switchToFilter("not-done"),
+        ...addTask("Task 0"),
+        ...addTask("Task 1"),
+        dragToFilter(0, "paused"),
+      ]);
+
+      function filterBarHas(view: View, label: string) {
+        return view.filterBar.filters.map((f) => f.label).includes(label);
+      }
+
+      test("no paused items", () => {
+        const step2 = updateAll(step1, [dragToFilter(0, "done")]);
+        expect(filterBarHas(view(step2), "Paused")).toBe(false);
+      });
+
+      test("only paused items", () => {
+        const step2 = updateAll(step1, [dragToFilter(1, "done")]);
+        expect(filterBarHas(view(step2), "Paused")).toBe(false);
+      });
+
+      test("paused and non-paused items", () => {
+        expect(filterBarHas(view(step1), "Paused")).toBe(true);
+      });
+    });
+  });
+});

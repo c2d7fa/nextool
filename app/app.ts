@@ -65,13 +65,28 @@ export type SideBarSectionView = {title: string; filter: FilterId; filters: Filt
 
 export type FileControlsView = "saveLoad" | null;
 
+export type FilterBarView = {
+  filters: {label: string}[];
+};
+
 export type View = {
   fileControls: FileControlsView;
   addTask: {value: string};
   sideBar: SideBarSectionView[];
   taskList: TaskListView;
+  filterBar: FilterBarView;
   editor: TaskEditor.View;
 };
+
+function viewFilterBar(app: State, args: {today: Date}): FilterBarView {
+  const list = Tasks.view({...app, today: args.today});
+
+  const anyPaused = list.some((r) => r.rows.some((t) => t.type === "task" && t.paused));
+  const anyUnpaused = list.some((r) => r.rows.some((t) => t.type === "task" && !t.paused));
+
+  if (anyPaused && anyUnpaused) return {filters: [{label: "Paused"}]};
+  else return {filters: []};
+}
 
 export function view(app: State, args: {today: Date}): View {
   const activeProjects = Tasks.activeProjects(app.tasks);
@@ -128,6 +143,7 @@ export function view(app: State, args: {today: Date}): View {
         filters: [filterView("archive")],
       },
     ],
+    filterBar: viewFilterBar(app, args),
     taskList: Tasks.view({...app, today: args.today}),
     editor: TaskEditor.view(app.editor),
   };
