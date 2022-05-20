@@ -19,6 +19,8 @@ export type SelectEditingTask = {tag: "selectEditingTask"; id: string};
 export type DragId = {type: "task"; id: string};
 export type DropId = {type: "filter"; id: FilterId} | {type: "list"; target: Tasks.DropTargetHandle};
 
+export type FilterBarEvent = {tag: "filterBar"; type: "set"; id: string; state: "include" | "exclude"};
+
 export type Event =
   | CheckEvent
   | TextFieldEvent<TextFieldId>
@@ -26,7 +28,8 @@ export type Event =
   | SelectFilterEvent
   | TaskEditor.Event
   | Drag.DragEvent<DragId, DropId>
-  | Storage.Event;
+  | Storage.Event
+  | FilterBarEvent;
 
 export type Effect =
   | {type: "fileDownload"; name: string; contents: string}
@@ -41,6 +44,7 @@ export type State = {
   textFields: TextFieldStates<TextFieldId>;
   editor: TaskEditor.State;
   taskDrag: Drag.DragState<DragId, DropId>;
+  filterBar: {filterStates: {id: string; state: "include" | "exclude"}[]};
 };
 
 export const empty: State = {
@@ -49,6 +53,7 @@ export const empty: State = {
   editor: TaskEditor.empty,
   filter: "ready",
   taskDrag: {dragging: null, hovering: null},
+  filterBar: {filterStates: []},
 };
 
 export type FilterIndicator = null | {text: string; color: "red" | "orange" | "green"} | {};
@@ -66,7 +71,7 @@ export type SideBarSectionView = {title: string; filter: FilterId; filters: Filt
 export type FileControlsView = "saveLoad" | null;
 
 export type FilterBarView = {
-  filters: {label: string}[];
+  filters: {id: string; label: string; state: "neutral" | "include" | "exclude"}[];
 };
 
 export type View = {
@@ -84,7 +89,15 @@ function viewFilterBar(app: State, args: {today: Date}): FilterBarView {
   const anyPaused = list.some((r) => r.rows.some((t) => t.type === "task" && t.paused));
   const anyUnpaused = list.some((r) => r.rows.some((t) => t.type === "task" && !t.paused));
 
-  if (anyPaused && anyUnpaused) return {filters: [{label: "Paused"}]};
+  function filterState(id: string): "neutral" | "include" | "exclude" {
+    const filter = app.filterBar.filterStates.find((f) => f.id === id);
+    if (filter === undefined) {
+      return "neutral";
+    }
+    return filter.state;
+  }
+
+  if (anyPaused && anyUnpaused) return {filters: [{id: "paused", label: "Paused", state: filterState("paused")}]};
   else return {filters: []};
 }
 
@@ -205,6 +218,28 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
     return {...app, filter: ev.filter};
   }
 
+  function handleFilterBar(app: State, ev: Event) {
+    if (ev.tag !== "filterBar") return app;
+
+    let filterStates = app.filterBar.filterStates;
+    const currentState = filterStates.find((f) => f.id === ev.id);
+    if (currentState === undefined) {
+      filterStates = [...filterStates, {id: ev.id, state: ev.state}];
+    } else {
+      filterStates = filterStates.flatMap((f) =>
+        f.id === ev.id ? (f.state === ev.state ? [] : [{...f, state: ev.state}]) : [f],
+      );
+    }
+
+    return {
+      ...app,
+      filterBar: {
+        ...app.filterBar,
+        filterStates,
+      },
+    };
+  }
+
   function handleTextField(app: State, ev: Event) {
     if (ev.tag !== "textField") return app;
     const result = {...app, textFields: updateTextFields(app.textFields, ev)};
@@ -249,6 +284,7 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
     (app) => handleCheck(app, ev),
     (app) => handleEdit(app, ev),
     (app) => handleSelectFilter(app, ev),
+    (app) => handleFilterBar(app, ev),
     (app) => handleSelectEditingTask(app, ev),
     (app) => handleDrop(app, ev),
     (app) => handleDragState(app, ev),

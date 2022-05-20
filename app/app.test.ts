@@ -2550,5 +2550,58 @@ describe("filter bar", () => {
         expect(filterBarHas(view(step1), "Paused")).toBe(true);
       });
     });
+
+    describe("can be toggled on or off", () => {
+      function filterState(view: View, label: string) {
+        const filter = view.filterBar.filters.find((f) => f.label === label);
+        if (!filter) {
+          console.error("no such filter", view.filterBar);
+          throw "no such filter in filter bar";
+        }
+        return filter.state;
+      }
+
+      function setFilter(label: string, state: "include" | "exclude") {
+        return (view: View) => {
+          return [
+            {
+              tag: "filterBar" as const,
+              type: "set" as const,
+              id: view.filterBar.filters.find((f) => f.label === label)!.id,
+              state,
+            },
+          ];
+        };
+      }
+
+      const step1 = updateAll(empty, [
+        ...switchToFilter("not-done"),
+        ...addTask("Task 0"),
+        ...addTask("Task 1"),
+        dragToFilter(0, "paused"),
+      ]);
+
+      const step2 = updateAll(step1, [setFilter("Paused", "include")]);
+
+      const step3 = updateAll(step2, [setFilter("Paused", "exclude")]);
+
+      const step4 = updateAll(step3, [setFilter("Paused", "exclude")]);
+
+      test("the filter is neutral by default", () => {
+        expect(filterState(view(step1), "Paused")).toBe("neutral");
+      });
+
+      test("the filter can be toggled on", () => {
+        expect(filterState(view(step2), "Paused")).toBe("include");
+      });
+
+      test("the filter can be toggled off", () => {
+        expect(filterState(view(step3), "Paused")).toBe("exclude");
+      });
+
+      test("the filter can be disabled again", () => {
+        expect(filterState(view(step4), "Paused")).toBe("neutral");
+      });
+    });
   });
 });
