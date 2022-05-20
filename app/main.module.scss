@@ -98,6 +98,9 @@
     padding-bottom: 1em;
 
     .bar {
+      font-size: 0.95em;
+      min-height: 2.40em;
+
       grid-area: bar;
       box-sizing: border-box;
 
@@ -115,14 +118,13 @@
         border-radius: 3px;
         border: 1px solid #f00;
 
-        font-size: 0.95em;
         font-family: 'Roboto';
 
         &.neutral {
-          $c: m.lch(30, 0, 0);
+          $c: m.lch(50, 0, 0);
 
           color: m.mix($c, #f4f4f4, 80%);
-          border-color: m.mix($c, #f4f4f4, 30%);
+          border-color: m.mix($c, #f4f4f4, 50%);
           background-color: #f4f4f4;
 
           box-shadow: 0 2px 2px -2px m.lch(80, 0, 0);

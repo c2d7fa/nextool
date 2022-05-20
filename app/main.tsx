@@ -151,6 +151,20 @@ function FileControls(props: {view: App.FileControlsView; send: App.Send}) {
   }
 }
 
+function FilterButton(props: {filter: App.FilterBarView["filters"][number]; send: App.Send}) {
+  return <button className={[style.filterButton, style.neutral].join(" ")}>{props.filter.label}</button>;
+}
+
+function FilterBar(props: {view: App.FilterBarView; send: App.Send}) {
+  return (
+    <div className={style.bar}>
+      {props.view.filters.map((filter, i) => (
+        <FilterButton key={i} filter={filter} send={props.send} />
+      ))}
+    </div>
+  );
+}
+
 export function Main(props: {platform: Platform}) {
   const [pendingEffects, setPendingEffects] = React.useState<App.Effect[]>([]);
 
@@ -185,11 +199,7 @@ export function Main(props: {platform: Platform}) {
       </div>
       <SideBar sections={view.sideBar} send={send} />
       <div className={style.innerContainer}>
-        <div className={style.bar}>
-          <button className={[style.filterButton, style.include].join(" ")}>Include</button>
-          <button className={[style.filterButton, style.neutral].join(" ")}>Neutral</button>
-          <button className={[style.filterButton, style.exclude].join(" ")}>Exclude</button>
-        </div>
+        <FilterBar view={view.filterBar} send={send} />
         <div className={style.left}>
           <TaskList view={view.taskList} send={send} />
         </div>
@@ -242,6 +252,7 @@ export function SmallDemo(props: {}) {
       </div>
       <SideBar sections={view.sideBar} send={send} />
       <div className={style.innerContainer}>
+        <FilterBar view={view.filterBar} send={send} />
         <div className={style.left}>
           <TaskList view={view.taskList} send={send} />
         </div>
