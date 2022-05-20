@@ -152,7 +152,20 @@ function FileControls(props: {view: App.FileControlsView; send: App.Send}) {
 }
 
 function FilterButton(props: {filter: App.FilterBarView["filters"][number]; send: App.Send}) {
-  return <button className={[style.filterButton, style.neutral].join(" ")}>{props.filter.label}</button>;
+  return (
+    <button
+      className={[style.filterButton, style[props.filter.state]].join(" ")}
+      onClick={() => {
+        props.send({tag: "filterBar", type: "set", id: props.filter.id, state: "include"});
+      }}
+      onContextMenu={(ev) => {
+        props.send({tag: "filterBar", type: "set", id: props.filter.id, state: "exclude"});
+        ev.preventDefault();
+      }}
+    >
+      {props.filter.label}
+    </button>
+  );
 }
 
 function FilterBar(props: {view: App.FilterBarView; send: App.Send}) {
