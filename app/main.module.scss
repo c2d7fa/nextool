@@ -1,4 +1,5 @@
 @use "./shared";
+@use "~@johv/sass-labmix" as m;
 
 :global(:root) {
   font-family: sans-serif;
@@ -87,29 +88,96 @@
 
   .innerContainer {
     min-height: 0;
-    padding: 1em;
 
     grid-area: main;
 
     display: grid;
-    grid: "left right" 1fr / 1fr 18em;
+    grid: "bar bar" auto "left right" 1fr / 1fr 18em;
     column-gap: 1em;
 
     padding-bottom: 1em;
+
+    .bar {
+      grid-area: bar;
+      box-sizing: border-box;
+
+      border-bottom: 1px solid #00000020;
+      background-color: #f4f4f4;
+
+      padding: 0.4em 0.8em;
+      display: flex;
+      column-gap: 0.4em;
+
+      .filterButton {
+        @include shared.reset-button;
+
+        padding: 0.10em 0.30em;
+        border-radius: 3px;
+        border: 1px solid #f00;
+
+        font-size: 0.95em;
+        font-family: 'Roboto';
+
+        &.neutral {
+          $c: m.lch(30, 0, 0);
+
+          color: m.mix($c, #f4f4f4, 80%);
+          border-color: m.mix($c, #f4f4f4, 30%);
+          background-color: #f4f4f4;
+
+          box-shadow: 0 2px 2px -2px m.lch(80, 0, 0);
+        }
+
+        &.include {
+          $c: 40;
+          $h: shared.$include-filter-hue;
+
+          color: m.lch(40, $c, $h);
+          border-color: m.mix(m.lch(40, $c, $h), #f4f4f4, 60%);
+          background: linear-gradient(
+            m.mix(m.lch(70, $c, $h), #f4f4f4, 70%),
+            m.mix(m.lch(80, $c, $h), #f4f4f4, 70%)
+          );
+
+          box-shadow: 0 2px 2px -2px m.lch(60, $c, $h) inset;
+        }
+
+        &.exclude {
+          $c: 40;
+          $h: shared.$exclude-filter-hue;
+
+          color: m.lch(40, $c, $h);
+          border-color: m.mix(m.lch(40, $c, $h), #f4f4f4, 60%);
+          background: linear-gradient(
+            m.mix(m.lch(80, $c, $h), #f4f4f4, 70%),
+            m.mix(m.lch(70, $c, $h), #f4f4f4, 70%)
+          );
+
+          box-shadow: 0 2px 2px -2px m.lch(60, $c, $h);
+        }
+      }
+    }
 
     .left {
       grid-area: left;
       box-sizing: border-box;
 
+
       display: flex;
       flex-direction: column;
       align-items: flex-start;
 
+      margin: 1em;
+      margin-right: 0;
       padding-right: 6px;
+
       overflow-y: scroll;
     }
 
     .right {
+      margin: 1em;
+      margin-left: 0;
+
       grid-area: right;
       box-sizing: border-box;
       display: grid;

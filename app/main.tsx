@@ -185,6 +185,11 @@ export function Main(props: {platform: Platform}) {
       </div>
       <SideBar sections={view.sideBar} send={send} />
       <div className={style.innerContainer}>
+        <div className={style.bar}>
+          <button className={[style.filterButton, style.include].join(" ")}>Include</button>
+          <button className={[style.filterButton, style.neutral].join(" ")}>Neutral</button>
+          <button className={[style.filterButton, style.exclude].join(" ")}>Exclude</button>
+        </div>
         <div className={style.left}>
           <TaskList view={view.taskList} send={send} />
         </div>
