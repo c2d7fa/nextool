@@ -152,21 +152,28 @@ function FileControls(props: {view: App.FileControlsView; send: App.Send}) {
 }
 
 function FilterButton(props: {filter: App.FilterBarView["filters"][number]; send: App.Send}) {
+  const [isDepressed, setIsDepressed] = React.useState(false);
+
   return (
-    <button
-      className={[style.filterButton, style[props.filter.state]].join(" ")}
-      onMouseUp={(ev) => {
-        props.send({
-          tag: "filterBar",
-          type: "set",
-          id: props.filter.id,
-          state: ev.button === 0 ? "include" : "exclude",
-        });
-      }}
-      onContextMenu={(ev) => ev.preventDefault()}
-    >
-      {props.filter.label}
-    </button>
+    <div className={style.filterButtonContainer}>
+      <button
+        className={[style.filterButton, style[props.filter.state], isDepressed ? style.down : ""].join(" ")}
+        onMouseDown={() => setIsDepressed(true)}
+        onMouseLeave={() => setIsDepressed(false)}
+        onMouseUp={(ev) => {
+          setIsDepressed(false);
+          props.send({
+            tag: "filterBar",
+            type: "set",
+            id: props.filter.id,
+            state: ev.button === 0 ? "include" : "exclude",
+          });
+        }}
+        onContextMenu={(ev) => ev.preventDefault()}
+      >
+        {props.filter.label}
+      </button>
+    </div>
   );
 }
 
