@@ -229,16 +229,14 @@ function taskProject(state: CommonState, task: Task): null | {id: string} {
 }
 
 function doesSubtaskMatch(state: CommonState, task: Task): boolean {
-  if (state.filter === "stalled")
-    return IndentedList.anyDescendant(state.tasks, task, (subtask) => isStalled(state, subtask));
-  if (state.filter === "ready")
-    return IndentedList.anyDescendant(state.tasks, task, (subtask) => isReady(state, subtask));
   if (isArchived(state, task) && state.filter !== "archive") return false;
+  if (state.filter === "stalled" || state.filter === "ready")
+    return IndentedList.anyDescendant(state.tasks, task, (subtask) => doesTaskMatch(state, subtask));
   return true;
 }
 
 function doesTaskMatch(state: CommonState, task: Task): boolean {
-  if (!doesSubtaskMatch(state, task)) return false;
+  if (isArchived(state, task) && state.filter !== "archive") return false;
 
   if (typeof state.filter === "object") {
     if (state.filter.type === "project" && taskProject(state, task)?.id === state.filter.project.id) return true;
