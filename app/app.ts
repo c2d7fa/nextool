@@ -102,7 +102,7 @@ function viewFilterBar(app: State, args: {today: Date}): FilterBarView {
 }
 
 export function view(app: State, args: {today: Date}): View {
-  const activeProjects = Tasks.activeProjects(app.tasks);
+  const activeProjects = Tasks.activeProjects({...app, ...args});
 
   function filterView(
     filter: FilterId,
@@ -110,7 +110,7 @@ export function view(app: State, args: {today: Date}): View {
   ): FilterView {
     function indicator() {
       if (!opts?.counter) return null;
-      const count = opts.count ?? Tasks.count(app.tasks, filter, args);
+      const count = opts.count ?? Tasks.count({...app, ...args}, filter);
       if (count === 0) return null;
       if (opts.counter === "small") return {};
       return {text: count.toString(), color: opts.counter};
@@ -119,7 +119,7 @@ export function view(app: State, args: {today: Date}): View {
     return {
       label: Tasks.filterTitle(app.tasks, filter),
       filter,
-      selected: Tasks.isSubfilter(app.tasks, app.filter, filter),
+      selected: Tasks.isSubfilter({...app, ...args}, app.filter, filter),
       dropTarget: {type: "filter", id: filter},
       indicator: indicator(),
     };
@@ -198,10 +198,10 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
     const [drag, drop] = dropped_;
 
     if (drop.type === "filter") {
-      const app_ = {...app, tasks: edit(app, drag.id, [{type: "moveToFilter", filter: drop.id}], args)};
+      const app_ = {...app, tasks: edit({...app, ...args}, drag.id, [{type: "moveToFilter", filter: drop.id}])};
       return {...app_, editor: TaskEditor.reload(app_)};
     } else if (drop.type === "list") {
-      return {...app, tasks: edit(app, drag.id, [{type: "move", target: drop.target}], args)};
+      return {...app, tasks: edit({...app, ...args}, drag.id, [{type: "move", target: drop.target}])};
     } else {
       const unreachable: never = drop;
       return unreachable;
@@ -242,7 +242,7 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
     if (ev.tag !== "textField") return app;
     const result = {...app, textFields: updateTextFields(app.textFields, ev)};
     if (ev.type === "submit") {
-      return {...result, tasks: add(app, {title: textFieldValue(app.textFields, "addTitle")}, args)};
+      return {...result, tasks: add({...app, ...args}, {title: textFieldValue(app.textFields, "addTitle")})};
     } else {
       return result;
     }
@@ -250,14 +250,14 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
 
   function handleEdit(app: State, ev: Event) {
     if (ev.tag !== "editor") return app;
-    const tasks = edit(app, ev.component.id.taskId, TaskEditor.editOperationsFor(app.editor, ev), args);
+    const tasks = edit({...app, ...args}, ev.component.id.taskId, TaskEditor.editOperationsFor(app.editor, ev));
     return {...app, editor: TaskEditor.load({tasks}, app.editor!.id), tasks};
   }
 
   function handleCheck(app: State, ev: Event) {
     if (ev.tag !== "check") return app;
     const value = Tasks.find(app.tasks, ev.id)?.status === "done" ? "active" : "done";
-    const tasks = edit(app, ev.id, [{type: "set", property: "status", value}], args);
+    const tasks = edit({...app, ...args}, ev.id, [{type: "set", property: "status", value}]);
     return {...app, tasks, editor: TaskEditor.reload({...app, tasks})};
   }
 
