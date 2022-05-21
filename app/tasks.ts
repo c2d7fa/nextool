@@ -229,6 +229,16 @@ function taskProject(state: CommonState, task: Task): null | {id: string} {
 }
 
 function doesSubtaskMatch(state: CommonState, task: Task): boolean {
+  const pausedSubtaskFilter = state.subtaskFilters.find((filter) => filter.id === "paused")?.state ?? "neutral";
+  if (pausedSubtaskFilter !== "neutral") {
+    if (
+      pausedSubtaskFilter === "include" &&
+      !IndentedList.anyDescendant(state.tasks, task, (subtask) => isPaused(state, subtask))
+    )
+      return false;
+    else if (pausedSubtaskFilter === "exclude" && isPaused(state, task)) return false;
+  }
+
   if (isArchived(state, task) && state.filter !== "archive") return false;
   if (state.filter === "stalled" || state.filter === "ready")
     return IndentedList.anyDescendant(state.tasks, task, (subtask) => doesTaskMatch(state, subtask));

@@ -97,7 +97,8 @@ function viewFilterBar(app: State, args: {today: Date}): FilterBarView {
     return filter.state;
   }
 
-  if (anyPaused && anyUnpaused) return {filters: [{id: "paused", label: "Paused", state: filterState("paused")}]};
+  if (app.subtaskFilters.find((f) => f.id === "paused") || (anyPaused && anyUnpaused))
+    return {filters: [{id: "paused", label: "Paused", state: filterState("paused")}]};
   else return {filters: []};
 }
 

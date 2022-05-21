@@ -2623,7 +2623,7 @@ describe("filter bar", () => {
 
       const step4 = updateAll(step3, [setFilter("Paused", "exclude")]);
 
-      test.skip("when set to 'include', only paused subtasks and their parents are shown", () => {
+      test("when set to 'include', only paused subtasks and their parents are shown", () => {
         expect(tasks(step2, ["title", "indentation"])).toEqual([
           {title: "Not paused parent 0", indentation: 0},
           {title: "Paused parent 1", indentation: 1},
@@ -2631,7 +2631,7 @@ describe("filter bar", () => {
         ]);
       });
 
-      test.skip("when set to 'exclude', only non-paused subtasks and their parents are shown", () => {
+      test("when set to 'exclude', only non-paused subtasks and their parents are shown", () => {
         expect(tasks(step3, ["title", "indentation"])).toEqual([
           {title: "Not paused parent 0", indentation: 0},
           {title: "Paused parent 1", indentation: 1},
@@ -2639,7 +2639,7 @@ describe("filter bar", () => {
         ]);
       });
 
-      test.skip("when set to 'neutral', all tasks are shown", () => {
+      test("when set to 'neutral', all tasks are shown", () => {
         expect(tasks(step4, ["title", "indentation"])).toEqual([
           {title: "Not paused parent 0", indentation: 0},
           {title: "Paused parent 1", indentation: 1},
