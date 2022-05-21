@@ -51,6 +51,9 @@ export type TaskListView = {
   rows: (DropTargetView | DropIndicatorView | TaskView)[];
 }[];
 
+export type SubtaskFilter = {id: "paused"; state: "include" | "exclude"};
+export type SubtaskFilters = SubtaskFilter[];
+
 export const empty: Tasks = IndentedList.empty<TaskData>();
 
 export function merge(tasks: Tasks, updates: ({id: string} & Partial<Task>)[]): Tasks {

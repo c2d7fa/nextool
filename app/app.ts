@@ -44,7 +44,7 @@ export type State = {
   textFields: TextFieldStates<TextFieldId>;
   editor: TaskEditor.State;
   taskDrag: Drag.DragState<DragId, DropId>;
-  filterBar: {filterStates: {id: string; state: "include" | "exclude"}[]};
+  subtaskFilters: Tasks.SubtaskFilters;
 };
 
 export const empty: State = {
@@ -53,7 +53,7 @@ export const empty: State = {
   editor: TaskEditor.empty,
   filter: "ready",
   taskDrag: {dragging: null, hovering: null},
-  filterBar: {filterStates: []},
+  subtaskFilters: [],
 };
 
 export type FilterIndicator = null | {text: string; color: "red" | "orange" | "green"} | {};
@@ -90,7 +90,7 @@ function viewFilterBar(app: State, args: {today: Date}): FilterBarView {
   const anyUnpaused = list.some((r) => r.rows.some((t) => t.type === "task" && !t.paused));
 
   function filterState(id: string): "neutral" | "include" | "exclude" {
-    const filter = app.filterBar.filterStates.find((f) => f.id === id);
+    const filter = app.subtaskFilters.find((f) => f.id === id);
     if (filter === undefined) {
       return "neutral";
     }
@@ -221,22 +221,20 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
   function handleFilterBar(app: State, ev: Event) {
     if (ev.tag !== "filterBar") return app;
 
-    let filterStates = app.filterBar.filterStates;
-    const currentState = filterStates.find((f) => f.id === ev.id);
+    let subtaskFilters = app.subtaskFilters;
+    const currentState = subtaskFilters.find((f) => f.id === ev.id);
     if (currentState === undefined) {
-      filterStates = [...filterStates, {id: ev.id, state: ev.state}];
+      if (ev.id === "paused") subtaskFilters = [...subtaskFilters, {id: ev.id, state: ev.state}];
+      else console.error("Invalid filter ID", ev);
     } else {
-      filterStates = filterStates.flatMap((f) =>
+      subtaskFilters = subtaskFilters.flatMap((f) =>
         f.id === ev.id ? (f.state === ev.state ? [] : [{...f, state: ev.state}]) : [f],
       );
     }
 
     return {
       ...app,
-      filterBar: {
-        ...app.filterBar,
-        filterStates,
-      },
+      subtaskFilters,
     };
   }
 
