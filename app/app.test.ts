@@ -2473,7 +2473,7 @@ describe("filter bar", () => {
       const step1 = updateAll(empty, [
         switchToFilter("all"),
         addTask("Non-paused parent"),
-        addTask("Paused parent", 1),
+        addTask("Paused parent", 1, "paused"),
         addTask("Paused task", 2, "paused"),
         addTask("Non-paused task", 2),
         addTask("Paused top-level task", "paused"),
@@ -2486,20 +2486,19 @@ describe("filter bar", () => {
 
       const step4 = updateAll(step3, [setFilter("Paused", "exclude")]);
 
-      test("when set to 'include', only paused subtasks and their parents are shown", () => {
+      test("when set to 'include', only paused subtrees are shown", () => {
         expect(tasks(step2, ["title", "indentation"])).toEqual([
           {title: "Non-paused parent", indentation: 0},
           {title: "Paused parent", indentation: 1},
           {title: "Paused task", indentation: 2},
+          {title: "Non-paused task", indentation: 2},
           {title: "Paused top-level task", indentation: 0},
         ]);
       });
 
-      test("when set to 'exclude', only non-paused subtasks and their parents are shown", () => {
+      test("when set to 'exclude', only non-paused subtrees are shown", () => {
         expect(tasks(step3, ["title", "indentation"])).toEqual([
           {title: "Non-paused parent", indentation: 0},
-          {title: "Paused parent", indentation: 1},
-          {title: "Non-paused task", indentation: 2},
           {title: "Non-paused top-level task", indentation: 0},
         ]);
       });
