@@ -6,11 +6,14 @@ function view(state: State): View {
   return viewApp(state, {today: new Date("2020-03-15")});
 }
 
-function updateAll(state: State, events: (Event | ((view: View) => Event[]))[]): State {
+function updateAll(state: State, events: (Event | ((view: View) => readonly Event[]))[]): State {
   return stateAndEffectsAfter(state, events)[0];
 }
 
-function stateAndEffectsAfter(state: State, events: (Event | ((view: View) => Event[]))[]): [State, Effect[]] {
+function stateAndEffectsAfter(
+  state: State,
+  events: readonly (Event | ((view: View) => readonly Event[]))[],
+): [State, Effect[]] {
   let resultState = state;
   let resultEffects: Effect[] = [];
 
@@ -28,11 +31,12 @@ function stateAndEffectsAfter(state: State, events: (Event | ((view: View) => Ev
   return [resultState, resultEffects];
 }
 
-function addTask(title: string): Event[] {
-  return [
-    {tag: "textField", type: "edit", field: "addTitle", value: title},
-    {tag: "textField", field: "addTitle", type: "submit"},
-  ];
+function addTask(title: string) {
+  return (view: View) =>
+    [
+      {tag: "textField", type: "edit", field: "addTitle", value: title},
+      {tag: "textField", field: "addTitle", type: "submit"},
+    ] as const;
 }
 
 function startDragNthTask(n: number): (view: View) => Event[] {
@@ -214,9 +218,9 @@ describe("adding tasks", () => {
   describe("after adding three new tasks", () => {
     const example = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
-      ...addTask("Task 3"),
+      addTask("Task 1"),
+      addTask("Task 2"),
+      addTask("Task 3"),
     ]);
 
     test("there are three tasks in the task list", () => {
@@ -238,7 +242,7 @@ describe("adding tasks", () => {
 });
 
 describe("checking and unchecking tasks", () => {
-  const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1")]);
+  const step1 = updateAll(empty, [...switchToFilter("all"), addTask("Task 1")]);
 
   test("the task is marked as unfinished by default", () => {
     expect(nthTask(step1, 0).done).toBe(false);
@@ -259,7 +263,7 @@ describe("checking and unchecking tasks", () => {
 
 describe("adding tasks in filter", () => {
   describe("in ready filter", () => {
-    const example = updateAll(empty, [...switchToFilter("ready"), ...addTask("Task 1")]);
+    const example = updateAll(empty, [...switchToFilter("ready"), addTask("Task 1")]);
 
     test("the task is shown in the current task list", () => {
       expect(tasks(example, "title")).toEqual(["Task 1"]);
@@ -269,8 +273,8 @@ describe("adding tasks in filter", () => {
   describe("in a project filter", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Project"),
-      ...addTask("Outside project"),
+      addTask("Project"),
+      addTask("Outside project"),
       openNth(0),
       setComponentValue("Type", "project"),
       (view) => switchToFilter(sideBarActiveProjects(view)[0]?.filter!),
@@ -282,7 +286,7 @@ describe("adding tasks in filter", () => {
       });
     });
 
-    const step2 = updateAll(step1, [...addTask("Inside project")]);
+    const step2 = updateAll(step1, [addTask("Inside project")]);
 
     describe("after adding a task", () => {
       test("the task is shown in the current task list", () => {
@@ -290,7 +294,7 @@ describe("adding tasks in filter", () => {
       });
     });
 
-    const step3 = updateAll(step2, [...addTask("Another task")]);
+    const step3 = updateAll(step2, [addTask("Another task")]);
 
     describe("after adding another task", () => {
       test("the task is added to the end of the list", () => {
@@ -304,9 +308,9 @@ describe("dragging tasks to filters", () => {
   describe("in an example with three tasks", () => {
     const example = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
-      ...addTask("Task 3"),
+      addTask("Task 1"),
+      addTask("Task 2"),
+      addTask("Task 3"),
       ...switchToFilter("all"),
     ]);
 
@@ -342,8 +346,8 @@ describe("dragging tasks to filters", () => {
   describe("project filter", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Project"),
-      ...addTask("Task 1"),
+      addTask("Project"),
+      addTask("Task 1"),
       openNth(0),
       setComponentValue("Type", "project"),
     ]);
@@ -359,7 +363,7 @@ describe("dragging tasks to filters", () => {
   });
 
   describe("paused filter", () => {
-    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1")]);
+    const step1 = updateAll(empty, [...switchToFilter("all"), addTask("Task 1")]);
 
     test("initially, the task is not paused", () => {
       expect(tasks(step1, "paused")).toEqual([false]);
@@ -377,9 +381,9 @@ describe("reordering tasks with drag and drop", () => {
   describe("in an example with three tasks", () => {
     const example = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
-      ...addTask("Task 3"),
+      addTask("Task 1"),
+      addTask("Task 2"),
+      addTask("Task 3"),
     ]);
 
     function testReorder(from: number, to: number, side: "above" | "below", result: number[]): void {
@@ -411,10 +415,10 @@ describe("nesting tasks with drag and drop", () => {
   describe("with a flat list of items", () => {
     const example = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
-      ...addTask("Task 3"),
-      ...addTask("Task 4"),
+      addTask("Task 1"),
+      addTask("Task 2"),
+      addTask("Task 3"),
+      addTask("Task 4"),
     ]);
 
     const draggingFourth = updateAll(example, [startDragNthTask(3)]);
@@ -441,10 +445,10 @@ describe("nesting tasks with drag and drop", () => {
   describe("when dragging one task into another", () => {
     const example = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
-      ...addTask("Task 3"),
-      ...addTask("Task 4"),
+      addTask("Task 1"),
+      addTask("Task 2"),
+      addTask("Task 3"),
+      addTask("Task 4"),
     ]);
 
     test("before dragging anything, neither task is indented", () => {
@@ -481,11 +485,11 @@ describe("nesting tasks with drag and drop", () => {
   describe("scenario where the following task is at a higher level of indentation", () => {
     const example = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 0"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
-      ...addTask("Task 3"),
-      ...addTask("Task 4"),
+      addTask("Task 0"),
+      addTask("Task 1"),
+      addTask("Task 2"),
+      addTask("Task 3"),
+      addTask("Task 4"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
       ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
       ...dragAndDropNth(3, 2, {side: "below", indentation: 1}),
@@ -508,7 +512,7 @@ describe("nesting tasks with drag and drop", () => {
 
   describe("making a task a descendant of itself is not allowed", () => {
     describe("in a list of just one task", () => {
-      const example = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1"), startDragNthTask(0)]);
+      const example = updateAll(empty, [...switchToFilter("all"), addTask("Task 1"), startDragNthTask(0)]);
 
       test("there are drop targets above and below the task itself at the same level of indentation", () => {
         expect(dropTargetsAfter(example, -1)).toContainEqual({width: "full", indentation: 0});
@@ -524,11 +528,11 @@ describe("nesting tasks with drag and drop", () => {
     describe("when dragging a subtree of tasks", () => {
       const example = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Task 0"),
-        ...addTask("Task 1"),
-        ...addTask("Task 2"),
-        ...addTask("Task 3"),
-        ...addTask("Task 4"),
+        addTask("Task 0"),
+        addTask("Task 1"),
+        addTask("Task 2"),
+        addTask("Task 3"),
+        addTask("Task 4"),
         ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
         ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
         ...dragAndDropNth(3, 2, {side: "below", indentation: 3}),
@@ -568,9 +572,9 @@ describe("nesting tasks with drag and drop", () => {
     describe("in a flat list", () => {
       const example = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Task 0"),
-        ...addTask("Task 1"),
-        ...addTask("Task 2"),
+        addTask("Task 0"),
+        addTask("Task 1"),
+        addTask("Task 2"),
         startDragNthTask(1),
       ]);
 
@@ -612,10 +616,10 @@ describe("nesting tasks with drag and drop", () => {
     describe("unindenting the last item in the subtree of a top-level item", () => {
       const example = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Task 0"),
-        ...addTask("Task 1"),
-        ...addTask("Task 2"),
-        ...addTask("Task 3"),
+        addTask("Task 0"),
+        addTask("Task 1"),
+        addTask("Task 2"),
+        addTask("Task 3"),
         ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
         ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
         startDragNthTask(2),
@@ -634,9 +638,9 @@ describe("nesting tasks with drag and drop", () => {
       test("when the task has logical sibling following it, it cannot be unindented at all", () => {
         const example = updateAll(empty, [
           ...switchToFilter("all"),
-          ...addTask("Task 0"),
-          ...addTask("Task 1"),
-          ...addTask("Task 2"),
+          addTask("Task 0"),
+          addTask("Task 1"),
+          addTask("Task 2"),
           ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
           ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
           startDragNthTask(1),
@@ -648,11 +652,11 @@ describe("nesting tasks with drag and drop", () => {
       test("even at the end of a subtree, task cannot be dragged beyong following task", () => {
         const example = updateAll(empty, [
           ...switchToFilter("all"),
-          ...addTask("Task 0"),
-          ...addTask("Task 1"),
-          ...addTask("Task 2"),
-          ...addTask("Task 3"),
-          ...addTask("Task 4"),
+          addTask("Task 0"),
+          addTask("Task 1"),
+          addTask("Task 2"),
+          addTask("Task 3"),
+          addTask("Task 4"),
           ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
           ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
           ...dragAndDropNth(3, 2, {side: "below", indentation: 2}),
@@ -670,11 +674,11 @@ describe("nesting tasks with drag and drop", () => {
       test("however, tasks that are descendants of the task being dragged are not taken into account", () => {
         const example = updateAll(empty, [
           ...switchToFilter("all"),
-          ...addTask("Task 0"),
-          ...addTask("Task 1"),
-          ...addTask("Task 2"),
-          ...addTask("Task 3"),
-          ...addTask("Task 4"),
+          addTask("Task 0"),
+          addTask("Task 1"),
+          addTask("Task 2"),
+          addTask("Task 3"),
+          addTask("Task 4"),
           ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
           ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
           ...dragAndDropNth(3, 2, {side: "below", indentation: 2}),
@@ -692,11 +696,11 @@ describe("nesting tasks with drag and drop", () => {
     test("dragging a task below its last descendant is like dragging the item to itself except it can't be indented further", () => {
       const example = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Task 0"),
-        ...addTask("Task 1"),
-        ...addTask("Task 2"),
-        ...addTask("Task 3"),
-        ...addTask("Task 4"),
+        addTask("Task 0"),
+        addTask("Task 1"),
+        addTask("Task 2"),
+        addTask("Task 3"),
+        addTask("Task 4"),
         ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
         ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
         ...dragAndDropNth(3, 2, {side: "below", indentation: 2}),
@@ -713,10 +717,10 @@ describe("nesting tasks with drag and drop", () => {
       test("the indentation of the preceeding item would be taken into account when it shouldn't", () => {
         const example = updateAll(empty, [
           ...switchToFilter("all"),
-          ...addTask("Task 0"),
-          ...addTask("Task 1"),
-          ...addTask("Task 2"),
-          ...addTask("Task 3"),
+          addTask("Task 0"),
+          addTask("Task 1"),
+          addTask("Task 2"),
+          addTask("Task 3"),
           ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
           ...dragAndDropNth(3, 2, {side: "below", indentation: 1}),
           startDragNthTask(0),
@@ -731,10 +735,10 @@ describe("nesting tasks with drag and drop", () => {
     describe.each([0, 1, 2])("when the archived task has indentation %d", (indentation) => {
       const step1 = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Task 0"),
-        ...addTask("Task 1"),
-        ...addTask("Task 2"),
-        ...addTask("Task 3"),
+        addTask("Task 0"),
+        addTask("Task 1"),
+        addTask("Task 2"),
+        addTask("Task 3"),
         ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
         ...dragAndDropNth(2, 1, {side: "below", indentation}),
         dragToFilter(2, "archive"),
@@ -775,9 +779,9 @@ describe("nesting tasks with drag and drop", () => {
   describe("dragging a task into a parent when there is an archived task at the top-level below the parent", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 0"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
+      addTask("Task 0"),
+      addTask("Task 1"),
+      addTask("Task 2"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 0}),
       dragToFilter(1, "archive"),
       startDragNthTask(1),
@@ -814,9 +818,9 @@ describe("nesting tasks with drag and drop", () => {
   describe("inside a project filter", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Project"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
+      addTask("Project"),
+      addTask("Task 1"),
+      addTask("Task 2"),
       openNth(0),
       setComponentValue("Type", "project"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
@@ -850,9 +854,9 @@ describe("drag and drop in filtered views", () => {
   describe("example in finished view, when subtask and other top-level task are finished, but parent is not", () => {
     const example = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 0"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
+      addTask("Task 0"),
+      addTask("Task 1"),
+      addTask("Task 2"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
       (view) => check(view, 1),
       (view) => check(view, 2),
@@ -919,11 +923,11 @@ describe("drag and drop with multiple sections shown", () => {
   describe("reordering subtasks within a section of a filtered view", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Project"),
+      addTask("Project"),
       openNth(0),
       setComponentValue("Type", "project"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
+      addTask("Task 1"),
+      addTask("Task 2"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
       ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
       ...switchToFilter({type: "section", section: "actions"}),
@@ -956,9 +960,9 @@ describe("drag and drop with multiple sections shown", () => {
   describe("dragging a task from the stalled section into the ready section makes it ready", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter({type: "section", section: "actions"}),
-      ...addTask("Task 0"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
+      addTask("Task 0"),
+      addTask("Task 1"),
+      addTask("Task 2"),
       dragToFilter(0, "ready"),
     ]);
 
@@ -982,8 +986,8 @@ describe("drag and drop with multiple sections shown", () => {
   describe("drop indicator when dragging task into first position in section", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 0"),
-      ...addTask("Task 1"),
+      addTask("Task 0"),
+      addTask("Task 1"),
       dragToFilter(0, "ready"),
       ...switchToFilter({type: "section", section: "actions"}),
     ]);
@@ -1020,8 +1024,8 @@ describe("drag and drop with multiple sections shown", () => {
     describe("a task planned today that is also ready or stalled", () => {
       const example = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Task 0"),
-        ...addTask("Task 1"),
+        addTask("Task 0"),
+        addTask("Task 1"),
         dragToTab(0, "Today"),
         dragToTab(0, "Ready"),
         ...switchToFilter({type: "section", section: "actions"}),
@@ -1079,8 +1083,8 @@ describe("a task that has an unfinished child task isn't stalled", () => {
   describe("when there is a parent with one child task", () => {
     const example = updateAll(empty, [
       {tag: "selectFilter", filter: "all"},
-      ...addTask("Parent"),
-      ...addTask("Child"),
+      addTask("Parent"),
+      addTask("Child"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
     ]);
 
@@ -1120,8 +1124,8 @@ describe("an action that has unfinished children isn't ready", () => {
   describe("when there is a parent action with one child action", () => {
     const example = updateAll(empty, [
       {tag: "selectFilter", filter: "all"},
-      ...addTask("Parent"),
-      ...addTask("Child"),
+      addTask("Parent"),
+      addTask("Child"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
       dragToFilter(0, "ready"),
       dragToFilter(1, "ready"),
@@ -1162,9 +1166,9 @@ describe("an action that has unfinished children isn't ready", () => {
 describe("dragging a subtree of tasks", () => {
   const example = updateAll(empty, [
     ...switchToFilter("all"),
-    ...addTask("Task 0"),
-    ...addTask("Task 1"),
-    ...addTask("Task 2"),
+    addTask("Task 0"),
+    addTask("Task 1"),
+    addTask("Task 2"),
     ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
   ]);
 
@@ -1203,9 +1207,9 @@ describe("filtered views of tasks", () => {
   describe("in an example where a child task is finished but the parent is not", () => {
     const exampleBeforeAll = updateAll(empty, [
       {tag: "selectFilter", filter: "all"},
-      ...addTask("Task 0"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
+      addTask("Task 0"),
+      addTask("Task 1"),
+      addTask("Task 2"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
       ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
     ]);
@@ -1273,7 +1277,7 @@ describe("filtered views of tasks", () => {
   });
 
   describe("the paused filter shows paused tasks", () => {
-    const step1 = updateAll(empty, [...switchToFilter("stalled"), ...addTask("Task 0"), ...addTask("Task 1")]);
+    const step1 = updateAll(empty, [...switchToFilter("stalled"), addTask("Task 0"), addTask("Task 1")]);
 
     describe("initially", () => {
       test("both tasks are shown in stalled filter", () => {
@@ -1365,8 +1369,8 @@ describe("section filters", () => {
     describe("for the active project section", () => {
       const step1 = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Project 0"),
-        ...addTask("Project 1"),
+        addTask("Project 0"),
+        addTask("Project 1"),
         openNth(0),
         setComponentValue("Type", "project"),
         openNth(1),
@@ -1401,10 +1405,10 @@ describe("section filters", () => {
     describe("actions filter", () => {
       const example = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Ready 1"),
-        ...addTask("Ready 2"),
-        ...addTask("Stalled 1"),
-        ...addTask("Stalled 2"),
+        addTask("Ready 1"),
+        addTask("Ready 2"),
+        addTask("Stalled 1"),
+        addTask("Stalled 2"),
         dragToFilter(0, "today"),
         dragToFilter(0, "ready"),
         dragToFilter(1, "ready"),
@@ -1450,7 +1454,7 @@ function setComponentValue(componentTitle: string, value: string) {
 
 describe("the task editor", () => {
   describe("editing task title", () => {
-    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task")]);
+    const step1 = updateAll(empty, [...switchToFilter("all"), addTask("Task")]);
 
     describe("initially", () => {
       test("the example task is shown in the task list", () => {
@@ -1495,7 +1499,7 @@ describe("the task editor", () => {
   });
 
   describe("setting task status", () => {
-    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task"), openNth(0)]);
+    const step1 = updateAll(empty, [...switchToFilter("all"), addTask("Task"), openNth(0)]);
 
     describe("initially", () => {
       test("the example task is not checked in the task list", () => {
@@ -1545,7 +1549,7 @@ describe("the task editor", () => {
   });
 
   describe("marking tasks as action", () => {
-    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task"), openNth(0)]);
+    const step1 = updateAll(empty, [...switchToFilter("all"), addTask("Task"), openNth(0)]);
 
     describe("initially", () => {
       test("the example task has the stalled badge in the task list", () => {
@@ -1597,7 +1601,7 @@ describe("the task editor", () => {
 
 describe("paused tasks", () => {
   describe("in an example with a single stalled task", () => {
-    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task"), openNth(0)]);
+    const step1 = updateAll(empty, [...switchToFilter("all"), addTask("Task"), openNth(0)]);
 
     describe("initially", () => {
       test("the task has the stalled badge", () => {
@@ -1625,8 +1629,8 @@ describe("paused tasks", () => {
   describe("in an example with a child task", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Parent"),
-      ...addTask("Child"),
+      addTask("Parent"),
+      addTask("Child"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
       openNth(0),
     ]);
@@ -1666,8 +1670,8 @@ describe("paused tasks", () => {
     describe("paused children prevents otherwise actionable parent from being ready", () => {
       const step1 = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Parent"),
-        ...addTask("Child"),
+        addTask("Parent"),
+        addTask("Child"),
         ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
         openNth(0),
         setComponentValue("Actionable", "yes"),
@@ -1701,8 +1705,8 @@ describe("paused tasks", () => {
     describe("task that would be stalled without paused child is still stalled", () => {
       const step1 = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Parent"),
-        ...addTask("Child"),
+        addTask("Parent"),
+        addTask("Child"),
         ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
         openNth(1),
         setComponentValue("Status", "paused"),
@@ -1742,7 +1746,7 @@ describe("the stalled filter", () => {
         expect(indicatorForFilter(view(step1), "Stalled")).toEqual(null);
       });
 
-      const step2 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task")]);
+      const step2 = updateAll(empty, [...switchToFilter("all"), addTask("Task")]);
 
       test("after adding task, the counter is shown", () => {
         expect(indicatorForFilter(view(step2), "Stalled")).toEqual({text: "1", color: "orange"});
@@ -1758,10 +1762,10 @@ describe("the stalled filter", () => {
     describe("subtasks are not included", () => {
       const example = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Project"),
+        addTask("Project"),
         openNth(0),
         setComponentValue("Type", "project"),
-        ...addTask("Task 1"),
+        addTask("Task 1"),
         ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
         ...switchToFilter("stalled"),
       ]);
@@ -1782,13 +1786,13 @@ describe("the stalled filter", () => {
   describe("projects and their stalled subtasks are shown, but not non-stalled subtasks", () => {
     const example = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Project"),
+      addTask("Project"),
       openNth(0),
       setComponentValue("Type", "project"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
-      ...addTask("Task 3"),
-      ...addTask("Task 4"),
+      addTask("Task 1"),
+      addTask("Task 2"),
+      addTask("Task 3"),
+      addTask("Task 4"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
       openNth(1),
       setComponentValue("Status", "paused"),
@@ -1817,7 +1821,7 @@ describe("the indicator for the ready filter", () => {
     expect(indicatorForFilter(view(step1), "Ready")).toEqual(null);
   });
 
-  const step2 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task"), dragToTab(0, "Ready")]);
+  const step2 = updateAll(empty, [...switchToFilter("all"), addTask("Task"), dragToTab(0, "Ready")]);
 
   test("after adding task, the counter is shown", () => {
     expect(indicatorForFilter(view(step2), "Ready")).toEqual({text: "1", color: "green"});
@@ -1826,7 +1830,7 @@ describe("the indicator for the ready filter", () => {
 
 describe("projects", () => {
   describe("marking a task as a project in the task list updates type", () => {
-    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Project"), openNth(0)]);
+    const step1 = updateAll(empty, [...switchToFilter("all"), addTask("Project"), openNth(0)]);
 
     describe("initially", () => {
       test("the task has type task in editor", () => {
@@ -1854,7 +1858,7 @@ describe("projects", () => {
   describe("projects cannot be marked as actionable", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Project"),
+      addTask("Project"),
       openNth(0),
       setComponentValue("Actionable", "yes"),
     ]);
@@ -1886,12 +1890,12 @@ describe("projects", () => {
     test("a project with an actionable subtask is not stalled", () => {
       const example = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Project"),
+        addTask("Project"),
         openNth(0),
         setComponentValue("Type", "project"),
-        ...addTask("Task 1"),
-        ...addTask("Task 2"),
-        ...addTask("Task 3"),
+        addTask("Task 1"),
+        addTask("Task 2"),
+        addTask("Task 3"),
         ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
         ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
         ...dragAndDropNth(3, 2, {side: "below", indentation: 1}),
@@ -1905,10 +1909,10 @@ describe("projects", () => {
     test("a project with only a stalled subtask is itself also stalled", () => {
       const example = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Project"),
+        addTask("Project"),
         openNth(0),
         setComponentValue("Type", "project"),
-        ...addTask("Task 1"),
+        addTask("Task 1"),
         ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
       ]);
 
@@ -1918,7 +1922,7 @@ describe("projects", () => {
     test("however, project isn't stalled if it's paused", () => {
       const example = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Project"),
+        addTask("Project"),
         openNth(0),
         setComponentValue("Type", "project"),
         setComponentValue("Status", "paused"),
@@ -1931,12 +1935,12 @@ describe("projects", () => {
   describe("a project is ready if it has a ready subtask", () => {
     const example = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Project"),
+      addTask("Project"),
       openNth(0),
       setComponentValue("Type", "project"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
-      ...addTask("Task 3"),
+      addTask("Task 1"),
+      addTask("Task 2"),
+      addTask("Task 3"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
       ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
       ...dragAndDropNth(3, 2, {side: "below", indentation: 1}),
@@ -1956,7 +1960,7 @@ describe("projects", () => {
   });
 
   describe("list of projects in the sidebar", () => {
-    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Project"), openNth(0)]);
+    const step1 = updateAll(empty, [...switchToFilter("all"), addTask("Project"), openNth(0)]);
 
     describe("without any projects", () => {
       test("the list of active projects in the sidebar is empty", () => {
@@ -2000,7 +2004,7 @@ describe("projects", () => {
   describe("stalled projects have indicators in sidebar", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Project"),
+      addTask("Project"),
       openNth(0),
       setComponentValue("Type", "project"),
     ]);
@@ -2013,7 +2017,7 @@ describe("projects", () => {
     });
 
     const step2 = updateAll(step1, [
-      ...addTask("Action"),
+      addTask("Action"),
       openNth(1),
       setComponentValue("Actionable", "yes"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
@@ -2030,12 +2034,12 @@ describe("projects", () => {
   describe("opening project from sidebar", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Example project"),
+      addTask("Example project"),
       openNth(0),
       setComponentValue("Type", "project"),
-      ...addTask("Inside project"),
+      addTask("Inside project"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
-      ...addTask("Outside project"),
+      addTask("Outside project"),
     ]);
 
     describe("in the 'all' filter", () => {
@@ -2081,9 +2085,9 @@ describe("archiving tasks", () => {
   describe("when the archived task is a subtask", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
-      ...addTask("Task 3"),
+      addTask("Task 1"),
+      addTask("Task 2"),
+      addTask("Task 3"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
       ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
     ]);
@@ -2125,7 +2129,7 @@ describe("archiving tasks", () => {
   describe("archiving project removes it from active projects list", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Project"),
+      addTask("Project"),
       openNth(0),
       setComponentValue("Type", "project"),
     ]);
@@ -2144,8 +2148,8 @@ describe("archiving tasks", () => {
   describe("children of archived tasks are also archived", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
+      addTask("Task 1"),
+      addTask("Task 2"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
     ]);
 
@@ -2185,8 +2189,8 @@ describe("archiving tasks", () => {
   describe("when child task is archived, the parent becomes stalled again", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
+      addTask("Task 1"),
+      addTask("Task 2"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
     ]);
 
@@ -2243,9 +2247,9 @@ describe("saving and loading files", () => {
   describe("saving and then loading a file gives the same result", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 1"),
-      ...addTask("Task 2"),
-      ...addTask("Task 3"),
+      addTask("Task 1"),
+      addTask("Task 2"),
+      addTask("Task 3"),
       ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
       ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
     ]);
@@ -2302,7 +2306,7 @@ describe("saving and loading files", () => {
 
   describe("automatically saving to local storage", () => {
     describe("after moving a task, the file is saved to local storage", () => {
-      const step1 = updateAll(empty, [...addTask("Task 0"), ...addTask("Task 1"), ...addTask("Task 2")]);
+      const step1 = updateAll(empty, [addTask("Task 0"), addTask("Task 1"), addTask("Task 2")]);
 
       const [step2, step2e] = stateAndEffectsAfter(step1, [
         ...dragAndDropNth(2, 1, {side: "below", indentation: 1}),
@@ -2337,7 +2341,7 @@ describe("saving and loading files", () => {
 
 describe("planning", () => {
   describe("planned date is saved", () => {
-    const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1"), openNth(0)]);
+    const step1 = updateAll(empty, [...switchToFilter("all"), addTask("Task 1"), openNth(0)]);
 
     describe("initially", () => {
       test("the planned date is not set", () => {
@@ -2372,7 +2376,7 @@ describe("planning", () => {
   describe("attempting to set invalid planned date", () => {
     ["", "invalid", "2020"].forEach((value) => {
       describe(`trying to set date to '${value}'`, () => {
-        const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1"), openNth(0)]);
+        const step1 = updateAll(empty, [...switchToFilter("all"), addTask("Task 1"), openNth(0)]);
 
         const step2 = updateAll(step1, [setComponentValue("Planned", value)]);
 
@@ -2388,7 +2392,7 @@ describe("planning", () => {
   describe("tasks planned today have today badge", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 1"),
+      addTask("Task 1"),
       openNth(0),
       setComponentValue("Planned", "2020-03-15"),
     ]);
@@ -2411,7 +2415,7 @@ describe("planning", () => {
   describe("tasks planned before today also have badge", () => {
     const step1 = updateAll(empty, [
       ...switchToFilter("all"),
-      ...addTask("Task 1"),
+      addTask("Task 1"),
       openNth(0),
       setComponentValue("Planned", "2020-03-10"),
     ]);
@@ -2439,8 +2443,8 @@ describe("planning", () => {
     describe("dragging task to the today tab", () => {
       const step1 = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Task 1"),
-        ...addTask("Task 2"),
+        addTask("Task 1"),
+        addTask("Task 2"),
         openNth(0),
         dragToFilter(0, "today"),
       ]);
@@ -2460,7 +2464,7 @@ describe("planning", () => {
     });
 
     describe("inicator", () => {
-      const step1 = updateAll(empty, [...switchToFilter("all"), ...addTask("Task 1")]);
+      const step1 = updateAll(empty, [...switchToFilter("all"), addTask("Task 1")]);
 
       describe("when there are no tasks planned today", () => {
         test("the indicator is not visible", () => {
@@ -2497,7 +2501,7 @@ describe("performance", () => {
   function exampleWithNArchivedTasks(n: number) {
     return updateAll(
       empty,
-      [...Array(n)].flatMap((_, i) => [...addTask(`Task ${i + 1}`), dragToFilter(0, "archive")]),
+      [...Array(n)].flatMap((_, i) => [addTask(`Task ${i + 1}`), dragToFilter(0, "archive")]),
     );
   }
 
@@ -2549,8 +2553,8 @@ describe("filter bar", () => {
     describe("is shown if and only if there are both paused and non-paused items", () => {
       const step1 = updateAll(empty, [
         ...switchToFilter("not-done"),
-        ...addTask("Task 0"),
-        ...addTask("Task 1"),
+        addTask("Task 0"),
+        addTask("Task 1"),
         dragToFilter(0, "paused"),
       ]);
 
@@ -2576,8 +2580,8 @@ describe("filter bar", () => {
     describe("can be toggled on or off", () => {
       const step1 = updateAll(empty, [
         ...switchToFilter("not-done"),
-        ...addTask("Task 0"),
-        ...addTask("Task 1"),
+        addTask("Task 0"),
+        addTask("Task 1"),
         dragToFilter(0, "paused"),
       ]);
 
@@ -2607,12 +2611,12 @@ describe("filter bar", () => {
     describe("hides or shows paused tasks, depending on state", () => {
       const step1 = updateAll(empty, [
         ...switchToFilter("all"),
-        ...addTask("Not paused parent 0"),
-        ...addTask("Paused parent 1"),
-        ...addTask("Paused 2"),
-        ...addTask("Not paused 3"),
-        ...addTask("Paused top-level 4"),
-        ...addTask("Not paused top-level 5"),
+        addTask("Not paused parent 0"),
+        addTask("Paused parent 1"),
+        addTask("Paused 2"),
+        addTask("Not paused 3"),
+        addTask("Paused top-level 4"),
+        addTask("Not paused top-level 5"),
         ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
         ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
         ...dragAndDropNth(3, 2, {side: "below", indentation: 2}),
