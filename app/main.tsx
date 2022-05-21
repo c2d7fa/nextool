@@ -151,6 +151,42 @@ function FileControls(props: {view: App.FileControlsView; send: App.Send}) {
   }
 }
 
+function FilterButton(props: {filter: App.FilterBarView["filters"][number]; send: App.Send}) {
+  const [isDepressed, setIsDepressed] = React.useState(false);
+
+  return (
+    <div className={style.filterButtonContainer}>
+      <button
+        className={[style.filterButton, style[props.filter.state], isDepressed ? style.down : ""].join(" ")}
+        onMouseDown={() => setIsDepressed(true)}
+        onMouseLeave={() => setIsDepressed(false)}
+        onMouseUp={(ev) => {
+          setIsDepressed(false);
+          props.send({
+            tag: "filterBar",
+            type: "set",
+            id: props.filter.id,
+            state: ev.button === 0 ? "include" : "exclude",
+          });
+        }}
+        onContextMenu={(ev) => ev.preventDefault()}
+      >
+        {props.filter.label}
+      </button>
+    </div>
+  );
+}
+
+function FilterBar(props: {view: App.FilterBarView; send: App.Send}) {
+  return (
+    <div className={[style.bar, props.view.filters.length === 0 ? style.empty : ""].join(" ")}>
+      {props.view.filters.map((filter, i) => (
+        <FilterButton key={i} filter={filter} send={props.send} />
+      ))}
+    </div>
+  );
+}
+
 export function Main(props: {platform: Platform}) {
   const [pendingEffects, setPendingEffects] = React.useState<App.Effect[]>([]);
 
@@ -185,6 +221,7 @@ export function Main(props: {platform: Platform}) {
       </div>
       <SideBar sections={view.sideBar} send={send} />
       <div className={style.innerContainer}>
+        <FilterBar view={view.filterBar} send={send} />
         <div className={style.left}>
           <TaskList view={view.taskList} send={send} />
         </div>
@@ -237,6 +274,7 @@ export function SmallDemo(props: {}) {
       </div>
       <SideBar sections={view.sideBar} send={send} />
       <div className={style.innerContainer}>
+        <FilterBar view={view.filterBar} send={send} />
         <div className={style.left}>
           <TaskList view={view.taskList} send={send} />
         </div>

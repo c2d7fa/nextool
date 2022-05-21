@@ -2521,3 +2521,139 @@ describe("performance", () => {
     expect(t2 / t1).toBeLessThan(1.2);
   });
 });
+
+describe("filter bar", () => {
+  function filterState(view: View, label: string) {
+    const filter = view.filterBar.filters.find((f) => f.label === label);
+    if (!filter) {
+      console.error("no such filter", view.filterBar);
+      throw "no such filter in filter bar";
+    }
+    return filter.state;
+  }
+
+  function setFilter(label: string, state: "include" | "exclude") {
+    return (view: View) => {
+      return [
+        {
+          tag: "filterBar" as const,
+          type: "set" as const,
+          id: view.filterBar.filters.find((f) => f.label === label)!.id,
+          state,
+        },
+      ];
+    };
+  }
+
+  describe("paused filter", () => {
+    describe("is shown if and only if there are both paused and non-paused items", () => {
+      const step1 = updateAll(empty, [
+        ...switchToFilter("not-done"),
+        ...addTask("Task 0"),
+        ...addTask("Task 1"),
+        dragToFilter(0, "paused"),
+      ]);
+
+      function filterBarHas(view: View, label: string) {
+        return view.filterBar.filters.map((f) => f.label).includes(label);
+      }
+
+      test("no paused items", () => {
+        const step2 = updateAll(step1, [dragToFilter(0, "done")]);
+        expect(filterBarHas(view(step2), "Paused")).toBe(false);
+      });
+
+      test("only paused items", () => {
+        const step2 = updateAll(step1, [dragToFilter(1, "done")]);
+        expect(filterBarHas(view(step2), "Paused")).toBe(false);
+      });
+
+      test("paused and non-paused items", () => {
+        expect(filterBarHas(view(step1), "Paused")).toBe(true);
+      });
+    });
+
+    describe("can be toggled on or off", () => {
+      const step1 = updateAll(empty, [
+        ...switchToFilter("not-done"),
+        ...addTask("Task 0"),
+        ...addTask("Task 1"),
+        dragToFilter(0, "paused"),
+      ]);
+
+      const step2 = updateAll(step1, [setFilter("Paused", "include")]);
+
+      const step3 = updateAll(step2, [setFilter("Paused", "exclude")]);
+
+      const step4 = updateAll(step3, [setFilter("Paused", "exclude")]);
+
+      test("the filter is neutral by default", () => {
+        expect(filterState(view(step1), "Paused")).toBe("neutral");
+      });
+
+      test("the filter can be toggled on", () => {
+        expect(filterState(view(step2), "Paused")).toBe("include");
+      });
+
+      test("the filter can be toggled off", () => {
+        expect(filterState(view(step3), "Paused")).toBe("exclude");
+      });
+
+      test("the filter can be disabled again", () => {
+        expect(filterState(view(step4), "Paused")).toBe("neutral");
+      });
+    });
+
+    describe("hides or shows paused tasks, depending on state", () => {
+      const step1 = updateAll(empty, [
+        ...switchToFilter("all"),
+        ...addTask("Not paused parent 0"),
+        ...addTask("Paused parent 1"),
+        ...addTask("Paused 2"),
+        ...addTask("Not paused 3"),
+        ...addTask("Paused top-level 4"),
+        ...addTask("Not paused top-level 5"),
+        ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
+        ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
+        ...dragAndDropNth(3, 2, {side: "below", indentation: 2}),
+        dragToFilter(2, "paused"),
+        dragToFilter(4, "paused"),
+      ]);
+
+      const step2 = updateAll(step1, [setFilter("Paused", "include")]);
+
+      const step3 = updateAll(step2, [setFilter("Paused", "exclude")]);
+
+      const step4 = updateAll(step3, [setFilter("Paused", "exclude")]);
+
+      test("when set to 'include', only paused subtasks and their parents are shown", () => {
+        expect(tasks(step2, ["title", "indentation"])).toEqual([
+          {title: "Not paused parent 0", indentation: 0},
+          {title: "Paused parent 1", indentation: 1},
+          {title: "Paused 2", indentation: 2},
+          {title: "Paused top-level 4", indentation: 0},
+        ]);
+      });
+
+      test("when set to 'exclude', only non-paused subtasks and their parents are shown", () => {
+        expect(tasks(step3, ["title", "indentation"])).toEqual([
+          {title: "Not paused parent 0", indentation: 0},
+          {title: "Paused parent 1", indentation: 1},
+          {title: "Not paused 3", indentation: 2},
+          {title: "Not paused top-level 5", indentation: 0},
+        ]);
+      });
+
+      test("when set to 'neutral', all tasks are shown", () => {
+        expect(tasks(step4, ["title", "indentation"])).toEqual([
+          {title: "Not paused parent 0", indentation: 0},
+          {title: "Paused parent 1", indentation: 1},
+          {title: "Paused 2", indentation: 2},
+          {title: "Not paused 3", indentation: 2},
+          {title: "Paused top-level 4", indentation: 0},
+          {title: "Not paused top-level 5", indentation: 0},
+        ]);
+      });
+    });
+  });
+});
