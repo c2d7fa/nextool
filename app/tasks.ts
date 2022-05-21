@@ -265,7 +265,7 @@ function doesTaskMatch(state: CommonState, task: Task): boolean {
 
 function filterTasks(state: CommonState): IndentedList.TreeNode<TaskData>[] {
   return IndentedList.searchAndTrim(state.tasks, {
-    pick: (task) => doesTaskMatch(state, task),
+    pick: (task) => doesTaskMatch(state, task) && doesSubtaskMatch(state, task),
     include: (task) => doesSubtaskMatch(state, task),
   });
 }

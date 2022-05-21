@@ -2611,10 +2611,13 @@ describe("filter bar", () => {
         ...addTask("Paused parent 1"),
         ...addTask("Paused 2"),
         ...addTask("Not paused 3"),
+        ...addTask("Paused top-level 4"),
+        ...addTask("Not paused top-level 5"),
         ...dragAndDropNth(1, 0, {side: "below", indentation: 1}),
         ...dragAndDropNth(2, 1, {side: "below", indentation: 2}),
         ...dragAndDropNth(3, 2, {side: "below", indentation: 2}),
         dragToFilter(2, "paused"),
+        dragToFilter(4, "paused"),
       ]);
 
       const step2 = updateAll(step1, [setFilter("Paused", "include")]);
@@ -2628,6 +2631,7 @@ describe("filter bar", () => {
           {title: "Not paused parent 0", indentation: 0},
           {title: "Paused parent 1", indentation: 1},
           {title: "Paused 2", indentation: 2},
+          {title: "Paused top-level 4", indentation: 0},
         ]);
       });
 
@@ -2636,6 +2640,7 @@ describe("filter bar", () => {
           {title: "Not paused parent 0", indentation: 0},
           {title: "Paused parent 1", indentation: 1},
           {title: "Not paused 3", indentation: 2},
+          {title: "Not paused top-level 5", indentation: 0},
         ]);
       });
 
@@ -2645,6 +2650,8 @@ describe("filter bar", () => {
           {title: "Paused parent 1", indentation: 1},
           {title: "Paused 2", indentation: 2},
           {title: "Not paused 3", indentation: 2},
+          {title: "Paused top-level 4", indentation: 0},
+          {title: "Not paused top-level 5", indentation: 0},
         ]);
       });
     });
