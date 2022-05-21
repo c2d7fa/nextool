@@ -51,7 +51,7 @@ export type TaskListView = {
   rows: (DropTargetView | DropIndicatorView | TaskView)[];
 }[];
 
-export type SubtaskFilter = {id: "paused"; state: "include" | "exclude"};
+export type SubtaskFilter = {id: "paused" | "done"; state: "include" | "exclude"};
 export type SubtaskFilters = SubtaskFilter[];
 
 type CommonState = {tasks: Tasks; filter: FilterId; subtaskFilters: SubtaskFilters; today: Date};
@@ -237,6 +237,20 @@ function doesSubtaskMatch(state: CommonState, task: Task): boolean {
     )
       return false;
     else if (pausedSubtaskFilter === "exclude" && isPaused(state, task)) return false;
+  }
+
+  const doneSubtaskFilter = state.subtaskFilters.find((filter) => filter.id === "done")?.state ?? "neutral";
+  if (doneSubtaskFilter !== "neutral") {
+    if (
+      doneSubtaskFilter === "include" &&
+      !IndentedList.anyDescendant(state.tasks, task, (subtask) => isDone(subtask))
+    )
+      return false;
+    else if (
+      doneSubtaskFilter === "exclude" &&
+      !IndentedList.anyDescendant(state.tasks, task, (subtask) => !isDone(subtask))
+    )
+      return false;
   }
 
   if (isArchived(state, task) && state.filter !== "archive") return false;

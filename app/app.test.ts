@@ -2516,4 +2516,101 @@ describe("filter bar", () => {
       });
     });
   });
+
+  describe("completed filter", () => {
+    describe("is shown if and only if there are both completed and non-completed items", () => {
+      const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 0", "done"), addTask("Task 1")]);
+
+      function filterBarHas(view: View, label: string) {
+        return view.filterBar.filters.map((f) => f.label).includes(label);
+      }
+
+      test("no completed items", () => {
+        const step2 = updateAll(step1, [dragToFilter(0, "not-done")]);
+        expect(filterBarHas(view(step2), "Completed")).toBe(false);
+      });
+
+      test("only completed items", () => {
+        const step2 = updateAll(step1, [dragToFilter(1, "done")]);
+        expect(filterBarHas(view(step2), "Completed")).toBe(false);
+      });
+
+      test("completed and non-completed items", () => {
+        expect(filterBarHas(view(step1), "Completed")).toBe(true);
+      });
+    });
+
+    describe("can be toggled on or off", () => {
+      const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 0", "done"), addTask("Task 1")]);
+
+      const step2 = updateAll(step1, [setFilter("Completed", "include")]);
+
+      const step3 = updateAll(step2, [setFilter("Completed", "exclude")]);
+
+      const step4 = updateAll(step3, [setFilter("Completed", "exclude")]);
+
+      test("the filter is neutral by default", () => {
+        expect(filterState(view(step1), "Completed")).toBe("neutral");
+      });
+
+      test("the filter can be toggled on", () => {
+        expect(filterState(view(step2), "Completed")).toBe("include");
+      });
+
+      test("the filter can be toggled off", () => {
+        expect(filterState(view(step3), "Completed")).toBe("exclude");
+      });
+
+      test("the filter can be disabled again", () => {
+        expect(filterState(view(step4), "Completed")).toBe("neutral");
+      });
+    });
+
+    describe("hides or shows completed tasks, depending on state", () => {
+      const step1 = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Non-completed parent"),
+        addTask("Completed parent", 1, "done"),
+        addTask("Completed task", 2, "done"),
+        addTask("Non-completed task", 2),
+        addTask("Completed top-level task", "done"),
+        addTask("Non-completed top-level task"),
+      ]);
+
+      const step2 = updateAll(step1, [setFilter("Completed", "include")]);
+
+      const step3 = updateAll(step2, [setFilter("Completed", "exclude")]);
+
+      const step4 = updateAll(step3, [setFilter("Completed", "exclude")]);
+
+      test("when set to 'include', only completed subtasks and their parents are shown", () => {
+        expect(tasks(step2, ["title", "indentation"])).toEqual([
+          {title: "Non-completed parent", indentation: 0},
+          {title: "Completed parent", indentation: 1},
+          {title: "Completed task", indentation: 2},
+          {title: "Completed top-level task", indentation: 0},
+        ]);
+      });
+
+      test("when set to 'exclude', only non-completed subtasks and their parents are shown", () => {
+        expect(tasks(step3, ["title", "indentation"])).toEqual([
+          {title: "Non-completed parent", indentation: 0},
+          {title: "Completed parent", indentation: 1},
+          {title: "Non-completed task", indentation: 2},
+          {title: "Non-completed top-level task", indentation: 0},
+        ]);
+      });
+
+      test("when set to 'neutral', all tasks are shown", () => {
+        expect(tasks(step4, ["title", "indentation"])).toEqual([
+          {title: "Non-completed parent", indentation: 0},
+          {title: "Completed parent", indentation: 1},
+          {title: "Completed task", indentation: 2},
+          {title: "Non-completed task", indentation: 2},
+          {title: "Completed top-level task", indentation: 0},
+          {title: "Non-completed top-level task", indentation: 0},
+        ]);
+      });
+    });
+  });
 });
