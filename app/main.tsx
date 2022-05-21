@@ -179,7 +179,7 @@ function FilterButton(props: {filter: App.FilterBarView["filters"][number]; send
 
 function FilterBar(props: {view: App.FilterBarView; send: App.Send}) {
   return (
-    <div className={style.bar}>
+    <div className={[style.bar, props.view.filters.length === 0 ? style.empty : ""].join(" ")}>
       {props.view.filters.map((filter, i) => (
         <FilterButton key={i} filter={filter} send={props.send} />
       ))}
