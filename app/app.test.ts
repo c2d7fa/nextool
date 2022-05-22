@@ -1735,6 +1735,34 @@ describe("the stalled filter", () => {
       ]);
     });
   });
+
+  describe("stalled subprojects of ready superproject are still grouped under that superproject", () => {
+    const step1 = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Project 0", "project"),
+      addTask("Task 1", 1, "ready"),
+      addTask("Project 2", 1, "project"),
+      addTask("Task 3", 2),
+    ]);
+
+    const step2 = updateAll(step1, [switchToFilter("ready")]);
+    const step3 = updateAll(step2, [switchToFilter("stalled")]);
+
+    test("the ready page shows the ready superproject and its ready task", () => {
+      expect(tasks(step2, ["title", "indentation", "badges"])).toEqual([
+        {title: "Project 0", indentation: 0, badges: ["project", "ready"]},
+        {title: "Task 1", indentation: 1, badges: ["ready"]},
+      ]);
+    });
+
+    test("the stalled page shows the ready superproject and its stalled subproject and subtask", () => {
+      expect(tasks(step3, ["title", "indentation", "badges"])).toEqual([
+        {title: "Project 0", indentation: 0, badges: ["project", "ready"]},
+        {title: "Project 2", indentation: 1, badges: ["project", "stalled"]},
+        {title: "Task 3", indentation: 2, badges: ["stalled"]},
+      ]);
+    });
+  });
 });
 
 describe("the indicator for the ready filter", () => {

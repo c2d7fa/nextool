@@ -265,7 +265,11 @@ function doesTaskMatch(state: CommonState, task: Task): boolean {
 
   if (state.filter === "ready") return isReady(state, task);
   else if (state.filter === "done") return isDone(task);
-  else if (state.filter === "stalled") return isStalled(state, task);
+  else if (state.filter === "stalled")
+    return (
+      isStalled(state, task) ||
+      (isProject(task) && IndentedList.anyDescendant(state.tasks, task, (subtask) => isStalled(state, subtask)))
+    );
   else if (state.filter === "not-done") return !isDone(task);
   else if (state.filter === "archive") return task.archived;
   else if (state.filter === "paused") return isPaused(state, task);
@@ -348,7 +352,7 @@ function viewRows(
           indentation: task.indentation,
           done: isDone(task),
           paused: isPaused(state, task),
-          badges: badges(state, task),
+          badges: badges(state, IndentedList.findNode(state.tasks, task)!),
           project: task.type === "project",
           today: isToday(state, task),
           borderBelow: index < list.length - 1,
