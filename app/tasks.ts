@@ -232,9 +232,17 @@ function doesSubtaskMatch(state: CommonState, task: Task): boolean {
   function excludedBySubtaskFilter(filter: SubtaskFilter["id"], matches: (subtask: Task) => boolean): boolean {
     const filterState = state.subtaskFilters.find((f) => f.id === filter)?.state ?? "neutral";
     if (filterState === "include")
-      return !IndentedList.anyDescendant(state.tasks, task, (subtask) => matches(subtask));
+      return !IndentedList.anyDescendant(
+        state.tasks,
+        task,
+        (subtask) => !isArchived(state, subtask) && matches(subtask),
+      );
     if (filterState === "exclude")
-      return !IndentedList.anyDescendant(state.tasks, task, (subtask) => !matches(subtask));
+      return !IndentedList.anyDescendant(
+        state.tasks,
+        task,
+        (subtask) => !isArchived(state, subtask) && !matches(subtask),
+      );
     return false;
   }
 

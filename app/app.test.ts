@@ -2611,5 +2611,38 @@ describe("filter bar", () => {
         ]);
       });
     });
+
+    describe("ignores children that aren't shown because they are archived", () => {
+      const example1 = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Task 0"),
+        addTask("Task 1", 1),
+        addTask("Task 2", 2, "done"),
+        addTask("Task 3", "done"),
+      ]);
+
+      const example2 = updateAll(example1, [dragToFilter(2, "archive")]);
+
+      describe("before archiving task", () => {
+        const step2 = updateAll(example1, [setFilter("Completed", "include")]);
+
+        test("the subtree with completed task is shown", () => {
+          expect(tasks(step2, ["title", "indentation"])).toEqual([
+            {title: "Task 0", indentation: 0},
+            {title: "Task 1", indentation: 1},
+            {title: "Task 2", indentation: 2},
+            {title: "Task 3", indentation: 0},
+          ]);
+        });
+      });
+
+      describe("after archiving task", () => {
+        const step2 = updateAll(example2, [setFilter("Completed", "include")]);
+
+        test("the subtree with completed task is hidden", () => {
+          expect(tasks(step2, ["title", "indentation"])).toEqual([{title: "Task 3", indentation: 0}]);
+        });
+      });
+    });
   });
 });
