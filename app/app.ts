@@ -89,6 +89,9 @@ function viewFilterBar(app: State, args: {today: Date}): FilterBarView {
   const anyPaused = list.some((r) => r.rows.some((t) => t.type === "task" && t.paused));
   const anyUnpaused = list.some((r) => r.rows.some((t) => t.type === "task" && !t.paused));
 
+  const anyDone = list.some((r) => r.rows.some((t) => t.type === "task" && t.done));
+  const anyNotDone = list.some((r) => r.rows.some((t) => t.type === "task" && !t.done));
+
   function filterState(id: string): "neutral" | "include" | "exclude" {
     const filter = app.subtaskFilters.find((f) => f.id === id);
     if (filter === undefined) {
@@ -97,9 +100,17 @@ function viewFilterBar(app: State, args: {today: Date}): FilterBarView {
     return filter.state;
   }
 
-  if (app.subtaskFilters.find((f) => f.id === "paused") || (anyPaused && anyUnpaused))
-    return {filters: [{id: "paused", label: "Paused", state: filterState("paused")}]};
-  else return {filters: []};
+  const pausedFilters =
+    app.subtaskFilters.find((f) => f.id === "paused") || (anyPaused && anyUnpaused)
+      ? [{id: "paused", label: "Paused", state: filterState("paused")}]
+      : [];
+
+  const doneFilters =
+    app.subtaskFilters.find((f) => f.id === "done") || (anyDone && anyNotDone)
+      ? [{id: "done", label: "Completed", state: filterState("done")}]
+      : [];
+
+  return {filters: [...pausedFilters, ...doneFilters]};
 }
 
 export function view(app: State, args: {today: Date}): View {
@@ -225,7 +236,8 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
     let subtaskFilters = app.subtaskFilters;
     const currentState = subtaskFilters.find((f) => f.id === ev.id);
     if (currentState === undefined) {
-      if (ev.id === "paused") subtaskFilters = [...subtaskFilters, {id: ev.id, state: ev.state}];
+      if (ev.id === "paused" || ev.id === "done")
+        subtaskFilters = [...subtaskFilters, {id: ev.id, state: ev.state}];
       else console.error("Invalid filter ID", ev);
     } else {
       subtaskFilters = subtaskFilters.flatMap((f) =>
