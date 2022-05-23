@@ -157,55 +157,60 @@ export function edit(state: CommonState, id: string, operations: EditOperation[]
   return operations.reduce(edit_, state.tasks);
 }
 
-function isDone(task: TaskData): boolean {
-  return task.status === "done";
-}
+type TaskProperty =
+  | "done"
+  | "not-done"
+  | "paused"
+  | "archived"
+  | "today"
+  | "inactive"
+  | "project"
+  | "readyItself"
+  | "readySubtree"
+  | "stalled";
 
-function isPaused(state: CommonState, task: Task): boolean {
-  return IndentedList.anyAncestor(state.tasks, task, (task) => task.status === "paused");
-}
+function taskIs(state: CommonState, task: Task, property: TaskProperty): boolean {
+  function hasReadyDescendents(state: CommonState, task: Task): boolean {
+    return task.children.some((child) => taskIs(state, child, "readyItself") || hasReadyDescendents(state, child));
+  }
 
-function isArchived(state: CommonState, task: TaskData): boolean {
-  return IndentedList.anyAncestor(state.tasks, task, (task) => task.archived);
-}
-
-function isToday(state: CommonState, task: Task) {
-  return (task.planned && (isSameDay(task.planned, state.today) || isBefore(task.planned, state.today))) ?? false;
-}
-
-function isInactive(state: CommonState, task: Task): boolean {
-  return isPaused(state, task) || isDone(task) || isArchived(state, task);
-}
-
-function isProject(task: Task): boolean {
-  return task.type === "project";
-}
-
-function hasReadyDescendents(state: CommonState, task: Task): boolean {
-  return task.children.some((child) => isReady(state, child) || hasReadyDescendents(state, child));
-}
-
-function isReady(state: CommonState, task: Task): boolean {
-  return isProject(task)
-    ? hasReadyDescendents(state, task)
-    : task.action && !isInactive(state, task) && !task.children.some((child) => !isDone(child));
-}
-
-function isStalledAssumingNotReady(state: CommonState, task: Task): boolean {
-  return (
-    !isInactive(state, task) && (isProject(task) || !task.children.some((child) => !isInactive(state, child)))
-  );
+  if (property === "done") return task.status === "done";
+  if (property === "not-done") return task.status !== "done";
+  if (property === "paused")
+    return IndentedList.anyAncestor(state.tasks, task, (task) => task.status === "paused");
+  if (property === "archived") return IndentedList.anyAncestor(state.tasks, task, (task) => task.archived);
+  if (property === "today")
+    return (
+      (task.planned && (isSameDay(task.planned, state.today) || isBefore(task.planned, state.today))) ?? false
+    );
+  if (property === "inactive")
+    return taskIs(state, task, "paused") || taskIs(state, task, "done") || taskIs(state, task, "archived");
+  if (property === "project") return task.type === "project";
+  if (property === "readyItself")
+    return taskIs(state, task, "project")
+      ? hasReadyDescendents(state, task)
+      : task.action &&
+          !taskIs(state, task, "inactive") &&
+          !task.children.some((child) => !taskIs(state, child, "done"));
+  if (property === "readySubtree") return taskIs(state, task, "readyItself") || hasReadyDescendents(state, task);
+  if (property === "stalled")
+    return (
+      !taskIs(state, task, "readyItself") &&
+      !taskIs(state, task, "inactive") &&
+      (taskIs(state, task, "project") || !task.children.some((child) => !taskIs(state, child, "inactive")))
+    );
+  return false;
 }
 
 export type BadgeId = "ready" | "stalled" | "project" | "today";
 
 function badges(state: CommonState, task: Task): BadgeId[] {
-  const ready = isReady(state, task);
-  const stalled = !ready && isStalledAssumingNotReady(state, task);
+  const ready = taskIs(state, task, "readyItself");
+  const stalled = taskIs(state, task, "stalled");
 
   return [
-    isProject(task) && "project",
-    isToday(state, task) && "today",
+    taskIs(state, task, "project") && "project",
+    taskIs(state, task, "today") && "today",
     stalled && "stalled",
     ready && "ready",
   ].filter(Boolean) as BadgeId[];
@@ -232,10 +237,6 @@ function taskProject(state: CommonState, task: Task): null | {id: string} {
   else return taskProject(state, parent);
 }
 
-function isReadyOrHasReadySubitems(state: CommonState, task: Task): boolean {
-  return isReady(state, task) || hasReadyDescendents(state, task);
-}
-
 function doesSubtaskMatch(state: CommonState, task: Task): boolean {
   function excludedBySubtaskFilter(filter: SubtaskFilter["id"], matches: (subtask: Task) => boolean): boolean {
     const filterState = state.subtaskFilters.find((f) => f.id === filter)?.state ?? "neutral";
@@ -243,22 +244,22 @@ function doesSubtaskMatch(state: CommonState, task: Task): boolean {
       return !IndentedList.anyDescendant(
         state.tasks,
         task,
-        (subtask) => !isArchived(state, subtask) && matches(subtask),
+        (subtask) => !taskIs(state, subtask, "archived") && matches(subtask),
       );
     if (filterState === "exclude")
       return !IndentedList.anyDescendant(
         state.tasks,
         task,
-        (subtask) => !isArchived(state, subtask) && !matches(subtask),
+        (subtask) => !taskIs(state, subtask, "archived") && !matches(subtask),
       );
     return false;
   }
 
-  if (excludedBySubtaskFilter("done", (subtask) => isDone(subtask))) return false;
-  if (excludedBySubtaskFilter("paused", (subtask) => isPaused(state, subtask))) return false;
-  if (excludedBySubtaskFilter("ready", (subtask) => isReadyOrHasReadySubitems(state, subtask))) return false;
+  if (excludedBySubtaskFilter("done", (subtask) => taskIs(state, subtask, "done"))) return false;
+  if (excludedBySubtaskFilter("paused", (subtask) => taskIs(state, subtask, "paused"))) return false;
+  if (excludedBySubtaskFilter("ready", (subtask) => taskIs(state, subtask, "readySubtree"))) return false;
 
-  if (isArchived(state, task) && state.filter !== "archive") return false;
+  if (taskIs(state, task, "archived") && state.filter !== "archive") return false;
   if (state.filter === "stalled" || state.filter === "ready")
     return IndentedList.anyDescendant(state.tasks, task, (subtask) => doesTaskMatch(state, subtask));
   return true;
@@ -274,13 +275,11 @@ export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["i
   const anyNotDone = list.some((r) => r.rows.some((t) => t.type === "task" && !t.done));
 
   const anyReady = list.some((r) =>
-    r.rows.some(
-      (t) => t.type === "task" && isReadyOrHasReadySubitems(state, IndentedList.findNode(state.tasks, t)!),
-    ),
+    r.rows.some((t) => t.type === "task" && taskIs(state, IndentedList.findNode(state.tasks, t)!, "readySubtree")),
   );
   const anyNotReady = list.some((r) =>
     r.rows.some(
-      (t) => t.type === "task" && !isReadyOrHasReadySubitems(state, IndentedList.findNode(state.tasks, t)!),
+      (t) => t.type === "task" && !taskIs(state, IndentedList.findNode(state.tasks, t)!, "readySubtree"),
     ),
   );
 
@@ -292,24 +291,25 @@ export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["i
 }
 
 function doesTaskMatch(state: CommonState, task: Task): boolean {
-  if (isArchived(state, task) && state.filter !== "archive") return false;
+  if (taskIs(state, task, "archived") && state.filter !== "archive") return false;
 
   if (typeof state.filter === "object") {
     if (state.filter.type === "project" && taskProject(state, task)?.id === state.filter.project.id) return true;
     else return false;
   }
 
-  if (state.filter === "ready") return isReady(state, task);
-  else if (state.filter === "done") return isDone(task);
+  if (state.filter === "ready") return taskIs(state, task, "readyItself");
+  else if (state.filter === "done") return taskIs(state, task, "done");
   else if (state.filter === "stalled")
     return (
-      isStalled(state, task) ||
-      (isProject(task) && IndentedList.anyDescendant(state.tasks, task, (subtask) => isStalled(state, subtask)))
+      taskIs(state, task, "stalled") ||
+      (taskIs(state, task, "project") &&
+        IndentedList.anyDescendant(state.tasks, task, (subtask) => taskIs(state, subtask, "stalled")))
     );
-  else if (state.filter === "not-done") return !isDone(task);
+  else if (state.filter === "not-done") return taskIs(state, task, "not-done");
   else if (state.filter === "archive") return task.archived;
-  else if (state.filter === "paused") return isPaused(state, task);
-  else if (state.filter === "today") return isToday(state, task);
+  else if (state.filter === "paused") return taskIs(state, task, "paused");
+  else if (state.filter === "today") return taskIs(state, task, "today");
   else return true;
 }
 
@@ -328,13 +328,9 @@ export function activeProjects(
       ...project,
       indentation: 0,
       project: true,
-      stalled: isStalled(state, project),
+      stalled: taskIs(state, project, "stalled"),
     }))
     .filter((project) => project.status === "active" && !project.archived);
-}
-
-function isStalled(state: CommonState, task: Task): boolean {
-  return !isReady(state, task) && isStalledAssumingNotReady(state, task);
 }
 
 export function count(state: Omit<CommonState, "filter">, filter: FilterId): number {
@@ -380,11 +376,11 @@ function viewRows(
     id: task.id,
     title: task.title,
     indentation: task.indentation,
-    done: isDone(task),
-    paused: isPaused(state, task),
+    done: taskIs(state, task, "done"),
+    paused: taskIs(state, task, "paused"),
     badges: badges(state, IndentedList.findNode(state.tasks, task)!),
     project: task.type === "project",
-    today: isToday(state, task),
+    today: taskIs(state, task, "today"),
     borderBelow: index < list.length - 1,
   }));
 
