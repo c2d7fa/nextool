@@ -84,14 +84,6 @@ export type View = {
 };
 
 function viewFilterBar(app: State, args: {today: Date}): FilterBarView {
-  const list = Tasks.view({...app, today: args.today});
-
-  const anyPaused = list.some((r) => r.rows.some((t) => t.type === "task" && t.paused));
-  const anyUnpaused = list.some((r) => r.rows.some((t) => t.type === "task" && !t.paused));
-
-  const anyDone = list.some((r) => r.rows.some((t) => t.type === "task" && t.done));
-  const anyNotDone = list.some((r) => r.rows.some((t) => t.type === "task" && !t.done));
-
   function filterState(id: string): "neutral" | "include" | "exclude" {
     const filter = app.subtaskFilters.find((f) => f.id === id);
     if (filter === undefined) {
@@ -100,17 +92,20 @@ function viewFilterBar(app: State, args: {today: Date}): FilterBarView {
     return filter.state;
   }
 
-  const pausedFilters =
-    app.subtaskFilters.find((f) => f.id === "paused") || (anyPaused && anyUnpaused)
-      ? [{id: "paused", label: "Paused", state: filterState("paused")}]
-      : [];
+  function filterLabel(id: Tasks.SubtaskFilter["id"]) {
+    if (id === "paused") return "Paused";
+    if (id === "done") return "Completed";
+    if (id === "ready") return "Ready";
+    return id;
+  }
 
-  const doneFilters =
-    app.subtaskFilters.find((f) => f.id === "done") || (anyDone && anyNotDone)
-      ? [{id: "done", label: "Completed", state: filterState("done")}]
+  function filterViews(id: Tasks.SubtaskFilter["id"]) {
+    return filterState(id) !== "neutral" || Tasks.isSubtaskFilterRelevant({...app, ...args}, id)
+      ? [{id: id, label: filterLabel(id), state: filterState(id)}]
       : [];
+  }
 
-  return {filters: [...pausedFilters, ...doneFilters]};
+  return {filters: [...filterViews("paused"), ...filterViews("done"), ...filterViews("ready")]};
 }
 
 export function view(app: State, args: {today: Date}): View {
@@ -236,7 +231,7 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
     let subtaskFilters = app.subtaskFilters;
     const currentState = subtaskFilters.find((f) => f.id === ev.id);
     if (currentState === undefined) {
-      if (ev.id === "paused" || ev.id === "done")
+      if (ev.id === "paused" || ev.id === "done" || ev.id === "ready")
         subtaskFilters = [...subtaskFilters, {id: ev.id, state: ev.state}];
       else console.error("Invalid filter ID", ev);
     } else {

@@ -2448,13 +2448,13 @@ describe("filter bar", () => {
     };
   }
 
+  function filterBarHas(view: View, label: string) {
+    return view.filterBar.filters.map((f) => f.label).includes(label);
+  }
+
   describe("paused filter", () => {
     describe("is shown if and only if there are both paused and non-paused items", () => {
       const step1 = updateAll(empty, [switchToFilter("not-done"), addTask("Task 0", "paused"), addTask("Task 1")]);
-
-      function filterBarHas(view: View, label: string) {
-        return view.filterBar.filters.map((f) => f.label).includes(label);
-      }
 
       test("no paused items", () => {
         const step2 = updateAll(step1, [dragToFilter(0, "done")]);
@@ -2547,10 +2547,6 @@ describe("filter bar", () => {
   describe("completed filter", () => {
     describe("is shown if and only if there are both completed and non-completed items", () => {
       const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 0", "done"), addTask("Task 1")]);
-
-      function filterBarHas(view: View, label: string) {
-        return view.filterBar.filters.map((f) => f.label).includes(label);
-      }
 
       test("no completed items", () => {
         const step2 = updateAll(step1, [dragToFilter(0, "not-done")]);
@@ -2670,6 +2666,70 @@ describe("filter bar", () => {
         test("the subtree with completed task is hidden", () => {
           expect(tasks(step2, ["title", "indentation"])).toEqual([{title: "Task 3", indentation: 0}]);
         });
+      });
+    });
+  });
+
+  describe("ready filter", () => {
+    describe("is shown if and only if there are both ready and non-ready items", () => {
+      const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 0", "ready"), addTask("Task 1")]);
+
+      test("no ready items", () => {
+        const step2 = updateAll(step1, [dragToFilter(0, "stalled")]);
+        expect(filterBarHas(view(step2), "Ready")).toBe(false);
+      });
+
+      test("only ready items", () => {
+        const step2 = updateAll(step1, [dragToFilter(1, "ready")]);
+        expect(filterBarHas(view(step2), "Ready")).toBe(false);
+      });
+
+      test("ready and non-ready items", () => {
+        expect(filterBarHas(view(step1), "Ready")).toBe(true);
+      });
+    });
+
+    describe("tasks that don't have the ready badge, but which contain tasks that do, don't influence whether it's shown or not", () => {
+      const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 0"), addTask("Task 1", 1, "ready")]);
+
+      test("in this example, it isn't shown", () => {
+        expect(filterBarHas(view(step1), "Ready")).toBe(false);
+      });
+    });
+
+    describe("filters tasks that are ready", () => {
+      const step1 = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Project", "project"),
+        addTask("Task 1", 1),
+        addTask("Task 2", 2, "ready"),
+        addTask("Task 3", 1),
+        switchToFilterCalled("Project"),
+      ]);
+
+      const step2 = updateAll(step1, [setFilter("Ready", "include")]);
+
+      const step3 = updateAll(step2, [setFilter("Ready", "exclude")]);
+
+      test("the intial state is correct", () => {
+        expect(tasks(step1, ["title", "indentation", "badges"])).toEqual([
+          {title: "Task 1", indentation: 0, badges: []},
+          {title: "Task 2", indentation: 1, badges: ["ready"]},
+          {title: "Task 3", indentation: 0, badges: ["stalled"]},
+        ]);
+      });
+
+      test("after setting filter to include, only subtrees with ready tasks are shown", () => {
+        expect(tasks(step2, ["title", "indentation", "badges"])).toEqual([
+          {title: "Task 1", indentation: 0, badges: []},
+          {title: "Task 2", indentation: 1, badges: ["ready"]},
+        ]);
+      });
+
+      test("after setting filter to exclude, only subtrees without ready tasks are shown", () => {
+        expect(tasks(step3, ["title", "indentation", "badges"])).toEqual([
+          {title: "Task 3", indentation: 0, badges: ["stalled"]},
+        ]);
       });
     });
   });

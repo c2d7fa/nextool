@@ -51,7 +51,7 @@ export type TaskListView = {
   rows: (DropTargetView | DropIndicatorView | TaskView)[];
 }[];
 
-export type SubtaskFilter = {id: "paused" | "done"; state: "include" | "exclude"};
+export type SubtaskFilter = {id: "paused" | "done" | "ready"; state: "include" | "exclude"};
 export type SubtaskFilters = SubtaskFilter[];
 
 type CommonState = {tasks: Tasks; filter: FilterId; subtaskFilters: SubtaskFilters; today: Date};
@@ -228,6 +228,15 @@ function taskProject(state: CommonState, task: Task): null | {id: string} {
   else return taskProject(state, parent);
 }
 
+function isReadyOrHasReadySubitems(state: CommonState, task: Task): boolean {
+  return (
+    isReady(state, IndentedList.findNode(state.tasks, task)!) ||
+    IndentedList.anyDescendant(state.tasks, IndentedList.findNode(state.tasks, task)!, (subtask) =>
+      isReady(state, subtask),
+    )
+  );
+}
+
 function doesSubtaskMatch(state: CommonState, task: Task): boolean {
   function excludedBySubtaskFilter(filter: SubtaskFilter["id"], matches: (subtask: Task) => boolean): boolean {
     const filterState = state.subtaskFilters.find((f) => f.id === filter)?.state ?? "neutral";
@@ -248,11 +257,39 @@ function doesSubtaskMatch(state: CommonState, task: Task): boolean {
 
   if (excludedBySubtaskFilter("done", (subtask) => isDone(subtask))) return false;
   if (excludedBySubtaskFilter("paused", (subtask) => isPaused(state, subtask))) return false;
+  if (excludedBySubtaskFilter("ready", (subtask) => isReadyOrHasReadySubitems(state, subtask))) return false;
 
   if (isArchived(state, task) && state.filter !== "archive") return false;
   if (state.filter === "stalled" || state.filter === "ready")
     return IndentedList.anyDescendant(state.tasks, task, (subtask) => doesTaskMatch(state, subtask));
   return true;
+}
+
+export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["id"]): boolean {
+  const list = view({...state, taskDrag: {dragging: null, hovering: null}});
+
+  const anyPaused = list.some((r) => r.rows.some((t) => t.type === "task" && t.paused));
+  const anyUnpaused = list.some((r) => r.rows.some((t) => t.type === "task" && !t.paused));
+
+  const anyDone = list.some((r) => r.rows.some((t) => t.type === "task" && t.done));
+  const anyNotDone = list.some((r) => r.rows.some((t) => t.type === "task" && !t.done));
+
+  const anyReady = list.some((r) =>
+    r.rows.some(
+      (t) => t.type === "task" && isReadyOrHasReadySubitems(state, IndentedList.findNode(state.tasks, t)!),
+    ),
+  );
+  const anyNotReady = list.some((r) =>
+    r.rows.some(
+      (t) => t.type === "task" && !isReadyOrHasReadySubitems(state, IndentedList.findNode(state.tasks, t)!),
+    ),
+  );
+
+  if (id === "paused") return anyPaused && anyUnpaused;
+  if (id === "done") return anyDone && anyNotDone;
+  if (id === "ready") return anyReady && anyNotReady;
+
+  return false;
 }
 
 function doesTaskMatch(state: CommonState, task: Task): boolean {
