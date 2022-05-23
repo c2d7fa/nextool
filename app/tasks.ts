@@ -181,13 +181,13 @@ function isProject(task: Task): boolean {
   return task.type === "project";
 }
 
-function isReady(state: CommonState, task: Task): boolean {
-  function hasReadyDescendants(task: Task): boolean {
-    return task.children.some((child) => isReady(state, child) || hasReadyDescendants(child));
-  }
+function hasReadyDescendents(state: CommonState, task: Task): boolean {
+  return task.children.some((child) => isReady(state, child) || hasReadyDescendents(state, child));
+}
 
+function isReady(state: CommonState, task: Task): boolean {
   return isProject(task)
-    ? hasReadyDescendants(task)
+    ? hasReadyDescendents(state, task)
     : task.action && !isInactive(state, task) && !task.children.some((child) => !isDone(child));
 }
 
@@ -233,12 +233,7 @@ function taskProject(state: CommonState, task: Task): null | {id: string} {
 }
 
 function isReadyOrHasReadySubitems(state: CommonState, task: Task): boolean {
-  return (
-    isReady(state, IndentedList.findNode(state.tasks, task)!) ||
-    IndentedList.anyDescendant(state.tasks, IndentedList.findNode(state.tasks, task)!, (subtask) =>
-      isReady(state, subtask),
-    )
-  );
+  return isReady(state, task) || hasReadyDescendents(state, task);
 }
 
 function doesSubtaskMatch(state: CommonState, task: Task): boolean {
