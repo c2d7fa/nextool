@@ -351,8 +351,7 @@ function viewRows(
     taskDrag: DragState<DragId, DropId>;
   },
 ): TaskListView[number]["rows"] {
-  const filtered = filterTasks(state);
-  const list = IndentedList.toList(filtered);
+  const list = IndentedList.toList(filterTasks(state));
 
   function dropIndicatorsBelow(taskIndex: number) {
     return state.taskDrag.hovering?.type === "list" &&
@@ -381,27 +380,23 @@ function viewRows(
     }));
   }
 
+  const taskRows = list.map((task, index) => ({
+    type: "task" as const,
+    id: task.id,
+    title: task.title,
+    indentation: task.indentation,
+    done: isDone(task),
+    paused: isPaused(state, task),
+    badges: badges(state, IndentedList.findNode(state.tasks, task)!),
+    project: task.type === "project",
+    today: isToday(state, task),
+    borderBelow: index < list.length - 1,
+  }));
+
   return [
     ...dropIndicatorsBelow(-1),
     ...dropTargetsBelow(-1),
-    ...list.flatMap((task, index) => {
-      return [
-        {
-          type: "task" as const,
-          id: task.id,
-          title: task.title,
-          indentation: task.indentation,
-          done: isDone(task),
-          paused: isPaused(state, task),
-          badges: badges(state, IndentedList.findNode(state.tasks, task)!),
-          project: task.type === "project",
-          today: isToday(state, task),
-          borderBelow: index < list.length - 1,
-        },
-        ...dropTargetsBelow(index),
-        ...dropIndicatorsBelow(index),
-      ];
-    }),
+    ...taskRows.flatMap((row, index) => [row, ...dropIndicatorsBelow(index), ...dropTargetsBelow(index)]),
   ];
 }
 
