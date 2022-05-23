@@ -2696,5 +2696,41 @@ describe("filter bar", () => {
         expect(filterBarHas(view(step1), "Ready")).toBe(false);
       });
     });
+
+    describe("filters tasks that are ready", () => {
+      const step1 = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Project", "project"),
+        addTask("Task 1", 1),
+        addTask("Task 2", 2, "ready"),
+        addTask("Task 3", 1),
+        switchToFilterCalled("Project"),
+      ]);
+
+      const step2 = updateAll(step1, [setFilter("Ready", "include")]);
+
+      const step3 = updateAll(step2, [setFilter("Ready", "exclude")]);
+
+      test("the intial state is correct", () => {
+        expect(tasks(step1, ["title", "indentation", "badges"])).toEqual([
+          {title: "Task 1", indentation: 0, badges: []},
+          {title: "Task 2", indentation: 1, badges: ["ready"]},
+          {title: "Task 3", indentation: 0, badges: ["stalled"]},
+        ]);
+      });
+
+      test("after setting filter to include, only subtrees with ready tasks are shown", () => {
+        expect(tasks(step2, ["title", "indentation", "badges"])).toEqual([
+          {title: "Task 1", indentation: 0, badges: []},
+          {title: "Task 2", indentation: 1, badges: ["ready"]},
+        ]);
+      });
+
+      test("after setting filter to exclude, only subtrees without ready tasks are shown", () => {
+        expect(tasks(step3, ["title", "indentation", "badges"])).toEqual([
+          {title: "Task 3", indentation: 0, badges: ["stalled"]},
+        ]);
+      });
+    });
   });
 });

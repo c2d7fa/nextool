@@ -228,6 +228,15 @@ function taskProject(state: CommonState, task: Task): null | {id: string} {
   else return taskProject(state, parent);
 }
 
+function isReadyOrHasReadySubitems(state: CommonState, task: Task): boolean {
+  return (
+    isReady(state, IndentedList.findNode(state.tasks, task)!) ||
+    IndentedList.anyDescendant(state.tasks, IndentedList.findNode(state.tasks, task)!, (subtask) =>
+      isReady(state, subtask),
+    )
+  );
+}
+
 function doesSubtaskMatch(state: CommonState, task: Task): boolean {
   function excludedBySubtaskFilter(filter: SubtaskFilter["id"], matches: (subtask: Task) => boolean): boolean {
     const filterState = state.subtaskFilters.find((f) => f.id === filter)?.state ?? "neutral";
@@ -248,6 +257,7 @@ function doesSubtaskMatch(state: CommonState, task: Task): boolean {
 
   if (excludedBySubtaskFilter("done", (subtask) => isDone(subtask))) return false;
   if (excludedBySubtaskFilter("paused", (subtask) => isPaused(state, subtask))) return false;
+  if (excludedBySubtaskFilter("ready", (subtask) => isReadyOrHasReadySubitems(state, subtask))) return false;
 
   if (isArchived(state, task) && state.filter !== "archive") return false;
   if (state.filter === "stalled" || state.filter === "ready")
@@ -266,22 +276,12 @@ export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["i
 
   const anyReady = list.some((r) =>
     r.rows.some(
-      (t) =>
-        t.type === "task" &&
-        (isReady(state, IndentedList.findNode(state.tasks, t)!) ||
-          IndentedList.anyDescendant(state.tasks, IndentedList.findNode(state.tasks, t)!, (s) =>
-            isReady(state, s),
-          )),
+      (t) => t.type === "task" && isReadyOrHasReadySubitems(state, IndentedList.findNode(state.tasks, t)!),
     ),
   );
   const anyNotReady = list.some((r) =>
     r.rows.some(
-      (t) =>
-        t.type === "task" &&
-        !(
-          isReady(state, IndentedList.findNode(state.tasks, t)!) ||
-          IndentedList.anyDescendant(state.tasks, IndentedList.findNode(state.tasks, t)!, (s) => isReady(state, s))
-        ),
+      (t) => t.type === "task" && !isReadyOrHasReadySubitems(state, IndentedList.findNode(state.tasks, t)!),
     ),
   );
 
