@@ -240,26 +240,26 @@ function taskProject(state: CommonState, task: Task): null | {id: string} {
 }
 
 function doesSubtaskMatch(state: CommonState, task: Task): boolean {
-  function excludedBySubtaskFilter(filter: SubtaskFilter["id"], matches: (subtask: Task) => boolean): boolean {
+  function excludedBySubtaskFilter(filter: SubtaskFilter["id"], property: TaskProperty) {
     const filterState = state.subtaskFilters.find((f) => f.id === filter)?.state ?? "neutral";
     if (filterState === "include")
       return !IndentedList.anyDescendant(
         state.tasks,
         task,
-        (subtask) => !taskIs(state, subtask, "archived") && matches(subtask),
+        (subtask) => !taskIs(state, subtask, "archived") && taskIs(state, subtask, property),
       );
     if (filterState === "exclude")
       return !IndentedList.anyDescendant(
         state.tasks,
         task,
-        (subtask) => !taskIs(state, subtask, "archived") && !matches(subtask),
+        (subtask) => !taskIs(state, subtask, "archived") && !taskIs(state, subtask, property),
       );
     return false;
   }
 
-  if (excludedBySubtaskFilter("done", (subtask) => taskIs(state, subtask, "done"))) return false;
-  if (excludedBySubtaskFilter("paused", (subtask) => taskIs(state, subtask, "paused"))) return false;
-  if (excludedBySubtaskFilter("ready", (subtask) => taskIs(state, subtask, "readySubtree"))) return false;
+  if (excludedBySubtaskFilter("done", "done")) return false;
+  if (excludedBySubtaskFilter("paused", "paused")) return false;
+  if (excludedBySubtaskFilter("ready", "readySubtree")) return false;
 
   if (taskIs(state, task, "archived") && state.filter !== "archive") return false;
   if (state.filter === "stalled" || state.filter === "ready")
