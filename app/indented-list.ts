@@ -58,17 +58,7 @@ function reposition<T>(list: T[], sourceIndex: number, targetIndex: number): T[]
   });
 }
 
-export function searchAndTrim<D>(
-  tree: Tree<D>,
-  {pick, include}: {pick: (node: TreeNode<D>) => boolean; include: (node: TreeNode<D>) => boolean},
-): TreeNode<D>[] {
-  function trim(nodes: TreeNode<D>[]): TreeNode<D>[] {
-    return nodes.flatMap((node) => {
-      if (!include(node)) return [];
-      else return [{...node, children: trim(node.children)}];
-    });
-  }
-
+export function pickIntoList<D>(tree: Tree<D>, pick: (node: TreeNode<D>) => boolean): IndentedList<D> {
   function search(nodes: TreeNode<D>[]): TreeNode<D>[] {
     return nodes.flatMap((node) => {
       if (pick(node)) return [{...node, children: node.children}];
@@ -76,7 +66,33 @@ export function searchAndTrim<D>(
     });
   }
 
-  return trim(search(roots(tree)));
+  return toList(search(roots(tree)));
+}
+
+export function filterList<D>(
+  list: IndentedList<D>,
+  include: (node: IndentedListItem<D>) => boolean,
+): IndentedList<D> {
+  let result: IndentedListItem<D>[] = [];
+  let index = 0;
+
+  function skipSubtree() {
+    const indentation = list[index]!.indentation;
+    index++;
+    while (index < list.length && list[index]!.indentation > indentation) index++;
+  }
+
+  while (index < list.length) {
+    const node = list[index]!;
+    if (!include(node)) {
+      skipSubtree();
+    } else {
+      result.push(node);
+      index++;
+    }
+  }
+
+  return result;
 }
 
 export function filterNodes<D>(tree: Tree<D>, pred: (node: TreeNode<D>) => boolean): TreeNode<D>[] {

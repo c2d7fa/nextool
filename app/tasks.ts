@@ -323,14 +323,9 @@ function doesTaskMatch(state: CommonState, task: Task): boolean {
 }
 
 function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
-  return IndentedList.toList(
-    IndentedList.searchAndTrim(state.tasks, {
-      pick: (task) =>
-        doesTaskMatch(state, task) &&
-        doesSubtaskMatchFilter(state, task) &&
-        doesSubtaskMatchSubtaskFilter(state, task),
-      include: (task) => doesSubtaskMatchFilter(state, task) && doesSubtaskMatchSubtaskFilter(state, task),
-    }),
+  return IndentedList.filterList(
+    IndentedList.pickIntoList(state.tasks, (task) => doesTaskMatch(state, task)),
+    (task) => doesSubtaskMatchFilter(state, task) && doesSubtaskMatchSubtaskFilter(state, task),
   );
 }
 
