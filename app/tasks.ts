@@ -205,15 +205,17 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
 export type BadgeId = "ready" | "stalled" | "project" | "today";
 
 function badges(state: CommonState, task: Task): BadgeId[] {
-  const ready = taskIs(state, task, "readyItself");
-  const stalled = taskIs(state, task, "stalled");
+  function taskHas(state: Pick<CommonState, "tasks" | "today">, task: Task, badge: BadgeId): boolean {
+    if (badge === "ready") return taskIs(state, task, "readyItself");
+    if (badge === "stalled") return taskIs(state, task, "stalled");
+    if (badge === "project") return taskIs(state, task, "project");
+    if (badge === "today") return taskIs(state, task, "today");
+    return false;
+  }
 
-  return [
-    taskIs(state, task, "project") && "project",
-    taskIs(state, task, "today") && "today",
-    stalled && "stalled",
-    ready && "ready",
-  ].filter(Boolean) as BadgeId[];
+  return (["project", "today", "stalled", "ready"] as const).flatMap((badge) =>
+    taskHas(state, task, badge) ? [badge] : [],
+  );
 }
 
 type FilterSectionId = "actions" | "tasks" | "activeProjects" | "archive";
