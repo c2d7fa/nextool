@@ -1725,7 +1725,7 @@ describe("the stalled filter", () => {
       });
     });
 
-    describe("subtasks are not included", () => {
+    describe("subtasks are included", () => {
       const example = updateAll(empty, [
         switchToFilter("all"),
         addTask("Project", "project"),
@@ -1740,8 +1740,8 @@ describe("the stalled filter", () => {
         ]);
       });
 
-      test("but the counter only shows one task", () => {
-        expect(indicatorForFilter(view(example), "Stalled")).toEqual({text: "1", color: "orange"});
+      test("but the counter indicates two tasks", () => {
+        expect(indicatorForFilter(view(example), "Stalled")).toEqual({text: "2", color: "orange"});
       });
     });
   });

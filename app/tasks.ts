@@ -139,7 +139,7 @@ export function edit(state: CommonState, id: string, operations: EditOperation[]
       return IndentedList.moveItemInSublistOfTree(
         {
           tree: tasks_,
-          list: IndentedList.toList(filterTasks({...state, filter: operation.target.filter ?? state.filter})),
+          list: filterTasksIntoList({...state, filter: operation.target.filter ?? state.filter}),
         },
         {id},
         operation.target.location,
@@ -322,14 +322,16 @@ function doesTaskMatch(state: CommonState, task: Task): boolean {
   else return true;
 }
 
-function filterTasks(state: CommonState): IndentedList.TreeNode<TaskData>[] {
-  return IndentedList.searchAndTrim(state.tasks, {
-    pick: (task) =>
-      doesTaskMatch(state, task) &&
-      doesSubtaskMatchFilter(state, task) &&
-      doesSubtaskMatchSubtaskFilter(state, task),
-    include: (task) => doesSubtaskMatchFilter(state, task) && doesSubtaskMatchSubtaskFilter(state, task),
-  });
+function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
+  return IndentedList.toList(
+    IndentedList.searchAndTrim(state.tasks, {
+      pick: (task) =>
+        doesTaskMatch(state, task) &&
+        doesSubtaskMatchFilter(state, task) &&
+        doesSubtaskMatchSubtaskFilter(state, task),
+      include: (task) => doesSubtaskMatchFilter(state, task) && doesSubtaskMatchSubtaskFilter(state, task),
+    }),
+  );
 }
 
 export function activeProjects(
@@ -346,7 +348,7 @@ export function activeProjects(
 }
 
 export function count(state: Omit<CommonState, "filter">, filter: FilterId): number {
-  return filterTasks({...state, filter}).length;
+  return filterTasksIntoList({...state, filter}).length;
 }
 
 function viewRows(
@@ -354,7 +356,7 @@ function viewRows(
     taskDrag: DragState<DragId, DropId>;
   },
 ): TaskListView[number]["rows"] {
-  const list = IndentedList.toList(filterTasks(state));
+  const list = filterTasksIntoList(state);
 
   function dropIndicatorsBelow(taskIndex: number) {
     return state.taskDrag.hovering?.type === "list" &&

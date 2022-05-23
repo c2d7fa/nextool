@@ -71,12 +71,12 @@ export function searchAndTrim<D>(
 
   function search(nodes: TreeNode<D>[]): TreeNode<D>[] {
     return nodes.flatMap((node) => {
-      if (pick(node)) return [{...node, children: trim(node.children)}];
+      if (pick(node)) return [{...node, children: node.children}];
       else return search(node.children);
     });
   }
 
-  return search(roots(tree));
+  return trim(search(roots(tree)));
 }
 
 export function filterNodes<D>(tree: Tree<D>, pred: (node: TreeNode<D>) => boolean): TreeNode<D>[] {
