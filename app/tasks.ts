@@ -265,10 +265,24 @@ export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["i
   const anyNotDone = list.some((r) => r.rows.some((t) => t.type === "task" && !t.done));
 
   const anyReady = list.some((r) =>
-    r.rows.some((t) => t.type === "task" && isReady(state, IndentedList.findNode(state.tasks, t)!)),
+    r.rows.some(
+      (t) =>
+        t.type === "task" &&
+        (isReady(state, IndentedList.findNode(state.tasks, t)!) ||
+          IndentedList.anyDescendant(state.tasks, IndentedList.findNode(state.tasks, t)!, (s) =>
+            isReady(state, s),
+          )),
+    ),
   );
   const anyNotReady = list.some((r) =>
-    r.rows.some((t) => t.type === "task" && !isReady(state, IndentedList.findNode(state.tasks, t)!)),
+    r.rows.some(
+      (t) =>
+        t.type === "task" &&
+        !(
+          isReady(state, IndentedList.findNode(state.tasks, t)!) ||
+          IndentedList.anyDescendant(state.tasks, IndentedList.findNode(state.tasks, t)!, (s) => isReady(state, s))
+        ),
+    ),
   );
 
   if (id === "paused") return anyPaused && anyUnpaused;

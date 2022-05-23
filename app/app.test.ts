@@ -2689,7 +2689,7 @@ describe("filter bar", () => {
       });
     });
 
-    describe.skip("tasks that don't have the ready badge, but which contain tasks that do, don't influence whether it's shown or not", () => {
+    describe("tasks that don't have the ready badge, but which contain tasks that do, don't influence whether it's shown or not", () => {
       const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 0"), addTask("Task 1", 1, "ready")]);
 
       test("in this example, it isn't shown", () => {
