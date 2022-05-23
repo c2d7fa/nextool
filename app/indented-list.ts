@@ -95,6 +95,28 @@ export function filterList<D>(
   return result;
 }
 
+export function anyDescendantInList<D>(
+  list: IndentedList<D>,
+  item: Handle,
+  predicate: (descendant: IndentedListItem<D>) => boolean,
+) {
+  let index = list.findIndex((i) => i.id === item.id);
+  if (index === -1) return false;
+
+  const rootIndendation = list[index]!.indentation;
+
+  const rootNode = list[index]!;
+  if (predicate(rootNode)) return true;
+
+  for (let i = index + 1; i < list.length; i++) {
+    const node = list[i]!;
+    if (node.indentation <= rootIndendation) break;
+    if (predicate(node)) return true;
+  }
+
+  return false;
+}
+
 export function filterNodes<D>(tree: Tree<D>, pred: (node: TreeNode<D>) => boolean): TreeNode<D>[] {
   let result: TreeNode<D>[] = [];
   function filter(handle: Handle): void {

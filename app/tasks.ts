@@ -240,22 +240,22 @@ function taskProject(state: CommonState, task: Task): null | {id: string} {
 }
 
 function doesSubtaskMatchSubtaskFilter(
-  state: Pick<CommonState, "tasks" | "today" | "subtaskFilters">,
+  state: Pick<CommonState, "tasks" | "today" | "subtaskFilters"> & {
+    fullList: IndentedList.IndentedListItem<TaskData>[];
+  },
   task: Task,
 ): boolean {
   function excludedBySubtaskFilter(filter: SubtaskFilter["id"], property: TaskProperty) {
     const filterState = state.subtaskFilters.find((f) => f.id === filter)?.state ?? "neutral";
     if (filterState === "include")
-      return !IndentedList.anyDescendant(
-        state.tasks,
-        task,
-        (subtask) => !taskIs(state, subtask, "archived") && taskIs(state, subtask, property),
+      return !IndentedList.anyDescendantInList(state.fullList, task, (subtask) =>
+        taskIs(state, subtask, property),
       );
     if (filterState === "exclude")
-      return !IndentedList.anyDescendant(
-        state.tasks,
+      return !IndentedList.anyDescendantInList(
+        state.fullList,
         task,
-        (subtask) => !taskIs(state, subtask, "archived") && !taskIs(state, subtask, property),
+        (subtask) => !taskIs(state, subtask, property),
       );
     return false;
   }
@@ -323,10 +323,11 @@ function doesTaskMatch(state: CommonState, task: Task): boolean {
 }
 
 function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
-  return IndentedList.filterList(
+  const fullList = IndentedList.filterList(
     IndentedList.pickIntoList(state.tasks, (task) => doesTaskMatch(state, task)),
-    (task) => doesSubtaskMatchFilter(state, task) && doesSubtaskMatchSubtaskFilter(state, task),
+    (task) => doesSubtaskMatchFilter(state, task),
   );
+  return IndentedList.filterList(fullList, (task) => doesSubtaskMatchSubtaskFilter({...state, fullList}, task));
 }
 
 export function activeProjects(
