@@ -881,6 +881,36 @@ describe("drag and drop in filtered views", () => {
       });
     });
   });
+
+  describe("dragging task to first position in a project filter", () => {
+    const step1 = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Project", "project"),
+      addTask("Task 1", 1),
+      addTask("Task 2", 1),
+      switchToFilterCalled("Project"),
+    ]);
+
+    describe("initially", () => {
+      test("the tasks are shown correctly", () => {
+        expect(tasks(step1, ["title", "indentation"])).toEqual([
+          {title: "Task 1", indentation: 0},
+          {title: "Task 2", indentation: 0},
+        ]);
+      });
+    });
+
+    const step2 = updateAll(step1, [...dragAndDropNth(1, 0, {side: "above", indentation: 0})]);
+
+    describe("after dragging second task into first position", () => {
+      test("the tasks swap positions", () => {
+        expect(tasks(step2, ["title", "indentation"])).toEqual([
+          {title: "Task 2", indentation: 0},
+          {title: "Task 1", indentation: 0},
+        ]);
+      });
+    });
+  });
 });
 
 describe("drag and drop with multiple sections shown", () => {

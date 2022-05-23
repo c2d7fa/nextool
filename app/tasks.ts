@@ -143,6 +143,10 @@ export function edit(state: CommonState, id: string, operations: EditOperation[]
         },
         {id},
         operation.target.location,
+        {
+          sublistRoot:
+            typeof state.filter === "object" && state.filter.type === "project" ? state.filter.project : null,
+        },
       );
     } else {
       const unreachable: never = operation;
