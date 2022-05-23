@@ -239,7 +239,10 @@ function taskProject(state: CommonState, task: Task): null | {id: string} {
   else return taskProject(state, parent);
 }
 
-function doesSubtaskMatch(state: CommonState, task: Task): boolean {
+function doesSubtaskMatchSubtaskFilter(
+  state: Pick<CommonState, "tasks" | "today" | "subtaskFilters">,
+  task: Task,
+): boolean {
   function excludedBySubtaskFilter(filter: SubtaskFilter["id"], property: TaskProperty) {
     const filterState = state.subtaskFilters.find((f) => f.id === filter)?.state ?? "neutral";
     if (filterState === "include")
@@ -261,6 +264,10 @@ function doesSubtaskMatch(state: CommonState, task: Task): boolean {
   if (excludedBySubtaskFilter("paused", "paused")) return false;
   if (excludedBySubtaskFilter("ready", "readySubtree")) return false;
 
+  return true;
+}
+
+function doesSubtaskMatchFilter(state: CommonState, task: Task): boolean {
   if (taskIs(state, task, "archived") && state.filter !== "archive") return false;
   if (state.filter === "stalled" || state.filter === "ready")
     return IndentedList.anyDescendant(state.tasks, task, (subtask) => doesTaskMatch(state, subtask));
@@ -317,8 +324,11 @@ function doesTaskMatch(state: CommonState, task: Task): boolean {
 
 function filterTasks(state: CommonState): IndentedList.TreeNode<TaskData>[] {
   return IndentedList.searchAndTrim(state.tasks, {
-    pick: (task) => doesTaskMatch(state, task) && doesSubtaskMatch(state, task),
-    include: (task) => doesSubtaskMatch(state, task),
+    pick: (task) =>
+      doesTaskMatch(state, task) &&
+      doesSubtaskMatchFilter(state, task) &&
+      doesSubtaskMatchSubtaskFilter(state, task),
+    include: (task) => doesSubtaskMatchFilter(state, task) && doesSubtaskMatchSubtaskFilter(state, task),
   });
 }
 
