@@ -169,9 +169,9 @@ type TaskProperty =
   | "readySubtree"
   | "stalled";
 
-function taskIs(state: CommonState, task: Task, property: TaskProperty): boolean {
-  function hasReadyDescendents(state: CommonState, task: Task): boolean {
-    return task.children.some((child) => taskIs(state, child, "readyItself") || hasReadyDescendents(state, child));
+function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, property: TaskProperty): boolean {
+  function hasReadyDescendents(task: Task): boolean {
+    return task.children.some((child) => taskIs(state, child, "readyItself") || hasReadyDescendents(child));
   }
 
   if (property === "done") return task.status === "done";
@@ -188,11 +188,11 @@ function taskIs(state: CommonState, task: Task, property: TaskProperty): boolean
   if (property === "project") return task.type === "project";
   if (property === "readyItself")
     return taskIs(state, task, "project")
-      ? hasReadyDescendents(state, task)
+      ? hasReadyDescendents(task)
       : task.action &&
           !taskIs(state, task, "inactive") &&
           !task.children.some((child) => !taskIs(state, child, "done"));
-  if (property === "readySubtree") return taskIs(state, task, "readyItself") || hasReadyDescendents(state, task);
+  if (property === "readySubtree") return taskIs(state, task, "readyItself") || hasReadyDescendents(task);
   if (property === "stalled")
     return (
       !taskIs(state, task, "readyItself") &&
