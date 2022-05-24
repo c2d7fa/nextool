@@ -322,17 +322,13 @@ function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<Task
   return IndentedList.filterList(fullList, (task) => doesSubtaskMatchSubtaskFilter({...state, fullList}, task));
 }
 
-export function activeProjects(
-  state: CommonState,
-): Omit<IndentedList.IndentedListItem<TaskData & {stalled: boolean}>, "children">[] {
-  return IndentedList.filterNodes(state.tasks, (node) => node.type === "project")
-    .map((project) => ({
-      ...project,
-      indentation: 0,
-      project: true,
-      stalled: taskIs(state, project, "stalled"),
-    }))
-    .filter((project) => project.status === "active" && !project.archived);
+export type ActiveProjectTree = {id: string; title: string; children: ActiveProjectTree}[];
+export function activeProjectTree(state: CommonState): ActiveProjectTree {
+  const list = IndentedList.pickIntoList(
+    state.tasks,
+    (node) => taskIs(state, node, "project") && !taskIs(state, node, "inactive"),
+  );
+  return list.filter((t) => t.indentation === 0);
 }
 
 export function count(state: Omit<CommonState, "filter">, filter: FilterId): number {
@@ -422,7 +418,7 @@ function subfilters(state: CommonState, section: FilterSectionId): FilterId[] {
   if (section === "actions") return ["today", "ready", "stalled"];
   else if (section === "tasks") return ["all", "not-done", "done", "paused"];
   else if (section === "activeProjects")
-    return activeProjects(state).map((project) => ({type: "project", project: {id: project.id}}));
+    return activeProjectTree(state).map((project) => ({type: "project", project: {id: project.id}}));
   else if (section === "archive") return ["archive"];
   else {
     const unreachable: never = section;

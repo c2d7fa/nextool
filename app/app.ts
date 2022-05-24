@@ -109,7 +109,7 @@ function viewFilterBar(state: State & {today: Date}): FilterBarView {
 }
 
 function viewSideBar(state: State & {today: Date}) {
-  const activeProjects = Tasks.activeProjects(state);
+  const activeProjects = Tasks.activeProjectTree(state);
 
   function filterView(
     filter: Tasks.FilterId,
@@ -151,7 +151,7 @@ function viewSideBar(state: State & {today: Date}) {
       title: "Active projects",
       filter: {type: "section", section: "activeProjects"},
       filters: activeProjects.map((project) =>
-        filterView({type: "project", project}, {counter: "small", count: project.stalled ? 1 : 0}),
+        filterView({type: "project", project}, {counter: "small", count: 0}),
       ),
     },
     {

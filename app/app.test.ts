@@ -2041,7 +2041,7 @@ describe("active projects section in sidebar", () => {
     ]);
 
     describe("initially", () => {
-      test.skip("the active projects section contains the two top-level projects", () => {
+      test("the active projects section contains the two top-level projects", () => {
         expect(sideBarActiveProjects(view(example)).map((p) => p.label)).toEqual(["Project 0", "Project 4"]);
       });
 
