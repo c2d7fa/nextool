@@ -322,25 +322,38 @@ function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<Task
   return IndentedList.filterList(fullList, (task) => doesSubtaskMatchSubtaskFilter({...state, fullList}, task));
 }
 
-export type ActiveProjectTree = {id: string; title: string; children: ActiveProjectTree}[];
+export type ActiveProjectTree = {id: string; title: string; count?: number}[];
 export function activeProjectTree(state: CommonState): ActiveProjectTree {
   const list = IndentedList.pickIntoList(
     state.tasks,
     (node) => taskIs(state, node, "project") && !taskIs(state, node, "inactive"),
   );
 
+  function countSubprojects(project: IndentedList.IndentedListItem<TaskData>): number {
+    return list.filter(
+      (task) =>
+        taskIs(state, task, "project") &&
+        !taskIs(state, task, "inactive") &&
+        IndentedList.isDescendant(state.tasks, task, project),
+    ).length;
+  }
+
   if (typeof state.filter === "object" && state.filter.type === "project") {
     const project = state.filter.project;
 
-    return list.filter(
-      (t) =>
-        t.indentation === 0 ||
-        (taskIs(state, t, "project") &&
-          !taskIs(state, t, "inactive") &&
-          IndentedList.anyAncestor(state.tasks, project, (a) => IndentedList.isDescendant(state.tasks, t, a))),
-    );
+    return list
+      .filter(
+        (t) =>
+          t.indentation === 0 ||
+          (taskIs(state, t, "project") &&
+            !taskIs(state, t, "inactive") &&
+            IndentedList.anyAncestor(state.tasks, project, (a) => IndentedList.isDescendant(state.tasks, t, a))),
+      )
+      .map((t) => ({id: t.id, title: t.title, count: t.indentation === 0 ? countSubprojects(t) : 0}));
   } else {
-    return list.filter((t) => t.indentation === 0);
+    return list
+      .filter((t) => t.indentation === 0)
+      .map((t) => ({id: t.id, title: t.title, count: countSubprojects(t)}));
   }
 }
 

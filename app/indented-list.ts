@@ -353,7 +353,7 @@ export function isDescendant<D>(tree: Tree<D>, query: Handle, ancestor: Handle):
   return ancestorChildren.some((child) => child.id === query.id || isDescendant(tree, query, child));
 }
 
-function isDescendantInList<D>(
+export function isDescendantInList<D>(
   list: (Handle & {indentation: number})[],
   query: Handle,
   ancestor: Handle,
