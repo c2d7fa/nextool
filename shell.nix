@@ -5,9 +5,16 @@ let session = writeText "session.tmuxp.yaml" ''
   windows:
     - layout: even-vertical
       panes:
-        - npm run watch
-        - npm run watch-tests
-        - rg -F '## Development' -A 999 README.md
+        - |
+          cd app
+          npm run watch-tests
+        - |
+          cd app
+          npx webpack -wc dev.config.js
+        - |
+          cd app
+          cd dist
+          python -m http.server 3000
 ''; in
 
 # We need to use FHS, since Selenium otherwise doesn't work if the host system
@@ -51,9 +58,8 @@ let session = writeText "session.tmuxp.yaml" ''
   ];
   runScript = ''
     #!/usr/bin/env bash
-    npm ci
     bundle install
+    cd app && npm ci && npx webpack -c dev.config.js && cd ..
     tmuxp load /opt/nextool/session.tmuxp.yaml
   '';
 }).env
-
