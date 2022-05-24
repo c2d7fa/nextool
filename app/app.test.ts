@@ -2037,7 +2037,8 @@ describe("active projects section in sidebar", () => {
       addTask("Project 2", "project", 2),
       addTask("Task 3", 3, "ready"),
       addTask("Project 4", "project"),
-      addTask("Task 5", 1, "ready"),
+      addTask("Project 5", "project", 1),
+      addTask("Task 6", 2, "ready"),
     ]);
 
     describe("initially", () => {
@@ -2048,7 +2049,42 @@ describe("active projects section in sidebar", () => {
       test.skip("the project with nested subprojects has a counter", () => {
         expect(sideBarActiveProjects(view(example)).map((p) => p.indicator)).toEqual([
           {color: "grey", text: "2"},
+          {color: "grey", text: "1"},
+        ]);
+      });
+    });
+
+    const step1 = updateAll(example, [switchToFilterCalled("Project 0")]);
+
+    describe("after switching to top-level project", () => {
+      test("all subprojects are now included in the sidebar", () => {
+        expect(sideBarActiveProjects(view(step1)).map((p) => p.label)).toEqual([
+          "Project 0",
+          "Project 1",
+          "Project 2",
+          "Project 4",
+        ]);
+      });
+
+      test.skip("there are no indicators for the selected project subtree", () => {
+        expect(sideBarActiveProjects(view(step1)).map((p) => p.indicator)).toEqual([
           null,
+          null,
+          null,
+          {color: "grey", text: "1"},
+        ]);
+      });
+    });
+
+    const step2 = updateAll(step1, [switchToFilterCalled("Project 1")]);
+
+    describe("after switching to subproject", () => {
+      test("the same subprojects are included in the sidebar", () => {
+        expect(sideBarActiveProjects(view(step2)).map((p) => p.label)).toEqual([
+          "Project 0",
+          "Project 1",
+          "Project 2",
+          "Project 4",
         ]);
       });
     });

@@ -328,7 +328,20 @@ export function activeProjectTree(state: CommonState): ActiveProjectTree {
     state.tasks,
     (node) => taskIs(state, node, "project") && !taskIs(state, node, "inactive"),
   );
-  return list.filter((t) => t.indentation === 0);
+
+  if (typeof state.filter === "object" && state.filter.type === "project") {
+    const project = state.filter.project;
+
+    return list.filter(
+      (t) =>
+        t.indentation === 0 ||
+        (taskIs(state, t, "project") &&
+          !taskIs(state, t, "inactive") &&
+          IndentedList.anyAncestor(state.tasks, project, (a) => IndentedList.isDescendant(state.tasks, t, a))),
+    );
+  } else {
+    return list.filter((t) => t.indentation === 0);
+  }
 }
 
 export function count(state: Omit<CommonState, "filter">, filter: FilterId): number {
