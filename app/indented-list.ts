@@ -330,7 +330,7 @@ export function validInsertLocationsBelow<D>(
   const preceedingItemIndentation = preceedingItem?.indentation ?? -1;
 
   const followingItems = list.slice(targetIndex + 1);
-  const followingNonChild = followingItems.find((item) => !isDescendant(tree, item, source));
+  const followingNonChild = followingItems.find((item) => !isDescendantInList(list, item, source));
   const followingNonChildIndentation = followingNonChild?.indentation ?? 0;
 
   const isSource = targetItem.id === source.id;
@@ -351,6 +351,33 @@ export function validInsertLocationsBelow<D>(
 export function isDescendant<D>(tree: Tree<D>, query: Handle, ancestor: Handle): boolean {
   const ancestorChildren = tree.children[ancestor.id] ?? [];
   return ancestorChildren.some((child) => child.id === query.id || isDescendant(tree, query, child));
+}
+
+function isDescendantInList<D>(
+  list: (Handle & {indentation: number})[],
+  query: Handle,
+  ancestor: Handle,
+): boolean {
+  let i = 0;
+
+  while (i < list.length) {
+    if (list[i]!.id === query.id) return false;
+    if (list[i]!.id === ancestor.id) break;
+    i++;
+  }
+
+  if (i === list.length) return false;
+
+  const ancestorIndentation = list[i]!.indentation;
+  i++;
+
+  while (i < list.length) {
+    if (list[i]!.indentation <= ancestorIndentation) return false;
+    if (list[i]!.id === query.id) return true;
+    i++;
+  }
+
+  return false;
 }
 
 export function anyAncestor<D>(tree: Tree<D>, query: Handle, predicate: (ancestor: D) => boolean): boolean {
