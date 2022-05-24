@@ -54,7 +54,7 @@ export const empty: State = {
   cachedHoverInvariantTaskListView: null,
 };
 
-export type FilterIndicator = null | {text: string; color: "red" | "orange" | "green" | "grey"} | {};
+export type FilterIndicator = null | {text: string; color: "red" | "orange" | "green" | "project"} | {};
 
 export type FilterView = {
   label: string;
@@ -113,7 +113,7 @@ function viewSideBar(state: State & {today: Date}) {
 
   function filterView(
     filter: Tasks.FilterId,
-    opts?: {counter: "small" | "red" | "orange" | "green" | "grey"; count?: number},
+    opts?: {counter: "small" | "red" | "orange" | "green" | "project"; count?: number},
   ): FilterView {
     function indicator() {
       if (!opts?.counter) return null;
@@ -151,7 +151,7 @@ function viewSideBar(state: State & {today: Date}) {
       title: "Active projects",
       filter: {type: "section", section: "activeProjects"},
       filters: activeProjects.map((project) =>
-        filterView({type: "project", project}, {counter: "grey", count: project.count}),
+        filterView({type: "project", project}, {counter: "project", count: project.count}),
       ),
     },
     {

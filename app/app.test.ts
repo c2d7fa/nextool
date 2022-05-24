@@ -2048,8 +2048,8 @@ describe("active projects section in sidebar", () => {
 
       test("the project with nested subprojects has a counter", () => {
         expect(sideBarActiveProjects(view(example)).map((p) => p.indicator)).toEqual([
-          {color: "grey", text: "2"},
-          {color: "grey", text: "1"},
+          {color: "project", text: "2"},
+          {color: "project", text: "1"},
         ]);
       });
     });
@@ -2071,7 +2071,7 @@ describe("active projects section in sidebar", () => {
           null,
           null,
           null,
-          {color: "grey", text: "1"},
+          {color: "project", text: "1"},
         ]);
       });
     });
