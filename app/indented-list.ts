@@ -58,25 +58,63 @@ function reposition<T>(list: T[], sourceIndex: number, targetIndex: number): T[]
   });
 }
 
-export function searchAndTrim<D>(
-  tree: Tree<D>,
-  {pick, include}: {pick: (node: TreeNode<D>) => boolean; include: (node: TreeNode<D>) => boolean},
-): TreeNode<D>[] {
-  function trim(nodes: TreeNode<D>[]): TreeNode<D>[] {
-    return nodes.flatMap((node) => {
-      if (!include(node)) return [];
-      else return [{...node, children: trim(node.children)}];
-    });
-  }
-
+export function pickIntoList<D>(tree: Tree<D>, pick: (node: TreeNode<D>) => boolean): IndentedList<D> {
   function search(nodes: TreeNode<D>[]): TreeNode<D>[] {
     return nodes.flatMap((node) => {
-      if (pick(node)) return [{...node, children: trim(node.children)}];
+      if (pick(node)) return [{...node, children: node.children}];
       else return search(node.children);
     });
   }
 
-  return search(roots(tree));
+  return toList(search(roots(tree)));
+}
+
+export function filterList<D>(
+  list: IndentedList<D>,
+  include: (node: IndentedListItem<D>) => boolean,
+): IndentedList<D> {
+  let result: IndentedListItem<D>[] = [];
+  let index = 0;
+
+  function skipSubtree() {
+    const indentation = list[index]!.indentation;
+    index++;
+    while (index < list.length && list[index]!.indentation > indentation) index++;
+  }
+
+  while (index < list.length) {
+    const node = list[index]!;
+    if (!include(node)) {
+      skipSubtree();
+    } else {
+      result.push(node);
+      index++;
+    }
+  }
+
+  return result;
+}
+
+export function anyDescendantInList<D>(
+  list: IndentedList<D>,
+  item: Handle,
+  predicate: (descendant: IndentedListItem<D>) => boolean,
+) {
+  let index = list.findIndex((i) => i.id === item.id);
+  if (index === -1) return false;
+
+  const rootIndendation = list[index]!.indentation;
+
+  const rootNode = list[index]!;
+  if (predicate(rootNode)) return true;
+
+  for (let i = index + 1; i < list.length; i++) {
+    const node = list[i]!;
+    if (node.indentation <= rootIndendation) break;
+    if (predicate(node)) return true;
+  }
+
+  return false;
 }
 
 export function filterNodes<D>(tree: Tree<D>, pred: (node: TreeNode<D>) => boolean): TreeNode<D>[] {
@@ -270,7 +308,7 @@ function takeWhile<T>(array: T[], predicate: (value: T, index: number) => boolea
 }
 
 export function validInsertLocationsBelow<D>(
-  {tree, list}: {tree: Tree<D>; list: IndentedList<D>},
+  {tree, list}: {tree: Tree<D>; list: (Handle & {indentation: number})[]},
   source: Handle,
   targetIndex: number,
 ): IndentedListInsertLocation[] {
@@ -292,7 +330,7 @@ export function validInsertLocationsBelow<D>(
   const preceedingItemIndentation = preceedingItem?.indentation ?? -1;
 
   const followingItems = list.slice(targetIndex + 1);
-  const followingNonChild = followingItems.find((item) => !isDescendant(tree, item, source));
+  const followingNonChild = followingItems.find((item) => !isDescendantInList(list, item, source));
   const followingNonChildIndentation = followingNonChild?.indentation ?? 0;
 
   const isSource = targetItem.id === source.id;
@@ -313,6 +351,33 @@ export function validInsertLocationsBelow<D>(
 export function isDescendant<D>(tree: Tree<D>, query: Handle, ancestor: Handle): boolean {
   const ancestorChildren = tree.children[ancestor.id] ?? [];
   return ancestorChildren.some((child) => child.id === query.id || isDescendant(tree, query, child));
+}
+
+function isDescendantInList<D>(
+  list: (Handle & {indentation: number})[],
+  query: Handle,
+  ancestor: Handle,
+): boolean {
+  let i = 0;
+
+  while (i < list.length) {
+    if (list[i]!.id === query.id) return false;
+    if (list[i]!.id === ancestor.id) break;
+    i++;
+  }
+
+  if (i === list.length) return false;
+
+  const ancestorIndentation = list[i]!.indentation;
+  i++;
+
+  while (i < list.length) {
+    if (list[i]!.indentation <= ancestorIndentation) return false;
+    if (list[i]!.id === query.id) return true;
+    i++;
+  }
+
+  return false;
 }
 
 export function anyAncestor<D>(tree: Tree<D>, query: Handle, predicate: (ancestor: D) => boolean): boolean {

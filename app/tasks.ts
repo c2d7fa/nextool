@@ -139,7 +139,7 @@ export function edit(state: CommonState, id: string, operations: EditOperation[]
       return IndentedList.moveItemInSublistOfTree(
         {
           tree: tasks_,
-          list: IndentedList.toList(filterTasks({...state, filter: operation.target.filter ?? state.filter})),
+          list: filterTasksIntoList({...state, filter: operation.target.filter ?? state.filter}),
         },
         {id},
         operation.target.location,
@@ -157,58 +157,65 @@ export function edit(state: CommonState, id: string, operations: EditOperation[]
   return operations.reduce(edit_, state.tasks);
 }
 
-function isDone(task: TaskData): boolean {
-  return task.status === "done";
-}
+type TaskProperty =
+  | "done"
+  | "not-done"
+  | "paused"
+  | "archived"
+  | "today"
+  | "inactive"
+  | "project"
+  | "readyItself"
+  | "readySubtree"
+  | "stalled";
 
-function isPaused(state: CommonState, task: Task): boolean {
-  return IndentedList.anyAncestor(state.tasks, task, (task) => task.status === "paused");
-}
-
-function isArchived(state: CommonState, task: TaskData): boolean {
-  return IndentedList.anyAncestor(state.tasks, task, (task) => task.archived);
-}
-
-function isToday(state: CommonState, task: Task) {
-  return (task.planned && (isSameDay(task.planned, state.today) || isBefore(task.planned, state.today))) ?? false;
-}
-
-function isInactive(state: CommonState, task: Task): boolean {
-  return isPaused(state, task) || isDone(task) || isArchived(state, task);
-}
-
-function isProject(task: Task): boolean {
-  return task.type === "project";
-}
-
-function isReady(state: CommonState, task: Task): boolean {
-  function hasReadyDescendants(task: Task): boolean {
-    return task.children.some((child) => isReady(state, child) || hasReadyDescendants(child));
+function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, property: TaskProperty): boolean {
+  function hasReadyDescendents(task: Task): boolean {
+    return task.children.some((child) => taskIs(state, child, "readyItself") || hasReadyDescendents(child));
   }
 
-  return isProject(task)
-    ? hasReadyDescendants(task)
-    : task.action && !isInactive(state, task) && !task.children.some((child) => !isDone(child));
-}
-
-function isStalledAssumingNotReady(state: CommonState, task: Task): boolean {
-  return (
-    !isInactive(state, task) && (isProject(task) || !task.children.some((child) => !isInactive(state, child)))
-  );
+  if (property === "done") return task.status === "done";
+  if (property === "not-done") return task.status !== "done";
+  if (property === "paused")
+    return IndentedList.anyAncestor(state.tasks, task, (task) => task.status === "paused");
+  if (property === "archived") return IndentedList.anyAncestor(state.tasks, task, (task) => task.archived);
+  if (property === "today")
+    return (
+      (task.planned && (isSameDay(task.planned, state.today) || isBefore(task.planned, state.today))) ?? false
+    );
+  if (property === "inactive")
+    return taskIs(state, task, "paused") || taskIs(state, task, "done") || taskIs(state, task, "archived");
+  if (property === "project") return task.type === "project";
+  if (property === "readyItself")
+    return taskIs(state, task, "project")
+      ? hasReadyDescendents(task)
+      : task.action &&
+          !taskIs(state, task, "inactive") &&
+          !task.children.some((child) => !taskIs(state, child, "done"));
+  if (property === "readySubtree") return taskIs(state, task, "readyItself") || hasReadyDescendents(task);
+  if (property === "stalled")
+    return (
+      !taskIs(state, task, "readyItself") &&
+      !taskIs(state, task, "inactive") &&
+      (taskIs(state, task, "project") || !task.children.some((child) => !taskIs(state, child, "inactive")))
+    );
+  return false;
 }
 
 export type BadgeId = "ready" | "stalled" | "project" | "today";
 
 function badges(state: CommonState, task: Task): BadgeId[] {
-  const ready = isReady(state, task);
-  const stalled = !ready && isStalledAssumingNotReady(state, task);
+  function taskHas(state: Pick<CommonState, "tasks" | "today">, task: Task, badge: BadgeId): boolean {
+    if (badge === "ready") return taskIs(state, task, "readyItself");
+    if (badge === "stalled") return taskIs(state, task, "stalled");
+    if (badge === "project") return taskIs(state, task, "project");
+    if (badge === "today") return taskIs(state, task, "today");
+    return false;
+  }
 
-  return [
-    isProject(task) && "project",
-    isToday(state, task) && "today",
-    stalled && "stalled",
-    ready && "ready",
-  ].filter(Boolean) as BadgeId[];
+  return (["project", "today", "stalled", "ready"] as const).flatMap((badge) =>
+    taskHas(state, task, badge) ? [badge] : [],
+  );
 }
 
 type FilterSectionId = "actions" | "tasks" | "activeProjects" | "archive";
@@ -232,97 +239,87 @@ function taskProject(state: CommonState, task: Task): null | {id: string} {
   else return taskProject(state, parent);
 }
 
-function isReadyOrHasReadySubitems(state: CommonState, task: Task): boolean {
-  return (
-    isReady(state, IndentedList.findNode(state.tasks, task)!) ||
-    IndentedList.anyDescendant(state.tasks, IndentedList.findNode(state.tasks, task)!, (subtask) =>
-      isReady(state, subtask),
-    )
-  );
-}
-
-function doesSubtaskMatch(state: CommonState, task: Task): boolean {
-  function excludedBySubtaskFilter(filter: SubtaskFilter["id"], matches: (subtask: Task) => boolean): boolean {
+function doesSubtaskMatchSubtaskFilter(
+  state: Pick<CommonState, "tasks" | "today" | "subtaskFilters"> & {
+    fullList: IndentedList.IndentedListItem<TaskData>[];
+  },
+  task: Task,
+): boolean {
+  function excludedBySubtaskFilter(filter: SubtaskFilter["id"], property: TaskProperty) {
     const filterState = state.subtaskFilters.find((f) => f.id === filter)?.state ?? "neutral";
     if (filterState === "include")
-      return !IndentedList.anyDescendant(
-        state.tasks,
-        task,
-        (subtask) => !isArchived(state, subtask) && matches(subtask),
+      return !IndentedList.anyDescendantInList(state.fullList, task, (subtask) =>
+        taskIs(state, subtask, property),
       );
     if (filterState === "exclude")
-      return !IndentedList.anyDescendant(
-        state.tasks,
+      return !IndentedList.anyDescendantInList(
+        state.fullList,
         task,
-        (subtask) => !isArchived(state, subtask) && !matches(subtask),
+        (subtask) => !taskIs(state, subtask, property),
       );
     return false;
   }
 
-  if (excludedBySubtaskFilter("done", (subtask) => isDone(subtask))) return false;
-  if (excludedBySubtaskFilter("paused", (subtask) => isPaused(state, subtask))) return false;
-  if (excludedBySubtaskFilter("ready", (subtask) => isReadyOrHasReadySubitems(state, subtask))) return false;
+  if (excludedBySubtaskFilter("done", "done")) return false;
+  if (excludedBySubtaskFilter("paused", "paused")) return false;
+  if (excludedBySubtaskFilter("ready", "readySubtree")) return false;
 
-  if (isArchived(state, task) && state.filter !== "archive") return false;
+  return true;
+}
+
+function doesSubtaskMatchFilter(state: CommonState, task: Task): boolean {
+  if (taskIs(state, task, "archived") && state.filter !== "archive") return false;
   if (state.filter === "stalled" || state.filter === "ready")
     return IndentedList.anyDescendant(state.tasks, task, (subtask) => doesTaskMatch(state, subtask));
   return true;
 }
 
 export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["id"]): boolean {
-  const list = view({...state, taskDrag: {dragging: null, hovering: null}});
-
-  const anyPaused = list.some((r) => r.rows.some((t) => t.type === "task" && t.paused));
-  const anyUnpaused = list.some((r) => r.rows.some((t) => t.type === "task" && !t.paused));
-
-  const anyDone = list.some((r) => r.rows.some((t) => t.type === "task" && t.done));
-  const anyNotDone = list.some((r) => r.rows.some((t) => t.type === "task" && !t.done));
-
-  const anyReady = list.some((r) =>
-    r.rows.some(
-      (t) => t.type === "task" && isReadyOrHasReadySubitems(state, IndentedList.findNode(state.tasks, t)!),
-    ),
-  );
-  const anyNotReady = list.some((r) =>
-    r.rows.some(
-      (t) => t.type === "task" && !isReadyOrHasReadySubitems(state, IndentedList.findNode(state.tasks, t)!),
-    ),
+  const fullList = IndentedList.filterList(
+    IndentedList.pickIntoList(state.tasks, (task) => doesTaskMatch(state, task)),
+    (task) => doesSubtaskMatchFilter(state, task),
   );
 
-  if (id === "paused") return anyPaused && anyUnpaused;
-  if (id === "done") return anyDone && anyNotDone;
-  if (id === "ready") return anyReady && anyNotReady;
+  function hasBoth(property: TaskProperty) {
+    return fullList.some((t) => taskIs(state, t, property)) && fullList.some((t) => !taskIs(state, t, property));
+  }
+
+  if (id === "paused") return hasBoth("paused");
+  if (id === "done") return hasBoth("done");
+  if (id === "ready") return hasBoth("readySubtree");
 
   return false;
 }
 
 function doesTaskMatch(state: CommonState, task: Task): boolean {
-  if (isArchived(state, task) && state.filter !== "archive") return false;
+  if (taskIs(state, task, "archived") && state.filter !== "archive") return false;
 
   if (typeof state.filter === "object") {
     if (state.filter.type === "project" && taskProject(state, task)?.id === state.filter.project.id) return true;
     else return false;
   }
 
-  if (state.filter === "ready") return isReady(state, task);
-  else if (state.filter === "done") return isDone(task);
+  if (state.filter === "ready") return taskIs(state, task, "readyItself");
+  else if (state.filter === "done") return taskIs(state, task, "done");
   else if (state.filter === "stalled")
     return (
-      isStalled(state, task) ||
-      (isProject(task) && IndentedList.anyDescendant(state.tasks, task, (subtask) => isStalled(state, subtask)))
+      taskIs(state, task, "stalled") ||
+      (taskIs(state, task, "project") &&
+        IndentedList.anyDescendant(state.tasks, task, (subtask) => taskIs(state, subtask, "stalled")))
     );
-  else if (state.filter === "not-done") return !isDone(task);
+  else if (state.filter === "not-done") return taskIs(state, task, "not-done");
   else if (state.filter === "archive") return task.archived;
-  else if (state.filter === "paused") return isPaused(state, task);
-  else if (state.filter === "today") return isToday(state, task);
+  else if (state.filter === "paused") return taskIs(state, task, "paused");
+  else if (state.filter === "today") return taskIs(state, task, "today");
   else return true;
 }
 
-function filterTasks(state: CommonState): IndentedList.TreeNode<TaskData>[] {
-  return IndentedList.searchAndTrim(state.tasks, {
-    pick: (task) => doesTaskMatch(state, task) && doesSubtaskMatch(state, task),
-    include: (task) => doesSubtaskMatch(state, task),
-  });
+function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
+  const fullList = IndentedList.filterList(
+    IndentedList.pickIntoList(state.tasks, (task) => doesTaskMatch(state, task)),
+    (task) => doesSubtaskMatchFilter(state, task),
+  );
+  return IndentedList.filterList(fullList, (task) => doesSubtaskMatchSubtaskFilter({...state, fullList}, task));
 }
 
 export function activeProjects(
@@ -333,27 +330,19 @@ export function activeProjects(
       ...project,
       indentation: 0,
       project: true,
-      stalled: isStalled(state, project),
+      stalled: taskIs(state, project, "stalled"),
     }))
     .filter((project) => project.status === "active" && !project.archived);
 }
 
-function isStalled(state: CommonState, task: Task): boolean {
-  return !isReady(state, task) && isStalledAssumingNotReady(state, task);
-}
-
 export function count(state: Omit<CommonState, "filter">, filter: FilterId): number {
-  return filterTasks({...state, filter}).length;
+  return filterTasksIntoList({...state, filter}).length;
 }
 
-function viewRows(
-  state: CommonState & {
-    taskDrag: DragState<DragId, DropId>;
-  },
-): TaskListView[number]["rows"] {
-  const filtered = filterTasks(state);
-  const list = IndentedList.toList(filtered);
-
+function mergeDragState(
+  list: TaskView[],
+  state: {tasks: Tasks; taskDrag: DragState<DragId, DropId>; filter: FilterId},
+) {
   function dropIndicatorsBelow(taskIndex: number) {
     return state.taskDrag.hovering?.type === "list" &&
       state.taskDrag.hovering.target.location.previousSibling?.id === list[taskIndex]?.id &&
@@ -384,25 +373,25 @@ function viewRows(
   return [
     ...dropIndicatorsBelow(-1),
     ...dropTargetsBelow(-1),
-    ...list.flatMap((task, index) => {
-      return [
-        {
-          type: "task" as const,
-          id: task.id,
-          title: task.title,
-          indentation: task.indentation,
-          done: isDone(task),
-          paused: isPaused(state, task),
-          badges: badges(state, IndentedList.findNode(state.tasks, task)!),
-          project: task.type === "project",
-          today: isToday(state, task),
-          borderBelow: index < list.length - 1,
-        },
-        ...dropTargetsBelow(index),
-        ...dropIndicatorsBelow(index),
-      ];
-    }),
+    ...list.flatMap((row, index) => [row, ...dropIndicatorsBelow(index), ...dropTargetsBelow(index)]),
   ];
+}
+
+function viewRows(state: CommonState): TaskView[] {
+  const list = filterTasksIntoList(state);
+
+  return list.map((task, index) => ({
+    type: "task" as const,
+    id: task.id,
+    title: task.title,
+    indentation: task.indentation,
+    done: taskIs(state, task, "done"),
+    paused: taskIs(state, task, "paused"),
+    badges: badges(state, task),
+    project: task.type === "project",
+    today: taskIs(state, task, "today"),
+    borderBelow: index < list.length - 1,
+  }));
 }
 
 function subfilters(state: CommonState, section: FilterSectionId): FilterId[] {
@@ -474,9 +463,9 @@ export function view(
   if (typeof state.filter === "object" && state.filter.type === "section") {
     return subfilters(state, state.filter.section).map((subfilter) => ({
       title: filterTitle(state.tasks, subfilter),
-      rows: viewRows({...state, filter: subfilter}),
+      rows: mergeDragState(viewRows({...state, filter: subfilter}), {...state, filter: subfilter}),
     }));
   } else {
-    return [{title: null, rows: viewRows(state)}];
+    return [{title: null, rows: mergeDragState(viewRows(state), state)}];
   }
 }
