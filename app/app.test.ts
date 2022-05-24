@@ -2028,6 +2028,33 @@ describe("projects", () => {
   });
 });
 
+describe("active projects section in sidebar", () => {
+  describe("nested projects are only shown when parent is selected", () => {
+    const example = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Project 0", "project"),
+      addTask("Project 1", "project", 1),
+      addTask("Project 2", "project", 2),
+      addTask("Task 3", 3, "ready"),
+      addTask("Project 4", "project"),
+      addTask("Task 5", 1, "ready"),
+    ]);
+
+    describe("initially", () => {
+      test.skip("the active projects section contains the two top-level projects", () => {
+        expect(sideBarActiveProjects(view(example)).map((p) => p.label)).toEqual(["Project 0", "Project 4"]);
+      });
+
+      test.skip("the project with nested subprojects has a counter", () => {
+        expect(sideBarActiveProjects(view(example)).map((p) => p.indicator)).toEqual([
+          {color: "grey", text: "2"},
+          null,
+        ]);
+      });
+    });
+  });
+});
+
 describe("archiving tasks", () => {
   function archive(n: number) {
     return dragToFilter(n, "archive");
