@@ -387,7 +387,7 @@ function viewRows(state: CommonState): TaskView[] {
     indentation: task.indentation,
     done: taskIs(state, task, "done"),
     paused: taskIs(state, task, "paused"),
-    badges: badges(state, IndentedList.findNode(state.tasks, task)!),
+    badges: badges(state, task),
     project: task.type === "project",
     today: taskIs(state, task, "today"),
     borderBelow: index < list.length - 1,
