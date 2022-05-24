@@ -275,26 +275,18 @@ function doesSubtaskMatchFilter(state: CommonState, task: Task): boolean {
 }
 
 export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["id"]): boolean {
-  const list = view({...state, taskDrag: {dragging: null, hovering: null}});
-
-  const anyPaused = list.some((r) => r.rows.some((t) => t.type === "task" && t.paused));
-  const anyUnpaused = list.some((r) => r.rows.some((t) => t.type === "task" && !t.paused));
-
-  const anyDone = list.some((r) => r.rows.some((t) => t.type === "task" && t.done));
-  const anyNotDone = list.some((r) => r.rows.some((t) => t.type === "task" && !t.done));
-
-  const anyReady = list.some((r) =>
-    r.rows.some((t) => t.type === "task" && taskIs(state, IndentedList.findNode(state.tasks, t)!, "readySubtree")),
-  );
-  const anyNotReady = list.some((r) =>
-    r.rows.some(
-      (t) => t.type === "task" && !taskIs(state, IndentedList.findNode(state.tasks, t)!, "readySubtree"),
-    ),
+  const fullList = IndentedList.filterList(
+    IndentedList.pickIntoList(state.tasks, (task) => doesTaskMatch(state, task)),
+    (task) => doesSubtaskMatchFilter(state, task),
   );
 
-  if (id === "paused") return anyPaused && anyUnpaused;
-  if (id === "done") return anyDone && anyNotDone;
-  if (id === "ready") return anyReady && anyNotReady;
+  function hasBoth(property: TaskProperty) {
+    return fullList.some((t) => taskIs(state, t, property)) && fullList.some((t) => !taskIs(state, t, property));
+  }
+
+  if (id === "paused") return hasBoth("paused");
+  if (id === "done") return hasBoth("done");
+  if (id === "ready") return hasBoth("readySubtree");
 
   return false;
 }
