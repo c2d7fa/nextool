@@ -308,7 +308,7 @@ function takeWhile<T>(array: T[], predicate: (value: T, index: number) => boolea
 }
 
 export function validInsertLocationsBelow<D>(
-  {tree, list}: {tree: Tree<D>; list: IndentedList<D>},
+  {tree, list}: {tree: Tree<D>; list: (Handle & {indentation: number})[]},
   source: Handle,
   targetIndex: number,
 ): IndentedListInsertLocation[] {

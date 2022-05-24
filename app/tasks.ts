@@ -339,13 +339,10 @@ export function count(state: Omit<CommonState, "filter">, filter: FilterId): num
   return filterTasksIntoList({...state, filter}).length;
 }
 
-function viewRows(
-  state: CommonState & {
-    taskDrag: DragState<DragId, DropId>;
-  },
-): TaskListView[number]["rows"] {
-  const list = filterTasksIntoList(state);
-
+function mergeDragState(
+  list: TaskView[],
+  state: {tasks: Tasks; taskDrag: DragState<DragId, DropId>; filter: FilterId},
+) {
   function dropIndicatorsBelow(taskIndex: number) {
     return state.taskDrag.hovering?.type === "list" &&
       state.taskDrag.hovering.target.location.previousSibling?.id === list[taskIndex]?.id &&
@@ -373,7 +370,17 @@ function viewRows(
     }));
   }
 
-  const taskRows = list.map((task, index) => ({
+  return [
+    ...dropIndicatorsBelow(-1),
+    ...dropTargetsBelow(-1),
+    ...list.flatMap((row, index) => [row, ...dropIndicatorsBelow(index), ...dropTargetsBelow(index)]),
+  ];
+}
+
+function viewRows(state: CommonState): TaskView[] {
+  const list = filterTasksIntoList(state);
+
+  return list.map((task, index) => ({
     type: "task" as const,
     id: task.id,
     title: task.title,
@@ -385,12 +392,6 @@ function viewRows(
     today: taskIs(state, task, "today"),
     borderBelow: index < list.length - 1,
   }));
-
-  return [
-    ...dropIndicatorsBelow(-1),
-    ...dropTargetsBelow(-1),
-    ...taskRows.flatMap((row, index) => [row, ...dropIndicatorsBelow(index), ...dropTargetsBelow(index)]),
-  ];
 }
 
 function subfilters(state: CommonState, section: FilterSectionId): FilterId[] {
@@ -462,9 +463,9 @@ export function view(
   if (typeof state.filter === "object" && state.filter.type === "section") {
     return subfilters(state, state.filter.section).map((subfilter) => ({
       title: filterTitle(state.tasks, subfilter),
-      rows: viewRows({...state, filter: subfilter}),
+      rows: mergeDragState(viewRows({...state, filter: subfilter}), {...state, filter: subfilter}),
     }));
   } else {
-    return [{title: null, rows: viewRows(state)}];
+    return [{title: null, rows: mergeDragState(viewRows(state), state)}];
   }
 }
