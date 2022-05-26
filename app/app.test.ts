@@ -2087,13 +2087,27 @@ describe("active projects section in sidebar", () => {
         expect(sideBarActiveProjects(view(step2)).map((p) => p.label)).toEqual(["Project 0", "Project 4"]);
       });
 
-      const section = view(step1).sideBar.find((section) => section.title === "Project 0");
+      const section = view(step2).sideBar.find((section) => section.title === "Project 0");
 
-      test.todo("the section still lists the subprojects");
+      test("the section still lists the subprojects", () => {
+        expect(section?.filters?.map((filter) => filter.label)).toEqual(["Project 1", "Project 2"]);
+      });
 
-      test.todo("the superproject is no longer marked selected");
+      test("the superproject is no longer marked selected", () => {
+        expect(
+          view(step2)
+            .sideBar.flatMap((section) => section.filters)
+            .find((filter) => filter.label === "Project 0")?.selected,
+        ).toBe(false);
+      });
 
-      test.todo("the subproject is now selected");
+      test("the subproject is now selected", () => {
+        expect(
+          view(step2)
+            .sideBar.flatMap((section) => section.filters)
+            .find((filter) => filter.label === "Project 1")?.selected,
+        ).toBe(true);
+      });
     });
   });
 });

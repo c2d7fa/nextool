@@ -346,18 +346,26 @@ export function activeProjectList(state: CommonState): ActiveProjectList {
 
 export function activeSubprojects(state: CommonState): {title: string; children: ActiveProjectList} | null {
   if (typeof state.filter === "object" && state.filter.type === "project") {
-    const project = state.filter.project;
+    const list = IndentedList.pickIntoList(
+      state.tasks,
+      (node) => taskIs(state, node, "project") && !taskIs(state, node, "inactive"),
+    );
+
+    const selectedProject = state.filter.project;
+
+    const superproject =
+      list.find((node) => IndentedList.isDescendantInList(list, selectedProject, node)) ?? selectedProject;
 
     const subprojects = IndentedList.filterNodes(
       state.tasks,
       (node) =>
         taskIs(state, node, "project") &&
         !taskIs(state, node, "inactive") &&
-        IndentedList.isDescendant(state.tasks, node, project),
+        IndentedList.isDescendant(state.tasks, node, superproject),
     );
 
     return {
-      title: filterTitle(state.tasks, state.filter),
+      title: filterTitle(state.tasks, {type: "project", project: superproject}),
       children: subprojects.map((subproject) => ({
         id: subproject.id,
         title: subproject.title,
