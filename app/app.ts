@@ -40,6 +40,7 @@ export type State = {
   taskDrag: Drag.DragState<DragId, DropId>;
   subtaskFilters: Tasks.SubtaskFilters;
   cachedView: DragInvariantView | null;
+  cachedHoverInvariantTaskListView: Tasks.HoverInvariantView | null;
 };
 
 export const empty: State = {
@@ -50,6 +51,7 @@ export const empty: State = {
   taskDrag: {dragging: null, hovering: null},
   subtaskFilters: [],
   cachedView: null,
+  cachedHoverInvariantTaskListView: null,
 };
 
 export type FilterIndicator = null | {text: string; color: "red" | "orange" | "green"} | {};
@@ -166,7 +168,7 @@ export function view(state: State & {today: Date}): View {
     addTask: state.cachedView?.addTask ?? {value: textFieldValue(state.textFields, "addTitle")},
     sideBar: state.cachedView?.sideBar ?? viewSideBar(state),
     filterBar: state.cachedView?.filterBar ?? viewFilterBar(state),
-    taskList: Tasks.view(state),
+    taskList: Tasks.view(state?.cachedHoverInvariantTaskListView ?? Tasks.prepareHoverInvariantView(state), state),
     editor: state.cachedView?.editor ?? TaskEditor.view(state.editor),
   };
 }
@@ -289,15 +291,17 @@ export function updateApp(state: State & {today: Date}, ev: Event): State {
   }
 
   function rebulidCache(app: State & {today: Date}, ev: Event) {
-    if (ev.tag === "drag" && ["drag", "hover", "leave"].includes(ev.type)) return app;
+    if (ev.tag === "drag" && ["hover", "leave"].includes(ev.type)) return app;
     return {
-      ...app, cachedView: {
+      ...app,
+      cachedView: {
         fileControls: "saveLoad" as const,
         addTask: {value: textFieldValue(app.textFields, "addTitle")},
         sideBar: viewSideBar(app),
         filterBar: viewFilterBar(app),
         editor: TaskEditor.view(app.editor),
       },
+      cachedHoverInvariantTaskListView: Tasks.prepareHoverInvariantView(app),
     };
   }
 

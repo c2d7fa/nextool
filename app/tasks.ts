@@ -479,9 +479,11 @@ export function filterTitle(tasks: Tasks, filter: FilterId): string {
   }
 }
 
-function buildHoverInvariantView(
+export type HoverInvariantView = TaskListSectionOf<TaskView | DropTargetView>;
+
+export function prepareHoverInvariantView(
   state: CommonState & {taskDrag: DragState<DragId, DropId>},
-): TaskListSectionOf<TaskView | DropTargetView> {
+): HoverInvariantView {
   const subfilters_ =
     typeof state.filter === "object" && state.filter.type === "section"
       ? subfilters(state, state.filter.section)
@@ -498,7 +500,9 @@ function buildHoverInvariantView(
   return mergeDropTargets(lists, state);
 }
 
-export function view(state: CommonState & {taskDrag: DragState<DragId, DropId>}): TaskListView {
-  const hoverInvariantView = buildHoverInvariantView(state);
-  return mergeDropIndicators(hoverInvariantView, state);
+export function view(
+  preparedView: HoverInvariantView,
+  state: CommonState & {taskDrag: DragState<DragId, DropId>},
+): TaskListView {
+  return mergeDropIndicators(preparedView, state);
 }
