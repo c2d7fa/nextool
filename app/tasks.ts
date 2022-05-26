@@ -339,23 +339,13 @@ export function count(state: Omit<CommonState, "filter">, filter: FilterId): num
   return filterTasksIntoList({...state, filter}).length;
 }
 
-function mergeDragState(
-  lists: {filter: FilterId; rows: TaskView[]}[],
-  state: {tasks: Tasks; taskDrag: DragState<DragId, DropId>},
-): {filter: FilterId; rows: (DropIndicatorView | DropTargetView | TaskView)[]}[] {
-  function mergeDragState_(
-    list: TaskView[],
-    filter: FilterId,
-    state: {tasks: Tasks; taskDrag: DragState<DragId, DropId>},
-  ) {
-    function dropIndicatorsBelow(task: {id: string} | null): DropIndicatorView[] {
-      return state.taskDrag.hovering?.type === "list" &&
-        state.taskDrag.hovering.target.location.previousSibling?.id === task?.id &&
-        JSON.stringify(state.taskDrag.hovering.target.filter) === JSON.stringify(filter)
-        ? [{type: "dropIndicator" as const, indentation: state.taskDrag.hovering.target.location.indentation}]
-        : [];
-    }
+type TaskListSectionOf<Row> = {filter: FilterId; rows: Row[]}[];
 
+function mergeDropTargets(
+  lists: TaskListSectionOf<TaskView>,
+  state: {tasks: Tasks; taskDrag: DragState<DragId, DropId>},
+): TaskListSectionOf<TaskView | DropTargetView> {
+  function mergeDropTargets_(list: TaskView[], filter: FilterId) {
     function dropTargetsBelow(index: number): DropTargetView[] {
       const source = state.taskDrag.dragging?.id;
       if (!source) return [];
@@ -375,14 +365,31 @@ function mergeDragState(
       }));
     }
 
-    const withDropTargets = [
-      ...dropTargetsBelow(-1),
-      ...list.flatMap((row, index) => [row, ...dropTargetsBelow(index)]),
-    ];
+    return [...dropTargetsBelow(-1), ...list.flatMap((row, index) => [row, ...dropTargetsBelow(index)])];
+  }
+
+  return lists.map((list) => ({
+    filter: list.filter,
+    rows: mergeDropTargets_(list.rows, list.filter),
+  }));
+}
+
+function mergeDropIndicators(
+  lists: TaskListSectionOf<TaskView | DropTargetView>,
+  state: {tasks: Tasks; taskDrag: DragState<DragId, DropId>},
+): TaskListSectionOf<TaskView | DropTargetView | DropIndicatorView> {
+  function mergeDropIndicators_(list: (TaskView | DropTargetView)[], filter: FilterId) {
+    function dropIndicatorsBelow(task: {id: string} | null): DropIndicatorView[] {
+      return state.taskDrag.hovering?.type === "list" &&
+        state.taskDrag.hovering.target.location.previousSibling?.id === task?.id &&
+        JSON.stringify(state.taskDrag.hovering.target.filter) === JSON.stringify(filter)
+        ? [{type: "dropIndicator" as const, indentation: state.taskDrag.hovering.target.location.indentation}]
+        : [];
+    }
 
     return [
       ...dropIndicatorsBelow(null),
-      ...withDropTargets.flatMap<DropIndicatorView | DropTargetView | TaskView>((row) =>
+      ...list.flatMap<DropIndicatorView | DropTargetView | TaskView>((row) =>
         row.type === "task" ? [row, ...dropIndicatorsBelow(row)] : [row],
       ),
     ];
@@ -390,7 +397,7 @@ function mergeDragState(
 
   return lists.map((list) => ({
     filter: list.filter,
-    rows: mergeDragState_(list.rows, list.filter, state),
+    rows: mergeDropIndicators_(list.rows, list.filter),
   }));
 }
 
@@ -489,7 +496,7 @@ export function view(
     rows: viewRows({...state, filter: subfilter}),
   }));
 
-  return mergeDragState(lists, state).map((list) => ({
+  return mergeDropIndicators(mergeDropTargets(lists, state), state).map((list) => ({
     title: showTitle ? filterTitle(state.tasks, list.filter) : null,
     ...list,
   }));
