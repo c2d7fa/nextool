@@ -460,12 +460,15 @@ export function view(
     taskDrag: DragState<DragId, DropId>;
   },
 ): TaskListView {
-  if (typeof state.filter === "object" && state.filter.type === "section") {
-    return subfilters(state, state.filter.section).map((subfilter) => ({
-      title: filterTitle(state.tasks, subfilter),
-      rows: mergeDragState(viewRows({...state, filter: subfilter}), {...state, filter: subfilter}),
-    }));
-  } else {
-    return [{title: null, rows: mergeDragState(viewRows(state), state)}];
-  }
+  const subfilters_ =
+    typeof state.filter === "object" && state.filter.type === "section"
+      ? subfilters(state, state.filter.section)
+      : [state.filter];
+
+  const showTitle = subfilters_.length > 1;
+
+  return subfilters_.map((subfilter) => ({
+    title: showTitle ? filterTitle(state.tasks, subfilter) : null,
+    rows: mergeDragState(viewRows({...state, filter: subfilter}), {...state, filter: subfilter}),
+  }));
 }
