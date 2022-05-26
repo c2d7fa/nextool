@@ -196,6 +196,8 @@ export function effects(state: State & {today: Date}, event: Event): Effect[] {
     return [{type: "fileUpload"}];
   }
 
+  if (event.tag === "drag" && ["drag", "hover", "leave"].includes(event.type)) return [];
+
   return [{type: "saveLocalStorage", value: Storage.saveString(updateApp(state, event).tasks)}];
 }
 
