@@ -322,17 +322,61 @@ function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<Task
   return IndentedList.filterList(fullList, (task) => doesSubtaskMatchSubtaskFilter({...state, fullList}, task));
 }
 
-export function activeProjects(
-  state: CommonState,
-): Omit<IndentedList.IndentedListItem<TaskData & {stalled: boolean}>, "children">[] {
-  return IndentedList.filterNodes(state.tasks, (node) => node.type === "project")
-    .map((project) => ({
-      ...project,
-      indentation: 0,
-      project: true,
-      stalled: taskIs(state, project, "stalled"),
-    }))
-    .filter((project) => project.status === "active" && !project.archived);
+export type ActiveProjectList = {id: string; title: string; count?: number}[];
+
+export function activeProjectList(state: CommonState): ActiveProjectList {
+  const list = IndentedList.pickIntoList(
+    state.tasks,
+    (node) => taskIs(state, node, "project") && !taskIs(state, node, "inactive"),
+  );
+
+  function countSubprojects(project: IndentedList.IndentedListItem<TaskData>): number {
+    return list.filter(
+      (task) =>
+        taskIs(state, task, "project") &&
+        !taskIs(state, task, "inactive") &&
+        IndentedList.isDescendantInList(list, task, project),
+    ).length;
+  }
+
+  return list
+    .filter((t) => t.indentation === 0)
+    .map((t) => ({id: t.id, title: t.title, count: countSubprojects(t)}));
+}
+
+export function activeSubprojects(state: CommonState): {title: string; children: ActiveProjectList} | null {
+  if (typeof state.filter === "object" && state.filter.type === "project") {
+    const list = IndentedList.pickIntoList(
+      state.tasks,
+      (node) => taskIs(state, node, "project") && !taskIs(state, node, "inactive"),
+    );
+
+    const selectedProject = state.filter.project;
+
+    const superproject =
+      list.find((node) => IndentedList.isDescendantInList(list, selectedProject, node)) ?? selectedProject;
+
+    const subprojects = IndentedList.filterNodes(
+      state.tasks,
+      (node) =>
+        taskIs(state, node, "project") &&
+        !taskIs(state, node, "inactive") &&
+        IndentedList.isDescendant(state.tasks, node, superproject),
+    );
+
+    if (subprojects.length === 0) return null;
+
+    return {
+      title: filterTitle(state.tasks, {type: "project", project: superproject}),
+      children: subprojects.map((subproject) => ({
+        id: subproject.id,
+        title: subproject.title,
+        count: 0,
+      })),
+    };
+  } else {
+    return null;
+  }
 }
 
 export function count(state: Omit<CommonState, "filter">, filter: FilterId): number {
@@ -422,7 +466,7 @@ function subfilters(state: CommonState, section: FilterSectionId): FilterId[] {
   if (section === "actions") return ["today", "ready", "stalled"];
   else if (section === "tasks") return ["all", "not-done", "done", "paused"];
   else if (section === "activeProjects")
-    return activeProjects(state).map((project) => ({type: "project", project: {id: project.id}}));
+    return activeProjectList(state).map((project) => ({type: "project", project: {id: project.id}}));
   else if (section === "archive") return ["archive"];
   else {
     const unreachable: never = section;

@@ -19,10 +19,7 @@ function stateAndEffectsAfter(app: State, mods: Modifications): [State, Effect[]
   } else if (Array.isArray(mods)) {
     return mods.reduce(([state, effects], mod) => stateAndEffectsAfter(state, mod), [app, []]);
   } else {
-    return [
-      updateApp(state, mods as Event),
-      effects(state, mods as Event),
-    ];
+    return [updateApp(state, mods as Event), effects(state, mods as Event)];
   }
 }
 
@@ -121,7 +118,10 @@ function switchToFilter(filter: FilterId): Event[] {
 function switchToFilterCalled(label: string) {
   return (view: View) => {
     const filter = view.sideBar.flatMap((section) => section.filters).find((row) => row.label === label);
-    if (!filter) throw "no such filter";
+    if (!filter) {
+      console.error("No filter called %o", label);
+      throw "no such filter";
+    }
     return switchToFilter(filter.filter);
   };
 }
@@ -2024,6 +2024,115 @@ describe("projects", () => {
       test("only one task (which is in the project) is shown now", () => {
         expect(tasks(step2, []).length).toEqual(1);
       });
+    });
+  });
+});
+
+describe("active projects section in sidebar", () => {
+  describe("nested projects are hidden until parent is selected", () => {
+    const example = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Project 0", "project"),
+      addTask("Project 1", "project", 1),
+      addTask("Project 2", "project", 2),
+      addTask("Task 3", 3, "ready"),
+      addTask("Project 4", "project"),
+      addTask("Project 5", "project", 1),
+      addTask("Task 6", 2, "ready"),
+    ]);
+
+    describe("initially", () => {
+      test("the active projects section contains the two top-level projects", () => {
+        expect(sideBarActiveProjects(view(example)).map((p) => p.label)).toEqual(["Project 0", "Project 4"]);
+      });
+
+      test("the project with nested subprojects has a counter", () => {
+        expect(sideBarActiveProjects(view(example)).map((p) => p.indicator)).toEqual([
+          {color: "project", text: "2"},
+          {color: "project", text: "1"},
+        ]);
+      });
+    });
+
+    const step1 = updateAll(example, [switchToFilterCalled("Project 0")]);
+
+    describe("after switching to top-level project", () => {
+      test("the active projects section remains the same", () => {
+        expect(sideBarActiveProjects(view(step1)).map((p) => p.label)).toEqual(["Project 0", "Project 4"]);
+      });
+
+      const section = view(step1).sideBar.find((section) => section.title === "Project 0");
+
+      test("the superproject is marked as selected", () => {
+        expect(
+          view(step1)
+            .sideBar.flatMap((section) => section.filters)
+            .find((filter) => filter.label === "Project 0")?.selected,
+        ).toBe(true);
+      });
+
+      test("but a new section is added, with the same title as the superproject", () => {
+        expect(section).not.toBeUndefined();
+      });
+
+      test("the subprojects are shown in the new section", () => {
+        expect(section?.filters?.map((filter) => filter.label)).toEqual(["Project 1", "Project 2"]);
+      });
+    });
+
+    const step2 = updateAll(step1, [switchToFilterCalled("Project 1")]);
+
+    describe("after switching to subproject", () => {
+      test("the same subprojects are included in the sidebar", () => {
+        expect(sideBarActiveProjects(view(step2)).map((p) => p.label)).toEqual(["Project 0", "Project 4"]);
+      });
+
+      const section = view(step2).sideBar.find((section) => section.title === "Project 0");
+
+      test("the section still lists the subprojects", () => {
+        expect(section?.filters?.map((filter) => filter.label)).toEqual(["Project 1", "Project 2"]);
+      });
+
+      test("the superproject is no longer marked selected", () => {
+        expect(
+          view(step2)
+            .sideBar.flatMap((section) => section.filters)
+            .find((filter) => filter.label === "Project 0")?.selected,
+        ).toBe(false);
+      });
+
+      test("the subproject is now selected", () => {
+        expect(
+          view(step2)
+            .sideBar.flatMap((section) => section.filters)
+            .find((filter) => filter.label === "Project 1")?.selected,
+        ).toBe(true);
+      });
+    });
+  });
+
+  describe("when selecting project without non-archived subprojects, no section is shown", () => {
+    const example = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Project 0", "project"),
+      addTask("Project 1", "project", 1, "archive"),
+      addTask("Task 2", 1, "ready"),
+    ]);
+
+    const step1 = updateAll(example, [switchToFilterCalled("Project 0")]);
+
+    test("the project is selected in the active projects section", () => {
+      expect(sideBarActiveProjects(view(step1)).map((p) => ({label: p.label, selected: p.selected}))).toEqual([
+        {label: "Project 0", selected: true},
+      ]);
+    });
+
+    test("the project has no indicators in the active projects section", () => {
+      expect(sideBarActiveProjects(view(step1)).map((p) => p.indicator)).toEqual([null]);
+    });
+
+    test("there is no section with the same title as the project", () => {
+      expect(view(step1).sideBar.find((section) => section.title === "Project 0")).toBeUndefined();
     });
   });
 });

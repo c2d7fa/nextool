@@ -54,7 +54,7 @@ export const empty: State = {
   cachedHoverInvariantTaskListView: null,
 };
 
-export type FilterIndicator = null | {text: string; color: "red" | "orange" | "green"} | {};
+export type FilterIndicator = null | {text: string; color: "red" | "orange" | "green" | "project"} | {};
 
 export type FilterView = {
   label: string;
@@ -109,11 +109,12 @@ function viewFilterBar(state: State & {today: Date}): FilterBarView {
 }
 
 function viewSideBar(state: State & {today: Date}) {
-  const activeProjects = Tasks.activeProjects(state);
+  const activeProjects = Tasks.activeProjectList(state);
+  const activeSubprojects = Tasks.activeSubprojects(state);
 
   function filterView(
     filter: Tasks.FilterId,
-    opts?: {counter: "small" | "red" | "orange" | "green"; count?: number},
+    opts?: {counter: "small" | "red" | "orange" | "green" | "project"; count?: number},
   ): FilterView {
     function indicator() {
       if (!opts?.counter) return null;
@@ -131,6 +132,18 @@ function viewSideBar(state: State & {today: Date}) {
       indicator: indicator(),
     };
   }
+
+  const subprojectSections =
+    activeSubprojects === null
+      ? []
+      : [
+          {
+            title: activeSubprojects.title,
+            filters: activeSubprojects.children.map((project) =>
+              filterView({type: "project", project}, {counter: "project", count: project.count}),
+            ),
+          },
+        ];
 
   return [
     {
@@ -151,9 +164,10 @@ function viewSideBar(state: State & {today: Date}) {
       title: "Active projects",
       filter: {type: "section", section: "activeProjects"},
       filters: activeProjects.map((project) =>
-        filterView({type: "project", project}, {counter: "small", count: project.stalled ? 1 : 0}),
+        filterView({type: "project", project}, {counter: "project", count: project.count}),
       ),
     },
+    ...subprojectSections,
     {
       title: "Archive",
       filter: {type: "section", section: "archive"},
