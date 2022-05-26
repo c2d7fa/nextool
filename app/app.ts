@@ -39,6 +39,7 @@ export type State = {
   editor: TaskEditor.State;
   taskDrag: Drag.DragState<DragId, DropId>;
   subtaskFilters: Tasks.SubtaskFilters;
+  cachedView: DragInvariantView | null;
 };
 
 export const empty: State = {
@@ -48,6 +49,7 @@ export const empty: State = {
   filter: "ready",
   taskDrag: {dragging: null, hovering: null},
   subtaskFilters: [],
+  cachedView: null,
 };
 
 export type FilterIndicator = null | {text: string; color: "red" | "orange" | "green"} | {};
@@ -67,6 +69,8 @@ export type FileControlsView = "saveLoad" | null;
 export type FilterBarView = {
   filters: {id: string; label: string; state: "neutral" | "include" | "exclude"}[];
 };
+
+type DragInvariantView = Pick<View, "fileControls" | "addTask" | "sideBar" | "filterBar" | "editor">;
 
 export type View = {
   fileControls: FileControlsView;
@@ -158,12 +162,12 @@ function viewSideBar(state: State & {today: Date}) {
 
 export function view(state: State & {today: Date}): View {
   return {
-    fileControls: "saveLoad",
-    addTask: {value: textFieldValue(state.textFields, "addTitle")},
-    sideBar: viewSideBar(state),
-    filterBar: viewFilterBar(state),
+    fileControls: state.cachedView?.fileControls ?? "saveLoad",
+    addTask: state.cachedView?.addTask ?? {value: textFieldValue(state.textFields, "addTitle")},
+    sideBar: state.cachedView?.sideBar ?? viewSideBar(state),
+    filterBar: state.cachedView?.filterBar ?? viewFilterBar(state),
     taskList: Tasks.view(state),
-    editor: TaskEditor.view(state.editor),
+    editor: state.cachedView?.editor ?? TaskEditor.view(state.editor),
   };
 }
 
@@ -284,6 +288,21 @@ export function updateApp(state: State & {today: Date}, ev: Event): State {
     }
   }
 
+  function rebulidCache(app: State & {today: Date}, ev: Event) {
+    if (ev.tag === "drag" && ["drag", "hover", "leave"].includes(ev.type)) return app;
+    return {
+      ...app, cachedView: {
+        fileControls: "saveLoad" as const,
+        addTask: {value: textFieldValue(app.textFields, "addTitle")},
+        sideBar: viewSideBar(app),
+        filterBar: viewFilterBar(app),
+        editor: TaskEditor.view(app.editor),
+      },
+    };
+  }
+
+  const today = state.today;
+
   return compose<State>([
     (state) => handleCheck(state, ev),
     (state) => handleEdit(state, ev),
@@ -294,5 +313,6 @@ export function updateApp(state: State & {today: Date}, ev: Event): State {
     (state) => handleDragState(state, ev),
     (state) => handleTextField(state, ev),
     (state) => handleStorage(state, ev),
+    (state) => rebulidCache({...state, today}, ev),
   ])(state);
 }
