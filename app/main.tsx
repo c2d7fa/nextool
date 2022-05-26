@@ -191,8 +191,9 @@ export function Main(props: {platform: Platform}) {
   const [pendingEffects, setPendingEffects] = React.useState<App.Effect[]>([]);
 
   const [app, send] = React.useReducer((app: App.State, ev: App.Event) => {
-    setPendingEffects((effects) => [...effects, ...App.effects(app, ev, {today: new Date()})]);
-    return App.updateApp(app, ev, {today: new Date()});
+    const state = {...app, today: new Date()};
+    setPendingEffects((effects) => [...effects, ...App.effects(state, ev)]);
+    return App.updateApp(state, ev);
   }, App.empty);
 
   React.useEffect(() => {
@@ -207,7 +208,7 @@ export function Main(props: {platform: Platform}) {
     });
   }, []);
 
-  const view = App.view(app, {today: new Date()});
+  const view = App.view({...app, today: new Date()});
 
   return (
     <div className={style.outerContainer}>
@@ -244,8 +245,9 @@ export function SmallDemo(props: {}) {
   const [pendingEffects, setPendingEffects] = React.useState<App.Effect[]>([]);
 
   const [app, send] = React.useReducer((app: App.State, ev: App.Event) => {
-    setPendingEffects((effects) => [...effects, ...App.effects(app, ev, {today: new Date()})]);
-    return App.updateApp(app, ev, {today: new Date()});
+    const state = {...app, today: new Date()};
+    setPendingEffects((effects) => [...effects, ...App.effects(state, ev)]);
+    return App.updateApp(state, ev);
   }, App.empty);
 
   React.useEffect(() => {
@@ -260,7 +262,7 @@ export function SmallDemo(props: {}) {
     });
   }, []);
 
-  const view = App.view(app, {today: new Date()});
+  const view = App.view({...app, today: new Date()});
 
   return (
     <div className={[style.outerContainer, style.smallDemo].join(" ")}>
