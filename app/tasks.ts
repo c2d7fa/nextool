@@ -343,9 +343,9 @@ function mergeDragState(
   list: TaskView[],
   state: {tasks: Tasks; taskDrag: DragState<DragId, DropId>; filter: FilterId},
 ) {
-  function dropIndicatorsBelow(taskIndex: number) {
+  function dropIndicatorsBelow(task: {id: string} | null): DropIndicatorView[] {
     return state.taskDrag.hovering?.type === "list" &&
-      state.taskDrag.hovering.target.location.previousSibling?.id === list[taskIndex]?.id &&
+      state.taskDrag.hovering.target.location.previousSibling?.id === task?.id &&
       JSON.stringify(state.taskDrag.hovering.target.filter) === JSON.stringify(state.filter)
       ? [{type: "dropIndicator" as const, indentation: state.taskDrag.hovering.target.location.indentation}]
       : [];
@@ -370,10 +370,16 @@ function mergeDragState(
     }));
   }
 
-  return [
-    ...dropIndicatorsBelow(-1),
+  const withDropTargets = [
     ...dropTargetsBelow(-1),
-    ...list.flatMap((row, index) => [row, ...dropIndicatorsBelow(index), ...dropTargetsBelow(index)]),
+    ...list.flatMap((row, index) => [row, ...dropTargetsBelow(index)]),
+  ];
+
+  return [
+    ...dropIndicatorsBelow(null),
+    ...withDropTargets.flatMap<DropIndicatorView | DropTargetView | TaskView>((row) =>
+      row.type === "task" ? [row, ...dropIndicatorsBelow(row)] : [row],
+    ),
   ];
 }
 
