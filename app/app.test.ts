@@ -1794,6 +1794,26 @@ describe("the stalled filter", () => {
       ]);
     });
   });
+
+  describe("parents of stalled tasks are included, but not non-stalled siblings", () => {
+    const example = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Task 0"),
+      addTask("Task 1", 1),
+      addTask("Task 2", 1),
+      addTask("Task 3", 2, "ready"),
+      addTask("Task 4", 1),
+      switchToFilter("stalled"),
+    ]);
+
+    test("the correct tasks are shown in the example", () => {
+      expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
+        {title: "Task 0", indentation: 0, badges: []},
+        {title: "Task 1", indentation: 1, badges: ["stalled"]},
+        {title: "Task 4", indentation: 1, badges: ["stalled"]},
+      ]);
+    });
+  });
 });
 
 describe("the indicator for the ready filter", () => {

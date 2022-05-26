@@ -167,7 +167,8 @@ type TaskProperty =
   | "project"
   | "readyItself"
   | "readySubtree"
-  | "stalled";
+  | "stalled"
+  | "stalledSubtree";
 
 function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, property: TaskProperty): boolean {
   function hasReadyDescendents(task: Task): boolean {
@@ -198,6 +199,11 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
       !taskIs(state, task, "readyItself") &&
       !taskIs(state, task, "inactive") &&
       (taskIs(state, task, "project") || !task.children.some((child) => !taskIs(state, child, "inactive")))
+    );
+  if (property === "stalledSubtree")
+    return (
+      taskIs(state, task, "stalled") ||
+      IndentedList.anyDescendant(state.tasks, task, (task) => taskIs(state, task, "stalled"))
     );
   return false;
 }
@@ -299,14 +305,9 @@ function doesTaskMatch(state: CommonState, task: Task): boolean {
     else return false;
   }
 
-  if (state.filter === "ready") return taskIs(state, task, "readyItself");
+  if (state.filter === "ready") return taskIs(state, task, "readySubtree");
   else if (state.filter === "done") return taskIs(state, task, "done");
-  else if (state.filter === "stalled")
-    return (
-      taskIs(state, task, "stalled") ||
-      (taskIs(state, task, "project") &&
-        IndentedList.anyDescendant(state.tasks, task, (subtask) => taskIs(state, subtask, "stalled")))
-    );
+  else if (state.filter === "stalled") return taskIs(state, task, "stalledSubtree");
   else if (state.filter === "not-done") return taskIs(state, task, "not-done");
   else if (state.filter === "archive") return task.archived;
   else if (state.filter === "paused") return taskIs(state, task, "paused");
