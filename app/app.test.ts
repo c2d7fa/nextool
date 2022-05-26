@@ -1745,6 +1745,28 @@ describe("the stalled filter", () => {
         expect(indicatorForFilter(view(example), "Stalled")).toEqual({text: "2", color: "orange"});
       });
     });
+
+    describe("when a parent of stalled subtask is shown, only the subtask is counted", () => {
+      const example = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Task 0"),
+        addTask("Task 1", 1),
+        addTask("Task 2"),
+        switchToFilter("stalled"),
+      ]);
+
+      test("in the example, there are three tasks shown in the view", () => {
+        expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
+          {title: "Task 0", indentation: 0, badges: []},
+          {title: "Task 1", indentation: 1, badges: ["stalled"]},
+          {title: "Task 2", indentation: 0, badges: ["stalled"]},
+        ]);
+      });
+
+      test("yet only two are counted", () => {
+        expect(indicatorForFilter(view(example), "Stalled")).toEqual({text: "2", color: "orange"});
+      });
+    });
   });
 
   describe("projects and their stalled subtasks are shown, but not non-stalled subtasks", () => {

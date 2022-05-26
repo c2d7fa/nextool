@@ -380,8 +380,9 @@ export function activeSubprojects(state: CommonState): {title: string; children:
   }
 }
 
-export function count(state: Omit<CommonState, "filter">, filter: FilterId): number {
-  return filterTasksIntoList({...state, filter}).length;
+export function count(state: Omit<CommonState, "filter">, filter: "today" | "ready" | "stalled"): number {
+  const subtaskProperty = filter === "today" ? "today" : filter === "ready" ? "readyItself" : "stalled";
+  return filterTasksIntoList({...state, filter}).filter((item) => taskIs(state, item, subtaskProperty)).length;
 }
 
 type TaskListSectionOf<Row> = {title: string | null; filter: FilterId; rows: Row[]}[];

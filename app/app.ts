@@ -118,7 +118,9 @@ function viewSideBar(state: State & {today: Date}) {
   ): FilterView {
     function indicator() {
       if (!opts?.counter) return null;
-      const count = opts.count ?? Tasks.count(state, filter);
+      const count =
+        opts.count ??
+        (filter === "ready" || filter === "stalled" || filter === "today" ? Tasks.count(state, filter) : 0);
       if (count === 0) return null;
       if (opts.counter === "small") return {};
       return {text: count.toString(), color: opts.counter};
