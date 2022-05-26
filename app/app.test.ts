@@ -19,10 +19,7 @@ function stateAndEffectsAfter(app: State, mods: Modifications): [State, Effect[]
   } else if (Array.isArray(mods)) {
     return mods.reduce(([state, effects], mod) => stateAndEffectsAfter(state, mod), [app, []]);
   } else {
-    return [
-      updateApp(state, mods as Event),
-      effects(state, mods as Event),
-    ];
+    return [updateApp(state, mods as Event), effects(state, mods as Event)];
   }
 }
 
@@ -121,7 +118,10 @@ function switchToFilter(filter: FilterId): Event[] {
 function switchToFilterCalled(label: string) {
   return (view: View) => {
     const filter = view.sideBar.flatMap((section) => section.filters).find((row) => row.label === label);
-    if (!filter) throw "no such filter";
+    if (!filter) {
+      console.error("No filter called %o", label);
+      throw "no such filter";
+    }
     return switchToFilter(filter.filter);
   };
 }
@@ -1716,7 +1716,7 @@ describe("the stalled filter", () => {
       const step2 = updateAll(empty, [...switchToFilter("all"), addTask("Task")]);
 
       test("after adding task, the counter is shown", () => {
-        expect(indicatorForFilter(view(step2), "Stalled")).toEqual({text: "1", color: "orange"});
+        expect(indicatorForFilter(view(step2), "Stalled")).toEqual({type: "text", text: "1", color: "orange"});
       });
 
       const step3 = updateAll(step2, [dragToFilter(0, "ready")]);
@@ -1742,7 +1742,29 @@ describe("the stalled filter", () => {
       });
 
       test("but the counter indicates two tasks", () => {
-        expect(indicatorForFilter(view(example), "Stalled")).toEqual({text: "2", color: "orange"});
+        expect(indicatorForFilter(view(example), "Stalled")).toEqual({type: "text", text: "2", color: "orange"});
+      });
+    });
+
+    describe("when a parent of stalled subtask is shown, only the subtask is counted", () => {
+      const example = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Task 0"),
+        addTask("Task 1", 1),
+        addTask("Task 2"),
+        switchToFilter("stalled"),
+      ]);
+
+      test("in the example, there are three tasks shown in the view", () => {
+        expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
+          {title: "Task 0", indentation: 0, badges: []},
+          {title: "Task 1", indentation: 1, badges: ["stalled"]},
+          {title: "Task 2", indentation: 0, badges: ["stalled"]},
+        ]);
+      });
+
+      test("yet only two are counted", () => {
+        expect(indicatorForFilter(view(example), "Stalled")).toEqual({type: "text", text: "2", color: "orange"});
       });
     });
   });
@@ -1794,6 +1816,26 @@ describe("the stalled filter", () => {
       ]);
     });
   });
+
+  describe("parents of stalled tasks are included, but not non-stalled siblings", () => {
+    const example = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Task 0"),
+      addTask("Task 1", 1),
+      addTask("Task 2", 1),
+      addTask("Task 3", 2, "ready"),
+      addTask("Task 4", 1),
+      switchToFilter("stalled"),
+    ]);
+
+    test("the correct tasks are shown in the example", () => {
+      expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
+        {title: "Task 0", indentation: 0, badges: []},
+        {title: "Task 1", indentation: 1, badges: ["stalled"]},
+        {title: "Task 4", indentation: 1, badges: ["stalled"]},
+      ]);
+    });
+  });
 });
 
 describe("the indicator for the ready filter", () => {
@@ -1806,7 +1848,7 @@ describe("the indicator for the ready filter", () => {
   const step2 = updateAll(empty, [...switchToFilter("all"), addTask("Task"), dragToTab(0, "Ready")]);
 
   test("after adding task, the counter is shown", () => {
-    expect(indicatorForFilter(view(step2), "Ready")).toEqual({text: "1", color: "green"});
+    expect(indicatorForFilter(view(step2), "Ready")).toEqual({type: "text", text: "1", color: "green"});
   });
 });
 
@@ -1966,7 +2008,7 @@ describe("projects", () => {
     test("stalled project has indicator in sidebar", () => {
       expect(sideBarActiveProjects(view(step1))[0]).toMatchObject({
         label: "Project",
-        indicator: {},
+        indicator: {type: "dot"},
       });
     });
 
@@ -2024,6 +2066,115 @@ describe("projects", () => {
       test("only one task (which is in the project) is shown now", () => {
         expect(tasks(step2, []).length).toEqual(1);
       });
+    });
+  });
+});
+
+describe("active projects section in sidebar", () => {
+  describe("nested projects are hidden until parent is selected", () => {
+    const example = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Project 0", "project"),
+      addTask("Project 1", "project", 1),
+      addTask("Project 2", "project", 2),
+      addTask("Task 3", 3, "ready"),
+      addTask("Project 4", "project"),
+      addTask("Project 5", "project", 1),
+      addTask("Task 6", 2, "ready"),
+    ]);
+
+    describe("initially", () => {
+      test("the active projects section contains the two top-level projects", () => {
+        expect(sideBarActiveProjects(view(example)).map((p) => p.label)).toEqual(["Project 0", "Project 4"]);
+      });
+
+      test("the project with nested subprojects has a counter", () => {
+        expect(sideBarActiveProjects(view(example)).map((p) => p.indicator)).toEqual([
+          {type: "text", color: "project", text: "2"},
+          {type: "text", color: "project", text: "1"},
+        ]);
+      });
+    });
+
+    const step1 = updateAll(example, [switchToFilterCalled("Project 0")]);
+
+    describe("after switching to top-level project", () => {
+      test("the active projects section remains the same", () => {
+        expect(sideBarActiveProjects(view(step1)).map((p) => p.label)).toEqual(["Project 0", "Project 4"]);
+      });
+
+      const section = view(step1).sideBar.find((section) => section.title === "Project 0");
+
+      test("the superproject is marked as selected", () => {
+        expect(
+          view(step1)
+            .sideBar.flatMap((section) => section.filters)
+            .find((filter) => filter.label === "Project 0")?.selected,
+        ).toBe(true);
+      });
+
+      test("but a new section is added, with the same title as the superproject", () => {
+        expect(section).not.toBeUndefined();
+      });
+
+      test("the subprojects are shown in the new section", () => {
+        expect(section?.filters?.map((filter) => filter.label)).toEqual(["Project 1", "Project 2"]);
+      });
+    });
+
+    const step2 = updateAll(step1, [switchToFilterCalled("Project 1")]);
+
+    describe("after switching to subproject", () => {
+      test("the same subprojects are included in the sidebar", () => {
+        expect(sideBarActiveProjects(view(step2)).map((p) => p.label)).toEqual(["Project 0", "Project 4"]);
+      });
+
+      const section = view(step2).sideBar.find((section) => section.title === "Project 0");
+
+      test("the section still lists the subprojects", () => {
+        expect(section?.filters?.map((filter) => filter.label)).toEqual(["Project 1", "Project 2"]);
+      });
+
+      test("the superproject is no longer marked selected", () => {
+        expect(
+          view(step2)
+            .sideBar.flatMap((section) => section.filters)
+            .find((filter) => filter.label === "Project 0")?.selected,
+        ).toBe(false);
+      });
+
+      test("the subproject is now selected", () => {
+        expect(
+          view(step2)
+            .sideBar.flatMap((section) => section.filters)
+            .find((filter) => filter.label === "Project 1")?.selected,
+        ).toBe(true);
+      });
+    });
+  });
+
+  describe("when selecting project without non-archived subprojects, no section is shown", () => {
+    const example = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Project 0", "project"),
+      addTask("Project 1", "project", 1, "archive"),
+      addTask("Task 2", 1, "ready"),
+    ]);
+
+    const step1 = updateAll(example, [switchToFilterCalled("Project 0")]);
+
+    test("the project is selected in the active projects section", () => {
+      expect(sideBarActiveProjects(view(step1)).map((p) => ({label: p.label, selected: p.selected}))).toEqual([
+        {label: "Project 0", selected: true},
+      ]);
+    });
+
+    test("the project has no indicators in the active projects section", () => {
+      expect(sideBarActiveProjects(view(step1)).map((p) => p.indicator)).toEqual([null]);
+    });
+
+    test("there is no section with the same title as the project", () => {
+      expect(view(step1).sideBar.find((section) => section.title === "Project 0")).toBeUndefined();
     });
   });
 });
@@ -2365,7 +2516,7 @@ describe("planning", () => {
     });
 
     test("the today tab has an indicator", () => {
-      expect(indicatorForFilter(step2, "Today")).toEqual({text: "1", color: "red"});
+      expect(indicatorForFilter(step2, "Today")).toEqual({type: "text", text: "1", color: "red"});
     });
   });
 
@@ -2406,7 +2557,7 @@ describe("planning", () => {
 
       describe("after planning a task today", () => {
         test("the indicator shows the number of tasks", () => {
-          expect(indicatorForFilter(step2, "Today")).toMatchObject({text: "1", color: "red"});
+          expect(indicatorForFilter(step2, "Today")).toMatchObject({type: "text", text: "1", color: "red"});
         });
       });
     });
