@@ -2,8 +2,8 @@ import * as process from "process";
 import {updateApp, State, view as viewApp, Event, empty, DragId, DropId, View, effects, Effect} from "./app";
 import {DropTargetView, FilterId, TaskView} from "./tasks";
 
-function view(state: State): View {
-  return viewApp(state, {today: new Date("2020-03-15")});
+function view(app: State): View {
+  return viewApp({...app, today: new Date("2020-03-15")});
 }
 
 type Modifications = Event | ((view: View) => readonly Event[]) | readonly Modifications[];
@@ -12,15 +12,16 @@ function updateAll(state: State, mods: Modifications): State {
   return stateAndEffectsAfter(state, mods)[0];
 }
 
-function stateAndEffectsAfter(state: State, mods: Modifications): [State, Effect[]] {
+function stateAndEffectsAfter(app: State, mods: Modifications): [State, Effect[]] {
+  const state = {...app, today: new Date("2020-03-15")};
   if (typeof mods === "function") {
-    return stateAndEffectsAfter(state, mods(view(state)));
+    return stateAndEffectsAfter(app, mods(view(app)));
   } else if (Array.isArray(mods)) {
-    return mods.reduce(([state, effects], mod) => stateAndEffectsAfter(state, mod), [state, []]);
+    return mods.reduce(([state, effects], mod) => stateAndEffectsAfter(state, mod), [app, []]);
   } else {
     return [
-      updateApp(state, mods as Event, {today: new Date("2020-03-15")}),
-      effects(state, mods as Event, {today: new Date("2020-03-15")}),
+      updateApp(state, mods as Event),
+      effects(state, mods as Event),
     ];
   }
 }

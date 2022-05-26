@@ -1,23 +1,17 @@
-import {TextFieldEvent, TextFieldStates} from "./text-field";
+import {TextFieldEvent, TextFieldStates, update as updateTextFields, value as textFieldValue} from "./text-field";
 import * as Tasks from "./tasks";
-import {TaskListView} from "./tasks";
 import * as TaskEditor from "./task-editor";
-import {add, edit, merge} from "./tasks";
-import {update as updateTextFields, value as textFieldValue} from "./text-field";
 import * as Drag from "./drag";
 import * as Storage from "./storage";
 
 type TextFieldId = "addTitle";
 
-import type {FilterId, BadgeId} from "./tasks";
-export type {FilterId, BadgeId};
-
-export type SelectFilterEvent = {tag: "selectFilter"; filter: FilterId};
+export type SelectFilterEvent = {tag: "selectFilter"; filter: Tasks.FilterId};
 export type CheckEvent = {tag: "check"; id: string};
 export type SelectEditingTask = {tag: "selectEditingTask"; id: string};
 
 export type DragId = {type: "task"; id: string};
-export type DropId = {type: "filter"; id: FilterId} | {type: "list"; target: Tasks.DropTargetHandle};
+export type DropId = {type: "filter"; id: Tasks.FilterId} | {type: "list"; target: Tasks.DropTargetHandle};
 
 export type FilterBarEvent = {tag: "filterBar"; type: "set"; id: string; state: "include" | "exclude"};
 
@@ -39,12 +33,14 @@ export type Effect =
 export type Send = (event: Event) => void;
 
 export type State = {
-  filter: FilterId;
+  filter: Tasks.FilterId;
   tasks: Tasks.Tasks;
   textFields: TextFieldStates<TextFieldId>;
   editor: TaskEditor.State;
   taskDrag: Drag.DragState<DragId, DropId>;
   subtaskFilters: Tasks.SubtaskFilters;
+  cachedView: DragInvariantView | null;
+  cachedHoverInvariantTaskListView: Tasks.HoverInvariantView | null;
 };
 
 export const empty: State = {
@@ -54,19 +50,21 @@ export const empty: State = {
   filter: "ready",
   taskDrag: {dragging: null, hovering: null},
   subtaskFilters: [],
+  cachedView: null,
+  cachedHoverInvariantTaskListView: null,
 };
 
 export type FilterIndicator = null | {text: string; color: "red" | "orange" | "green"} | {};
 
 export type FilterView = {
   label: string;
-  filter: FilterId;
+  filter: Tasks.FilterId;
   selected: boolean;
   dropTarget: DropId | null;
   indicator: FilterIndicator;
 };
 
-export type SideBarSectionView = {title: string; filter: FilterId; filters: FilterView[]};
+export type SideBarSectionView = {title: string; filter: Tasks.FilterId; filters: FilterView[]};
 
 export type FileControlsView = "saveLoad" | null;
 
@@ -74,18 +72,20 @@ export type FilterBarView = {
   filters: {id: string; label: string; state: "neutral" | "include" | "exclude"}[];
 };
 
+type DragInvariantView = Pick<View, "fileControls" | "addTask" | "sideBar" | "filterBar" | "editor">;
+
 export type View = {
   fileControls: FileControlsView;
   addTask: {value: string};
   sideBar: SideBarSectionView[];
-  taskList: TaskListView;
+  taskList: Tasks.TaskListView;
   filterBar: FilterBarView;
   editor: TaskEditor.View;
 };
 
-function viewFilterBar(app: State, args: {today: Date}): FilterBarView {
+function viewFilterBar(state: State & {today: Date}): FilterBarView {
   function filterState(id: string): "neutral" | "include" | "exclude" {
-    const filter = app.subtaskFilters.find((f) => f.id === id);
+    const filter = state.subtaskFilters.find((f) => f.id === id);
     if (filter === undefined) {
       return "neutral";
     }
@@ -100,7 +100,7 @@ function viewFilterBar(app: State, args: {today: Date}): FilterBarView {
   }
 
   function filterViews(id: Tasks.SubtaskFilter["id"]) {
-    return filterState(id) !== "neutral" || Tasks.isSubtaskFilterRelevant({...app, ...args}, id)
+    return filterState(id) !== "neutral" || Tasks.isSubtaskFilterRelevant(state, id)
       ? [{id: id, label: filterLabel(id), state: filterState(id)}]
       : [];
   }
@@ -108,64 +108,68 @@ function viewFilterBar(app: State, args: {today: Date}): FilterBarView {
   return {filters: [...filterViews("paused"), ...filterViews("done"), ...filterViews("ready")]};
 }
 
-export function view(app: State, args: {today: Date}): View {
-  const activeProjects = Tasks.activeProjects({...app, ...args});
+function viewSideBar(state: State & {today: Date}) {
+  const activeProjects = Tasks.activeProjects(state);
 
   function filterView(
-    filter: FilterId,
+    filter: Tasks.FilterId,
     opts?: {counter: "small" | "red" | "orange" | "green"; count?: number},
   ): FilterView {
     function indicator() {
       if (!opts?.counter) return null;
-      const count = opts.count ?? Tasks.count({...app, ...args}, filter);
+      const count = opts.count ?? Tasks.count(state, filter);
       if (count === 0) return null;
       if (opts.counter === "small") return {};
       return {text: count.toString(), color: opts.counter};
     }
 
     return {
-      label: Tasks.filterTitle(app.tasks, filter),
+      label: Tasks.filterTitle(state.tasks, filter),
       filter,
-      selected: Tasks.isSubfilter({...app, ...args}, app.filter, filter),
+      selected: Tasks.isSubfilter(state, state.filter, filter),
       dropTarget: {type: "filter", id: filter},
       indicator: indicator(),
     };
   }
 
+  return [
+    {
+      title: "Actions",
+      filter: {type: "section", section: "actions"},
+      filters: [
+        filterView("today", {counter: "red"}),
+        filterView("ready", {counter: "green"}),
+        filterView("stalled", {counter: "orange"}),
+      ],
+    },
+    {
+      title: "Tasks",
+      filter: {type: "section", section: "tasks"},
+      filters: [filterView("all"), filterView("not-done"), filterView("done"), filterView("paused")],
+    },
+    {
+      title: "Active projects",
+      filter: {type: "section", section: "activeProjects"},
+      filters: activeProjects.map((project) =>
+        filterView({type: "project", project}, {counter: "small", count: project.stalled ? 1 : 0}),
+      ),
+    },
+    {
+      title: "Archive",
+      filter: {type: "section", section: "archive"},
+      filters: [filterView("archive")],
+    },
+  ] as SideBarSectionView[];
+}
+
+export function view(state: State & {today: Date}): View {
   return {
-    fileControls: "saveLoad",
-    addTask: {value: textFieldValue(app.textFields, "addTitle")},
-    sideBar: [
-      {
-        title: "Actions",
-        filter: {type: "section", section: "actions"},
-        filters: [
-          filterView("today", {counter: "red"}),
-          filterView("ready", {counter: "green"}),
-          filterView("stalled", {counter: "orange"}),
-        ],
-      },
-      {
-        title: "Tasks",
-        filter: {type: "section", section: "tasks"},
-        filters: [filterView("all"), filterView("not-done"), filterView("done"), filterView("paused")],
-      },
-      {
-        title: "Active projects",
-        filter: {type: "section", section: "activeProjects"},
-        filters: activeProjects.map((project) =>
-          filterView({type: "project", project}, {counter: "small", count: project.stalled ? 1 : 0}),
-        ),
-      },
-      {
-        title: "Archive",
-        filter: {type: "section", section: "archive"},
-        filters: [filterView("archive")],
-      },
-    ],
-    filterBar: viewFilterBar(app, args),
-    taskList: Tasks.view({...app, today: args.today}),
-    editor: TaskEditor.view(app.editor),
+    fileControls: state.cachedView?.fileControls ?? "saveLoad",
+    addTask: state.cachedView?.addTask ?? {value: textFieldValue(state.textFields, "addTitle")},
+    sideBar: state.cachedView?.sideBar ?? viewSideBar(state),
+    filterBar: state.cachedView?.filterBar ?? viewFilterBar(state),
+    taskList: Tasks.view(state?.cachedHoverInvariantTaskListView ?? Tasks.prepareHoverInvariantView(state), state),
+    editor: state.cachedView?.editor ?? TaskEditor.view(state.editor),
   };
 }
 
@@ -177,13 +181,13 @@ function always<T>(x: T): (...args: unknown[]) => T {
   return () => x;
 }
 
-export function effects(app: State, event: Event, args: {today: Date}): Effect[] {
+export function effects(state: State & {today: Date}, event: Event): Effect[] {
   if (event.tag === "storage" && event.type === "clickSaveButton") {
     return [
       {
         type: "fileDownload",
         name: "tasks.json",
-        contents: Storage.saveString(app.tasks),
+        contents: Storage.saveString(state.tasks),
       },
     ];
   }
@@ -192,10 +196,12 @@ export function effects(app: State, event: Event, args: {today: Date}): Effect[]
     return [{type: "fileUpload"}];
   }
 
-  return [{type: "saveLocalStorage", value: Storage.saveString(updateApp(app, event, args).tasks)}];
+  if (event.tag === "drag" && ["drag", "hover", "leave"].includes(event.type)) return [];
+
+  return [{type: "saveLocalStorage", value: Storage.saveString(updateApp(state, event).tasks)}];
 }
 
-export function updateApp(app: State, ev: Event, args: {today: Date}): State {
+export function updateApp(state: State & {today: Date}, ev: Event): State {
   function handleDrop(app: State, ev: Event) {
     if (ev.tag !== "drag") return app;
 
@@ -205,10 +211,10 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
     const [drag, drop] = dropped_;
 
     if (drop.type === "filter") {
-      const app_ = {...app, tasks: edit({...app, ...args}, drag.id, [{type: "moveToFilter", filter: drop.id}])};
+      const app_ = {...app, tasks: Tasks.edit(state, drag.id, [{type: "moveToFilter", filter: drop.id}])};
       return {...app_, editor: TaskEditor.reload(app_)};
     } else if (drop.type === "list") {
-      return {...app, tasks: edit({...app, ...args}, drag.id, [{type: "move", target: drop.target}])};
+      return {...app, tasks: Tasks.edit(state, drag.id, [{type: "move", target: drop.target}])};
     } else {
       const unreachable: never = drop;
       return unreachable;
@@ -250,7 +256,7 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
     if (ev.tag !== "textField") return app;
     const result = {...app, textFields: updateTextFields(app.textFields, ev)};
     if (ev.type === "submit") {
-      return {...result, tasks: add({...app, ...args}, {title: textFieldValue(app.textFields, "addTitle")})};
+      return {...result, tasks: Tasks.add(state, {title: textFieldValue(app.textFields, "addTitle")})};
     } else {
       return result;
     }
@@ -258,14 +264,14 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
 
   function handleEdit(app: State, ev: Event) {
     if (ev.tag !== "editor") return app;
-    const tasks = edit({...app, ...args}, ev.component.id.taskId, TaskEditor.editOperationsFor(app.editor, ev));
+    const tasks = Tasks.edit(state, ev.component.id.taskId, TaskEditor.editOperationsFor(app.editor, ev));
     return {...app, editor: TaskEditor.load({tasks}, app.editor!.id), tasks};
   }
 
   function handleCheck(app: State, ev: Event) {
     if (ev.tag !== "check") return app;
     const value = Tasks.find(app.tasks, ev.id)?.status === "done" ? "active" : "done";
-    const tasks = edit({...app, ...args}, ev.id, [{type: "set", property: "status", value}]);
+    const tasks = Tasks.edit(state, ev.id, [{type: "set", property: "status", value}]);
     return {...app, tasks, editor: TaskEditor.reload({...app, tasks})};
   }
 
@@ -286,15 +292,33 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
     }
   }
 
+  function rebulidCache(app: State & {today: Date}, ev: Event) {
+    if (ev.tag === "drag" && ["hover", "leave"].includes(ev.type)) return app;
+    return {
+      ...app,
+      cachedView: {
+        fileControls: "saveLoad" as const,
+        addTask: {value: textFieldValue(app.textFields, "addTitle")},
+        sideBar: viewSideBar(app),
+        filterBar: viewFilterBar(app),
+        editor: TaskEditor.view(app.editor),
+      },
+      cachedHoverInvariantTaskListView: Tasks.prepareHoverInvariantView(app),
+    };
+  }
+
+  const today = state.today;
+
   return compose<State>([
-    (app) => handleCheck(app, ev),
-    (app) => handleEdit(app, ev),
-    (app) => handleSelectFilter(app, ev),
-    (app) => handleFilterBar(app, ev),
-    (app) => handleSelectEditingTask(app, ev),
-    (app) => handleDrop(app, ev),
-    (app) => handleDragState(app, ev),
-    (app) => handleTextField(app, ev),
-    (app) => handleStorage(app, ev),
-  ])(app);
+    (state) => handleCheck(state, ev),
+    (state) => handleEdit(state, ev),
+    (state) => handleSelectFilter(state, ev),
+    (state) => handleFilterBar(state, ev),
+    (state) => handleSelectEditingTask(state, ev),
+    (state) => handleDrop(state, ev),
+    (state) => handleDragState(state, ev),
+    (state) => handleTextField(state, ev),
+    (state) => handleStorage(state, ev),
+    (state) => rebulidCache({...state, today}, ev),
+  ])(state);
 }

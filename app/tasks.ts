@@ -339,42 +339,66 @@ export function count(state: Omit<CommonState, "filter">, filter: FilterId): num
   return filterTasksIntoList({...state, filter}).length;
 }
 
-function mergeDragState(
-  list: TaskView[],
-  state: {tasks: Tasks; taskDrag: DragState<DragId, DropId>; filter: FilterId},
-) {
-  function dropIndicatorsBelow(taskIndex: number) {
-    return state.taskDrag.hovering?.type === "list" &&
-      state.taskDrag.hovering.target.location.previousSibling?.id === list[taskIndex]?.id &&
-      JSON.stringify(state.taskDrag.hovering.target.filter) === JSON.stringify(state.filter)
-      ? [{type: "dropIndicator" as const, indentation: state.taskDrag.hovering.target.location.indentation}]
-      : [];
-  }
+type TaskListSectionOf<Row> = {title: string | null; filter: FilterId; rows: Row[]}[];
 
-  function dropTargetsBelow(index: number): DropTargetView[] {
-    const source = state.taskDrag.dragging?.id;
-    if (!source) return [];
+function mergeDropTargets(
+  lists: TaskListSectionOf<TaskView>,
+  state: {tasks: Tasks; taskDrag: DragState<DragId, DropId>},
+): TaskListSectionOf<TaskView | DropTargetView> {
+  function mergeDropTargets_(list: TaskView[], filter: FilterId) {
+    function dropTargetsBelow(index: number): DropTargetView[] {
+      const source = state.taskDrag.dragging?.id;
+      if (!source) return [];
 
-    const locations = IndentedList.validInsertLocationsBelow({list, tree: state.tasks}, source, index);
+      const locations = IndentedList.validInsertLocationsBelow({list, tree: state.tasks}, source, index);
 
-    function isRightmost(location: IndentedList.IndentedListInsertLocation): boolean {
-      const highestIndentation = Math.max(...locations.map((l) => l.indentation));
-      return location.indentation === highestIndentation;
+      function isRightmost(location: IndentedList.IndentedListInsertLocation): boolean {
+        const highestIndentation = Math.max(...locations.map((l) => l.indentation));
+        return location.indentation === highestIndentation;
+      }
+
+      return locations.map((location) => ({
+        type: "dropTarget",
+        handle: {location, filter},
+        width: isRightmost(location) ? "full" : 1,
+        indentation: location.indentation,
+      }));
     }
 
-    return locations.map((location) => ({
-      type: "dropTarget",
-      handle: {location, filter: state.filter},
-      width: isRightmost(location) ? "full" : 1,
-      indentation: location.indentation,
-    }));
+    return [...dropTargetsBelow(-1), ...list.flatMap((row, index) => [row, ...dropTargetsBelow(index)])];
   }
 
-  return [
-    ...dropIndicatorsBelow(-1),
-    ...dropTargetsBelow(-1),
-    ...list.flatMap((row, index) => [row, ...dropIndicatorsBelow(index), ...dropTargetsBelow(index)]),
-  ];
+  return lists.map((list) => ({
+    ...list,
+    rows: mergeDropTargets_(list.rows, list.filter),
+  }));
+}
+
+function mergeDropIndicators(
+  lists: TaskListSectionOf<TaskView | DropTargetView>,
+  state: {tasks: Tasks; taskDrag: DragState<DragId, DropId>},
+): TaskListSectionOf<TaskView | DropTargetView | DropIndicatorView> {
+  function mergeDropIndicators_(list: (TaskView | DropTargetView)[], filter: FilterId) {
+    function dropIndicatorsBelow(task: {id: string} | null): DropIndicatorView[] {
+      return state.taskDrag.hovering?.type === "list" &&
+        state.taskDrag.hovering.target.location.previousSibling?.id === task?.id &&
+        JSON.stringify(state.taskDrag.hovering.target.filter) === JSON.stringify(filter)
+        ? [{type: "dropIndicator" as const, indentation: state.taskDrag.hovering.target.location.indentation}]
+        : [];
+    }
+
+    return [
+      ...dropIndicatorsBelow(null),
+      ...list.flatMap<DropIndicatorView | DropTargetView | TaskView>((row) =>
+        row.type === "task" ? [row, ...dropIndicatorsBelow(row)] : [row],
+      ),
+    ];
+  }
+
+  return lists.map((list) => ({
+    ...list,
+    rows: mergeDropIndicators_(list.rows, list.filter),
+  }));
 }
 
 function viewRows(state: CommonState): TaskView[] {
@@ -455,17 +479,30 @@ export function filterTitle(tasks: Tasks, filter: FilterId): string {
   }
 }
 
+export type HoverInvariantView = TaskListSectionOf<TaskView | DropTargetView>;
+
+export function prepareHoverInvariantView(
+  state: CommonState & {taskDrag: DragState<DragId, DropId>},
+): HoverInvariantView {
+  const subfilters_ =
+    typeof state.filter === "object" && state.filter.type === "section"
+      ? subfilters(state, state.filter.section)
+      : [state.filter];
+
+  const showTitle = subfilters_.length > 1;
+
+  const lists = subfilters_.map((subfilter) => ({
+    title: showTitle ? filterTitle(state.tasks, subfilter) : "",
+    filter: subfilter,
+    rows: viewRows({...state, filter: subfilter}),
+  }));
+
+  return mergeDropTargets(lists, state);
+}
+
 export function view(
-  state: CommonState & {
-    taskDrag: DragState<DragId, DropId>;
-  },
+  preparedView: HoverInvariantView,
+  state: CommonState & {taskDrag: DragState<DragId, DropId>},
 ): TaskListView {
-  if (typeof state.filter === "object" && state.filter.type === "section") {
-    return subfilters(state, state.filter.section).map((subfilter) => ({
-      title: filterTitle(state.tasks, subfilter),
-      rows: mergeDragState(viewRows({...state, filter: subfilter}), {...state, filter: subfilter}),
-    }));
-  } else {
-    return [{title: null, rows: mergeDragState(viewRows(state), state)}];
-  }
+  return mergeDropIndicators(preparedView, state);
 }

@@ -48,7 +48,7 @@ export function Draggable<DragId, DropId>(props: {
 }) {
   return (
     <div
-      onDrag={(ev) => props.send({tag: "drag", type: "drag", id: props.id, x: ev.clientX, y: ev.clientY})}
+      onDragStart={(ev) => props.send({tag: "drag", type: "drag", id: props.id, x: ev.clientX, y: ev.clientY})}
       onDragEnd={(ev) => {
         ev.preventDefault();
         props.send({tag: "drag", type: "drop"});

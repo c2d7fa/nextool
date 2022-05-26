@@ -1,6 +1,6 @@
 {
   "name": "nextool",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "peerDependencies": {
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
@@ -45,7 +45,7 @@
     }
   },
   "scripts": {
-    "postinstall": "cd ../app && npm pack && cd ../electron && npm install --ignore-scripts --no-save ../app/nextool-app-1.2.0.tgz",
+    "postinstall": "cd ../app && npm pack && cd ../electron && npm install --ignore-scripts --no-save ../app/nextool-app-1.2.1.tgz",
     "prepare-build": "npx webpack",
     "build-linux": "npm run prepare-build && npx electron-builder --publish=never -l",
     "build-windows": "npm run prepare-build && npx electron-builder --publish=never -w",
