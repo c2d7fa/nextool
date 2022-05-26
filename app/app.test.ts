@@ -118,7 +118,10 @@ function switchToFilter(filter: FilterId): Event[] {
 function switchToFilterCalled(label: string) {
   return (view: View) => {
     const filter = view.sideBar.flatMap((section) => section.filters).find((row) => row.label === label);
-    if (!filter) throw "no such filter";
+    if (!filter) {
+      console.error("No filter called %o", label);
+      throw "no such filter";
+    }
     return switchToFilter(filter.filter);
   };
 }
@@ -2054,19 +2057,25 @@ describe("active projects section in sidebar", () => {
     const step1 = updateAll(example, [switchToFilterCalled("Project 0")]);
 
     describe("after switching to top-level project", () => {
-      test.skip("the active projects section remains the same", () => {
+      test("the active projects section remains the same", () => {
         expect(sideBarActiveProjects(view(step1)).map((p) => p.label)).toEqual(["Project 0", "Project 4"]);
       });
 
       const section = view(step1).sideBar.find((section) => section.title === "Project 0");
 
-      test.todo("the superproject is marked as selected");
+      test("the superproject is marked as selected", () => {
+        expect(
+          view(step1)
+            .sideBar.flatMap((section) => section.filters)
+            .find((filter) => filter.label === "Project 0")?.selected,
+        ).toBe(true);
+      });
 
-      test.skip("but a new section is added, which shows all subprojects of the selected project", () => {
+      test("but a new section is added, with the same title as the superproject", () => {
         expect(section).not.toBeUndefined();
       });
 
-      test.skip("the subprojects are shown in the new section", () => {
+      test("the subprojects are shown in the new section", () => {
         expect(section?.filters?.map((filter) => filter.label)).toEqual(["Project 1", "Project 2"]);
       });
     });
@@ -2074,13 +2083,13 @@ describe("active projects section in sidebar", () => {
     const step2 = updateAll(step1, [switchToFilterCalled("Project 1")]);
 
     describe("after switching to subproject", () => {
-      test.skip("the same subprojects are included in the sidebar", () => {
+      test("the same subprojects are included in the sidebar", () => {
         expect(sideBarActiveProjects(view(step2)).map((p) => p.label)).toEqual(["Project 0", "Project 4"]);
       });
 
       const section = view(step1).sideBar.find((section) => section.title === "Project 0");
 
-      test.todo("the project still shows the subprojects");
+      test.todo("the section still lists the subprojects");
 
       test.todo("the superproject is no longer marked selected");
 

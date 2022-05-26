@@ -109,7 +109,8 @@ function viewFilterBar(state: State & {today: Date}): FilterBarView {
 }
 
 function viewSideBar(state: State & {today: Date}) {
-  const activeProjects = Tasks.activeProjectTree(state);
+  const activeProjects = Tasks.activeProjectList(state);
+  const activeSubprojects = Tasks.activeSubprojects(state);
 
   function filterView(
     filter: Tasks.FilterId,
@@ -131,6 +132,18 @@ function viewSideBar(state: State & {today: Date}) {
       indicator: indicator(),
     };
   }
+
+  const subprojectSections =
+    activeSubprojects === null
+      ? []
+      : [
+          {
+            title: activeSubprojects.title,
+            filters: activeSubprojects.children.map((project) =>
+              filterView({type: "project", project}, {counter: "project", count: project.count}),
+            ),
+          },
+        ];
 
   return [
     {
@@ -154,6 +167,7 @@ function viewSideBar(state: State & {today: Date}) {
         filterView({type: "project", project}, {counter: "project", count: project.count}),
       ),
     },
+    ...subprojectSections,
     {
       title: "Archive",
       filter: {type: "section", section: "archive"},
