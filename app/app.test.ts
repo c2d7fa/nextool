@@ -2026,7 +2026,7 @@ describe("projects", () => {
 });
 
 describe("active projects section in sidebar", () => {
-  describe("nested projects are only shown when parent is selected", () => {
+  describe("nested projects are hidden until parent is selected", () => {
     const example = updateAll(empty, [
       switchToFilter("all"),
       addTask("Project 0", "project"),
@@ -2054,27 +2054,37 @@ describe("active projects section in sidebar", () => {
     const step1 = updateAll(example, [switchToFilterCalled("Project 0")]);
 
     describe("after switching to top-level project", () => {
-      test("all subprojects are now included in the sidebar", () => {
-        expect(sideBarActiveProjects(view(step1)).map((p) => p.label)).toEqual([
-          "Project 0",
-          "Project 1",
-          "Project 2",
-          "Project 4",
-        ]);
+      test.skip("the active projects section remains the same", () => {
+        expect(sideBarActiveProjects(view(step1)).map((p) => p.label)).toEqual(["Project 0", "Project 4"]);
+      });
+
+      const section = view(step1).sideBar.find((section) => section.title === "Project 0");
+
+      test.todo("the superproject is marked as selected");
+
+      test.skip("but a new section is added, which shows all subprojects of the selected project", () => {
+        expect(section).not.toBeUndefined();
+      });
+
+      test.skip("the subprojects are shown in the new section", () => {
+        expect(section?.filters?.map((filter) => filter.label)).toEqual(["Project 1", "Project 2"]);
       });
     });
 
     const step2 = updateAll(step1, [switchToFilterCalled("Project 1")]);
 
     describe("after switching to subproject", () => {
-      test("the same subprojects are included in the sidebar", () => {
-        expect(sideBarActiveProjects(view(step2)).map((p) => p.label)).toEqual([
-          "Project 0",
-          "Project 1",
-          "Project 2",
-          "Project 4",
-        ]);
+      test.skip("the same subprojects are included in the sidebar", () => {
+        expect(sideBarActiveProjects(view(step2)).map((p) => p.label)).toEqual(["Project 0", "Project 4"]);
       });
+
+      const section = view(step1).sideBar.find((section) => section.title === "Project 0");
+
+      test.todo("the project still shows the subprojects");
+
+      test.todo("the superproject is no longer marked selected");
+
+      test.todo("the subproject is now selected");
     });
   });
 });
