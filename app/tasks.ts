@@ -339,7 +339,7 @@ export function count(state: Omit<CommonState, "filter">, filter: FilterId): num
   return filterTasksIntoList({...state, filter}).length;
 }
 
-type TaskListSectionOf<Row> = {filter: FilterId; rows: Row[]}[];
+type TaskListSectionOf<Row> = {title: string | null; filter: FilterId; rows: Row[]}[];
 
 function mergeDropTargets(
   lists: TaskListSectionOf<TaskView>,
@@ -369,7 +369,7 @@ function mergeDropTargets(
   }
 
   return lists.map((list) => ({
-    filter: list.filter,
+    ...list,
     rows: mergeDropTargets_(list.rows, list.filter),
   }));
 }
@@ -396,7 +396,7 @@ function mergeDropIndicators(
   }
 
   return lists.map((list) => ({
-    filter: list.filter,
+    ...list,
     rows: mergeDropIndicators_(list.rows, list.filter),
   }));
 }
@@ -479,11 +479,9 @@ export function filterTitle(tasks: Tasks, filter: FilterId): string {
   }
 }
 
-export function view(
-  state: CommonState & {
-    taskDrag: DragState<DragId, DropId>;
-  },
-): TaskListView {
+function buildHoverInvariantView(
+  state: CommonState & {taskDrag: DragState<DragId, DropId>},
+): TaskListSectionOf<TaskView | DropTargetView> {
   const subfilters_ =
     typeof state.filter === "object" && state.filter.type === "section"
       ? subfilters(state, state.filter.section)
@@ -492,12 +490,15 @@ export function view(
   const showTitle = subfilters_.length > 1;
 
   const lists = subfilters_.map((subfilter) => ({
+    title: showTitle ? filterTitle(state.tasks, subfilter) : "",
     filter: subfilter,
     rows: viewRows({...state, filter: subfilter}),
   }));
 
-  return mergeDropIndicators(mergeDropTargets(lists, state), state).map((list) => ({
-    title: showTitle ? filterTitle(state.tasks, list.filter) : null,
-    ...list,
-  }));
+  return mergeDropTargets(lists, state);
+}
+
+export function view(state: CommonState & {taskDrag: DragState<DragId, DropId>}): TaskListView {
+  const hoverInvariantView = buildHoverInvariantView(state);
+  return mergeDropIndicators(hoverInvariantView, state);
 }
