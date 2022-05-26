@@ -364,6 +364,8 @@ export function activeSubprojects(state: CommonState): {title: string; children:
         IndentedList.isDescendant(state.tasks, node, superproject),
     );
 
+    if (subprojects.length === 0) return null;
+
     return {
       title: filterTitle(state.tasks, {type: "project", project: superproject}),
       children: subprojects.map((subproject) => ({

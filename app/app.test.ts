@@ -2110,6 +2110,31 @@ describe("active projects section in sidebar", () => {
       });
     });
   });
+
+  describe("when selecting project without non-archived subprojects, no section is shown", () => {
+    const example = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Project 0", "project"),
+      addTask("Project 1", "project", 1, "archive"),
+      addTask("Task 2", 1, "ready"),
+    ]);
+
+    const step1 = updateAll(example, [switchToFilterCalled("Project 0")]);
+
+    test("the project is selected in the active projects section", () => {
+      expect(sideBarActiveProjects(view(step1)).map((p) => ({label: p.label, selected: p.selected}))).toEqual([
+        {label: "Project 0", selected: true},
+      ]);
+    });
+
+    test("the project has no indicators in the active projects section", () => {
+      expect(sideBarActiveProjects(view(step1)).map((p) => p.indicator)).toEqual([null]);
+    });
+
+    test("there is no section with the same title as the project", () => {
+      expect(view(step1).sideBar.find((section) => section.title === "Project 0")).toBeUndefined();
+    });
+  });
 });
 
 describe("archiving tasks", () => {
