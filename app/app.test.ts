@@ -19,10 +19,7 @@ function stateAndEffectsAfter(app: State, mods: Modifications): [State, Effect[]
   } else if (Array.isArray(mods)) {
     return mods.reduce(([state, effects], mod) => stateAndEffectsAfter(state, mod), [app, []]);
   } else {
-    return [
-      updateApp(state, mods as Event),
-      effects(state, mods as Event),
-    ];
+    return [updateApp(state, mods as Event), effects(state, mods as Event)];
   }
 }
 
@@ -2063,15 +2060,6 @@ describe("active projects section in sidebar", () => {
           "Project 1",
           "Project 2",
           "Project 4",
-        ]);
-      });
-
-      test.skip("there are no indicators for the selected project subtree", () => {
-        expect(sideBarActiveProjects(view(step1)).map((p) => p.indicator)).toEqual([
-          null,
-          null,
-          null,
-          {color: "project", text: "1"},
         ]);
       });
     });
