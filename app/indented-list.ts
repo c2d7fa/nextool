@@ -139,8 +139,17 @@ export function findNode<D>(tree: Tree<D>, query: Handle): TreeNode<D> | null {
 }
 
 export function updateNode<D>(tree: Tree<D>, query: Handle, update: (x: TreeNode<D>) => TreeNode<D>): Tree<D> {
-  // [TODO] Deregister old children
-  return registerNode(tree, update(findNode(tree, query)!), {parent: tree.parents[query.id] ?? null});
+  const oldNode = findNode(tree, query)!;
+  const newNode = update(oldNode);
+
+  // Performance optimization: when not updating children, there is no need to
+  // register or deregister any nodes.
+  if (newNode.children === oldNode.children) {
+    return {...tree, data: {...tree.data, [query.id]: newNode}};
+  } else {
+    // [TODO] Deregister old children
+    return registerNode(tree, update(findNode(tree, query)!), {parent: tree.parents[query.id] ?? null});
+  }
 }
 
 export function roots<D>(tree: Tree<D>): TreeNode<D>[] {
