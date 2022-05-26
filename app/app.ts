@@ -102,7 +102,7 @@ function viewFilterBar(state: State & {today: Date}): FilterBarView {
   return {filters: [...filterViews("paused"), ...filterViews("done"), ...filterViews("ready")]};
 }
 
-export function view(state: State & {today: Date}): View {
+function viewSideBar(state: State & {today: Date}) {
   const activeProjects = Tasks.activeProjects(state);
 
   function filterView(
@@ -126,37 +126,41 @@ export function view(state: State & {today: Date}): View {
     };
   }
 
+  return [
+    {
+      title: "Actions",
+      filter: {type: "section", section: "actions"},
+      filters: [
+        filterView("today", {counter: "red"}),
+        filterView("ready", {counter: "green"}),
+        filterView("stalled", {counter: "orange"}),
+      ],
+    },
+    {
+      title: "Tasks",
+      filter: {type: "section", section: "tasks"},
+      filters: [filterView("all"), filterView("not-done"), filterView("done"), filterView("paused")],
+    },
+    {
+      title: "Active projects",
+      filter: {type: "section", section: "activeProjects"},
+      filters: activeProjects.map((project) =>
+        filterView({type: "project", project}, {counter: "small", count: project.stalled ? 1 : 0}),
+      ),
+    },
+    {
+      title: "Archive",
+      filter: {type: "section", section: "archive"},
+      filters: [filterView("archive")],
+    },
+  ] as SideBarSectionView[];
+}
+
+export function view(state: State & {today: Date}): View {
   return {
     fileControls: "saveLoad",
     addTask: {value: textFieldValue(state.textFields, "addTitle")},
-    sideBar: [
-      {
-        title: "Actions",
-        filter: {type: "section", section: "actions"},
-        filters: [
-          filterView("today", {counter: "red"}),
-          filterView("ready", {counter: "green"}),
-          filterView("stalled", {counter: "orange"}),
-        ],
-      },
-      {
-        title: "Tasks",
-        filter: {type: "section", section: "tasks"},
-        filters: [filterView("all"), filterView("not-done"), filterView("done"), filterView("paused")],
-      },
-      {
-        title: "Active projects",
-        filter: {type: "section", section: "activeProjects"},
-        filters: activeProjects.map((project) =>
-          filterView({type: "project", project}, {counter: "small", count: project.stalled ? 1 : 0}),
-        ),
-      },
-      {
-        title: "Archive",
-        filter: {type: "section", section: "archive"},
-        filters: [filterView("archive")],
-      },
-    ],
+    sideBar: viewSideBar(state),
     filterBar: viewFilterBar(state),
     taskList: Tasks.view(state),
     editor: TaskEditor.view(state.editor),
