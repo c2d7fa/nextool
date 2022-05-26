@@ -1,23 +1,17 @@
-import {TextFieldEvent, TextFieldStates} from "./text-field";
+import {TextFieldEvent, TextFieldStates, update as updateTextFields, value as textFieldValue} from "./text-field";
 import * as Tasks from "./tasks";
-import {TaskListView} from "./tasks";
 import * as TaskEditor from "./task-editor";
-import {add, edit, merge} from "./tasks";
-import {update as updateTextFields, value as textFieldValue} from "./text-field";
 import * as Drag from "./drag";
 import * as Storage from "./storage";
 
 type TextFieldId = "addTitle";
 
-import type {FilterId, BadgeId} from "./tasks";
-export type {FilterId, BadgeId};
-
-export type SelectFilterEvent = {tag: "selectFilter"; filter: FilterId};
+export type SelectFilterEvent = {tag: "selectFilter"; filter: Tasks.FilterId};
 export type CheckEvent = {tag: "check"; id: string};
 export type SelectEditingTask = {tag: "selectEditingTask"; id: string};
 
 export type DragId = {type: "task"; id: string};
-export type DropId = {type: "filter"; id: FilterId} | {type: "list"; target: Tasks.DropTargetHandle};
+export type DropId = {type: "filter"; id: Tasks.FilterId} | {type: "list"; target: Tasks.DropTargetHandle};
 
 export type FilterBarEvent = {tag: "filterBar"; type: "set"; id: string; state: "include" | "exclude"};
 
@@ -39,7 +33,7 @@ export type Effect =
 export type Send = (event: Event) => void;
 
 export type State = {
-  filter: FilterId;
+  filter: Tasks.FilterId;
   tasks: Tasks.Tasks;
   textFields: TextFieldStates<TextFieldId>;
   editor: TaskEditor.State;
@@ -60,13 +54,13 @@ export type FilterIndicator = null | {text: string; color: "red" | "orange" | "g
 
 export type FilterView = {
   label: string;
-  filter: FilterId;
+  filter: Tasks.FilterId;
   selected: boolean;
   dropTarget: DropId | null;
   indicator: FilterIndicator;
 };
 
-export type SideBarSectionView = {title: string; filter: FilterId; filters: FilterView[]};
+export type SideBarSectionView = {title: string; filter: Tasks.FilterId; filters: FilterView[]};
 
 export type FileControlsView = "saveLoad" | null;
 
@@ -78,7 +72,7 @@ export type View = {
   fileControls: FileControlsView;
   addTask: {value: string};
   sideBar: SideBarSectionView[];
-  taskList: TaskListView;
+  taskList: Tasks.TaskListView;
   filterBar: FilterBarView;
   editor: TaskEditor.View;
 };
@@ -112,7 +106,7 @@ export function view(app: State, args: {today: Date}): View {
   const activeProjects = Tasks.activeProjects({...app, ...args});
 
   function filterView(
-    filter: FilterId,
+    filter: Tasks.FilterId,
     opts?: {counter: "small" | "red" | "orange" | "green"; count?: number},
   ): FilterView {
     function indicator() {
@@ -205,10 +199,10 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
     const [drag, drop] = dropped_;
 
     if (drop.type === "filter") {
-      const app_ = {...app, tasks: edit({...app, ...args}, drag.id, [{type: "moveToFilter", filter: drop.id}])};
+      const app_ = {...app, tasks: Tasks.edit({...app, ...args}, drag.id, [{type: "moveToFilter", filter: drop.id}])};
       return {...app_, editor: TaskEditor.reload(app_)};
     } else if (drop.type === "list") {
-      return {...app, tasks: edit({...app, ...args}, drag.id, [{type: "move", target: drop.target}])};
+      return {...app, tasks: Tasks.edit({...app, ...args}, drag.id, [{type: "move", target: drop.target}])};
     } else {
       const unreachable: never = drop;
       return unreachable;
@@ -250,7 +244,7 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
     if (ev.tag !== "textField") return app;
     const result = {...app, textFields: updateTextFields(app.textFields, ev)};
     if (ev.type === "submit") {
-      return {...result, tasks: add({...app, ...args}, {title: textFieldValue(app.textFields, "addTitle")})};
+      return {...result, tasks: Tasks.add({...app, ...args}, {title: textFieldValue(app.textFields, "addTitle")})};
     } else {
       return result;
     }
@@ -258,14 +252,14 @@ export function updateApp(app: State, ev: Event, args: {today: Date}): State {
 
   function handleEdit(app: State, ev: Event) {
     if (ev.tag !== "editor") return app;
-    const tasks = edit({...app, ...args}, ev.component.id.taskId, TaskEditor.editOperationsFor(app.editor, ev));
+    const tasks = Tasks.edit({...app, ...args}, ev.component.id.taskId, TaskEditor.editOperationsFor(app.editor, ev));
     return {...app, editor: TaskEditor.load({tasks}, app.editor!.id), tasks};
   }
 
   function handleCheck(app: State, ev: Event) {
     if (ev.tag !== "check") return app;
     const value = Tasks.find(app.tasks, ev.id)?.status === "done" ? "active" : "done";
-    const tasks = edit({...app, ...args}, ev.id, [{type: "set", property: "status", value}]);
+    const tasks = Tasks.edit({...app, ...args}, ev.id, [{type: "set", property: "status", value}]);
     return {...app, tasks, editor: TaskEditor.reload({...app, tasks})};
   }
 
