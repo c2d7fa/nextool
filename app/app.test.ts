@@ -1716,7 +1716,7 @@ describe("the stalled filter", () => {
       const step2 = updateAll(empty, [...switchToFilter("all"), addTask("Task")]);
 
       test("after adding task, the counter is shown", () => {
-        expect(indicatorForFilter(view(step2), "Stalled")).toEqual({text: "1", color: "orange"});
+        expect(indicatorForFilter(view(step2), "Stalled")).toEqual({type: "text", text: "1", color: "orange"});
       });
 
       const step3 = updateAll(step2, [dragToFilter(0, "ready")]);
@@ -1742,7 +1742,7 @@ describe("the stalled filter", () => {
       });
 
       test("but the counter indicates two tasks", () => {
-        expect(indicatorForFilter(view(example), "Stalled")).toEqual({text: "2", color: "orange"});
+        expect(indicatorForFilter(view(example), "Stalled")).toEqual({type: "text", text: "2", color: "orange"});
       });
     });
 
@@ -1764,7 +1764,7 @@ describe("the stalled filter", () => {
       });
 
       test("yet only two are counted", () => {
-        expect(indicatorForFilter(view(example), "Stalled")).toEqual({text: "2", color: "orange"});
+        expect(indicatorForFilter(view(example), "Stalled")).toEqual({type: "text", text: "2", color: "orange"});
       });
     });
   });
@@ -1848,7 +1848,7 @@ describe("the indicator for the ready filter", () => {
   const step2 = updateAll(empty, [...switchToFilter("all"), addTask("Task"), dragToTab(0, "Ready")]);
 
   test("after adding task, the counter is shown", () => {
-    expect(indicatorForFilter(view(step2), "Ready")).toEqual({text: "1", color: "green"});
+    expect(indicatorForFilter(view(step2), "Ready")).toEqual({type: "text", text: "1", color: "green"});
   });
 });
 
@@ -2008,7 +2008,7 @@ describe("projects", () => {
     test("stalled project has indicator in sidebar", () => {
       expect(sideBarActiveProjects(view(step1))[0]).toMatchObject({
         label: "Project",
-        indicator: {},
+        indicator: {type: "dot"},
       });
     });
 
@@ -2090,8 +2090,8 @@ describe("active projects section in sidebar", () => {
 
       test("the project with nested subprojects has a counter", () => {
         expect(sideBarActiveProjects(view(example)).map((p) => p.indicator)).toEqual([
-          {color: "project", text: "2"},
-          {color: "project", text: "1"},
+          {type: "text", color: "project", text: "2"},
+          {type: "text", color: "project", text: "1"},
         ]);
       });
     });
@@ -2516,7 +2516,7 @@ describe("planning", () => {
     });
 
     test("the today tab has an indicator", () => {
-      expect(indicatorForFilter(step2, "Today")).toEqual({text: "1", color: "red"});
+      expect(indicatorForFilter(step2, "Today")).toEqual({type: "text", text: "1", color: "red"});
     });
   });
 
@@ -2557,7 +2557,7 @@ describe("planning", () => {
 
       describe("after planning a task today", () => {
         test("the indicator shows the number of tasks", () => {
-          expect(indicatorForFilter(step2, "Today")).toMatchObject({text: "1", color: "red"});
+          expect(indicatorForFilter(step2, "Today")).toMatchObject({type: "text", text: "1", color: "red"});
         });
       });
     });

@@ -28,14 +28,17 @@ function AddTask(props: {view: App.View["addTask"]; send(ev: App.Event): void}) 
 
 function Indicator(props: {indicator: App.FilterIndicator}) {
   if (props.indicator === null) return null;
-  else if ("text" in props.indicator) {
+  else if (props.indicator.type === "text") {
     return (
       <span className={[style.indicator, style[props.indicator.color]].join(" ")}>
         <span className={style.text}>{props.indicator.text}</span>
       </span>
     );
+  } else if (props.indicator.type === "dot") {
+    return <span className={[style.indicator, style.dot].join(" ")} />;
   } else {
-    return <span className={[style.indicator, style.small].join(" ")} />;
+    const unreachable: never = props.indicator;
+    return unreachable;
   }
 }
 

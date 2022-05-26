@@ -331,7 +331,8 @@
         font-size: 0.9em;
       }
 
-      &.small {
+      &.dot {
+        @include shared.badge-like(shared.$orange-hue);
         font-size: 0.7em;
         padding: 0;
       }

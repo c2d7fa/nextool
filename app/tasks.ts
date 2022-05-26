@@ -323,7 +323,7 @@ function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<Task
   return IndentedList.filterList(fullList, (task) => doesSubtaskMatchSubtaskFilter({...state, fullList}, task));
 }
 
-export type ActiveProjectList = {id: string; title: string; count?: number}[];
+export type ActiveProjectList = {id: string; title: string; count?: number; isStalled: boolean}[];
 
 export function activeProjectList(state: CommonState): ActiveProjectList {
   const list = IndentedList.pickIntoList(
@@ -342,7 +342,12 @@ export function activeProjectList(state: CommonState): ActiveProjectList {
 
   return list
     .filter((t) => t.indentation === 0)
-    .map((t) => ({id: t.id, title: t.title, count: countSubprojects(t)}));
+    .map((t) => ({
+      id: t.id,
+      title: t.title,
+      count: countSubprojects(t),
+      isStalled: taskIs(state, t, "stalled"),
+    }));
 }
 
 export function activeSubprojects(state: CommonState): {title: string; children: ActiveProjectList} | null {
@@ -373,6 +378,7 @@ export function activeSubprojects(state: CommonState): {title: string; children:
         id: subproject.id,
         title: subproject.title,
         count: 0,
+        isStalled: taskIs(state, subproject, "stalled"),
       })),
     };
   } else {
