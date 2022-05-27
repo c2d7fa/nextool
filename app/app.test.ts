@@ -2972,4 +2972,48 @@ describe("filter bar", () => {
       });
     });
   });
+
+  describe("ready filter is never shown in stalled tab", () => {
+    describe("in example with ready project and stalled subtask", () => {
+      const example = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Project", "project"),
+        addTask("Task 1", 1),
+        addTask("Task 2", 1, "ready"),
+        switchToFilter("stalled"),
+      ]);
+
+      test("the correct tasks are shown in the stalled view", () => {
+        expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
+          {title: "Project", indentation: 0, badges: ["project", "ready"]},
+          {title: "Task 1", indentation: 1, badges: ["stalled"]},
+        ]);
+      });
+
+      test("the ready filter is not available in the filter bar", () => {
+        expect(filterBarHas(view(example), "Ready")).toBe(false);
+      });
+    });
+
+    describe("in example with non-project parent task that has both stalled and ready subtask", () => {
+      const example = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Task 1", 0),
+        addTask("Task 2", 1, "ready"),
+        addTask("Task 3", 1),
+        switchToFilter("stalled"),
+      ]);
+
+      test("the correct tasks are shown in the stalled view", () => {
+        expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
+          {title: "Task 1", indentation: 0, badges: []},
+          {title: "Task 3", indentation: 1, badges: ["stalled"]},
+        ]);
+      });
+
+      test("the ready filter is not available in the filter bar", () => {
+        expect(filterBarHas(view(example), "Ready")).toBe(false);
+      });
+    });
+  });
 });

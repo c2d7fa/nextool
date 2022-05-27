@@ -7,7 +7,7 @@ import * as Drag from "./drag";
 import {TaskList} from "./task-list";
 
 import * as style from "./main.module.scss";
-import {Button} from "./ui";
+import {Button, IconLabel} from "./ui";
 
 function AddTask(props: {view: App.View["addTask"]; send(ev: App.Event): void}) {
   return (
@@ -51,7 +51,11 @@ function Filter(props: {
       onClick={() => props.send({tag: "selectFilter", filter: props.filter.filter})}
       className={props.filter.selected ? style.selected : ""}
     >
-      <span className={style.label}>{props.filter.label}</span>
+      <span className={style.label}>
+        <IconLabel extraSpace icon={props.filter.icon}>
+          <span className={style.labelText}>{props.filter.label}</span>
+        </IconLabel>
+      </span>
       <Indicator indicator={props.filter.indicator} />
     </button>
   );
@@ -174,7 +178,7 @@ function FilterButton(props: {filter: App.FilterBarView["filters"][number]; send
         }}
         onContextMenu={(ev) => ev.preventDefault()}
       >
-        {props.filter.label}
+        <IconLabel icon={props.filter.icon}>{props.filter.label}</IconLabel>
       </button>
     </div>
   );

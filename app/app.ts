@@ -3,6 +3,7 @@ import * as Tasks from "./tasks";
 import * as TaskEditor from "./task-editor";
 import * as Drag from "./drag";
 import * as Storage from "./storage";
+import * as Ui from "./ui";
 
 type TextFieldId = "addTitle";
 
@@ -61,6 +62,7 @@ export type FilterIndicator =
 
 export type FilterView = {
   label: string;
+  icon: Ui.Icon;
   filter: Tasks.FilterId;
   selected: boolean;
   dropTarget: DropId | null;
@@ -72,7 +74,7 @@ export type SideBarSectionView = {title: string; filter: Tasks.FilterId; filters
 export type FileControlsView = "saveLoad" | null;
 
 export type FilterBarView = {
-  filters: {id: string; label: string; state: "neutral" | "include" | "exclude"}[];
+  filters: {id: string; label: string; state: "neutral" | "include" | "exclude"; icon?: Ui.Icon}[];
 };
 
 type DragInvariantView = Pick<View, "fileControls" | "addTask" | "sideBar" | "filterBar" | "editor">;
@@ -102,9 +104,16 @@ function viewFilterBar(state: State & {today: Date}): FilterBarView {
     return id;
   }
 
+  function filterIcon(id: Tasks.SubtaskFilter["id"]): Ui.Icon | undefined {
+    if (id === "paused") return "paused";
+    if (id === "done") return "completed";
+    if (id === "ready") return "ready";
+    return undefined;
+  }
+
   function filterViews(id: Tasks.SubtaskFilter["id"]) {
     return filterState(id) !== "neutral" || Tasks.isSubtaskFilterRelevant(state, id)
-      ? [{id: id, label: filterLabel(id), state: filterState(id)}]
+      ? [{id: id, label: filterLabel(id), icon: filterIcon(id), state: filterState(id)}]
       : [];
   }
 
@@ -129,8 +138,25 @@ function viewSideBar(state: State & {today: Date}) {
       return {type: "text" as const, text: count.toString(), color: opts.counter};
     }
 
+    const icon: Ui.Icon =
+      typeof filter === "object"
+        ? "project"
+        : (
+            {
+              "all": "allTasks",
+              "today": "today",
+              "ready": "ready",
+              "stalled": "stalled",
+              "paused": "paused",
+              "done": "completed",
+              "not-done": "unfinished",
+              "archive": "archive",
+            } as const
+          )[filter];
+
     return {
       label: Tasks.filterTitle(state.tasks, filter),
+      icon,
       filter,
       selected: Tasks.isSubfilter(state, state.filter, filter),
       dropTarget: {type: "filter", id: filter},

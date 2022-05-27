@@ -60,7 +60,7 @@
 
   .sidebar {
     grid-area: sidebar;
-    background-color: #f0f0f0;
+    background-color: #f4f4f4;
     border-right: 1px solid #00000020;
     
     padding-bottom: 1em;
@@ -268,7 +268,7 @@
 
     color: #888;
 
-    background-color: #f8f8f8;
+    background-color: #f6f6f6;
 
     border-bottom: 1px solid #aaa;
 
@@ -279,9 +279,14 @@
       display: inline-block;
       transition: margin-left 100ms ease-out;
 
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      .labelText {
+        // Leave a little space between label and indicator when label is cut off.
+        padding-right: 0.25em;
+
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
     }
 
     &:active .label {
@@ -289,20 +294,16 @@
     }
 
     &:hover, &:active {
-      background-color: #f4f4f4;
+      background-color: #f2f2f2;
     }
 
     &.selected {
       color: #666;
       font-weight: 500;
-      background-color: #f0f0f0;
+      background-color: #e8e8e8;
 
       &:hover {
-        background-color: #ececec;
-      }
-
-      .label {
-        margin-left: 1em;
+        background-color: #e4e4e4;
       }
     }
 
