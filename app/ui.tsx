@@ -13,7 +13,16 @@ export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement> & {c
   );
 }
 
-export type Icon = "project" | "ready" | "stalled" | "today" | "paused" | "completed";
+export type Icon =
+  | "project"
+  | "ready"
+  | "stalled"
+  | "today"
+  | "paused"
+  | "completed"
+  | "allTasks"
+  | "archive"
+  | "unfinished";
 
 export type BadgeColor = "green" | "orange" | "project" | "red";
 
@@ -25,6 +34,9 @@ function iconPath(icon: Icon) {
     today: Mdi.mdiCalendarOutline,
     paused: Mdi.mdiPauseCircleOutline,
     completed: Mdi.mdiCheckCircleOutline,
+    allTasks: Mdi.mdiCheckboxMultipleMarkedOutline,
+    archive: Mdi.mdiArchiveOutline,
+    unfinished: Mdi.mdiMinusCircleOutline,
   }[icon];
 }
 

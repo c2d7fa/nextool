@@ -51,7 +51,9 @@ function Filter(props: {
       onClick={() => props.send({tag: "selectFilter", filter: props.filter.filter})}
       className={props.filter.selected ? style.selected : ""}
     >
-      <span className={style.label}>{props.filter.label}</span>
+      <span className={style.label}>
+        <IconLabel icon={props.filter.icon}>{props.filter.label}</IconLabel>
+      </span>
       <Indicator indicator={props.filter.indicator} />
     </button>
   );

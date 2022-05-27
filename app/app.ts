@@ -62,6 +62,7 @@ export type FilterIndicator =
 
 export type FilterView = {
   label: string;
+  icon: Ui.Icon;
   filter: Tasks.FilterId;
   selected: boolean;
   dropTarget: DropId | null;
@@ -137,8 +138,25 @@ function viewSideBar(state: State & {today: Date}) {
       return {type: "text" as const, text: count.toString(), color: opts.counter};
     }
 
+    const icon: Ui.Icon =
+      typeof filter === "object"
+        ? "project"
+        : (
+            {
+              "all": "allTasks",
+              "today": "today",
+              "ready": "ready",
+              "stalled": "stalled",
+              "paused": "paused",
+              "done": "completed",
+              "not-done": "unfinished",
+              "archive": "archive",
+            } as const
+          )[filter];
+
     return {
       label: Tasks.filterTitle(state.tasks, filter),
+      icon,
       filter,
       selected: Tasks.isSubfilter(state, state.filter, filter),
       dropTarget: {type: "filter", id: filter},
