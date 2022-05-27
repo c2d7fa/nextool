@@ -41,6 +41,10 @@
   align-items: center;
   column-gap: 0.25em;
 
+  &.extraSpace {
+    column-gap: 0.5em;
+  }
+
   .icon {
     opacity: 0.9;
   }

@@ -52,7 +52,9 @@ function Filter(props: {
       className={props.filter.selected ? style.selected : ""}
     >
       <span className={style.label}>
-        <IconLabel icon={props.filter.icon}>{props.filter.label}</IconLabel>
+        <IconLabel extraSpace icon={props.filter.icon}>
+          {props.filter.label}
+        </IconLabel>
       </span>
       <Indicator indicator={props.filter.indicator} />
     </button>
