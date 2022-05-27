@@ -1,6 +1,6 @@
 import * as React from "react";
 import {BadgeId, DropTargetView, TaskListView, TaskView} from "./tasks";
-import {Badge, BadgeColor, BadgeIcon} from "./ui";
+import {Badge, BadgeColor, Icon} from "./ui";
 import * as Drag from "./drag";
 import {Send} from "./app";
 
@@ -18,7 +18,7 @@ function CheckBox(props: {checked: boolean; id: string; send: Send}) {
   );
 }
 
-function badgeFor(id: BadgeId): {color: BadgeColor; icon: BadgeIcon; label: string} {
+function badgeFor(id: BadgeId): {color: BadgeColor; icon: Icon; label: string} {
   if (id === "project") return {color: "project", icon: "project", label: "Project"};
   else if (id === "ready") return {color: "green", icon: "ready", label: "Ready"};
   else if (id === "stalled") return {color: "orange", icon: "stalled", label: "Stalled"};

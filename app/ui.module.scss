@@ -35,7 +35,13 @@
   &.red { @include shared.badge-like(shared.$red-hue); }
 }
 
-.labelIcon {
-  margin-right: 0.25em;
-  opacity: 0.9;
+.iconLabel {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  column-gap: 0.25em;
+
+  .icon {
+    opacity: 0.9;
+  }
 }

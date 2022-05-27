@@ -7,7 +7,7 @@ import * as Drag from "./drag";
 import {TaskList} from "./task-list";
 
 import * as style from "./main.module.scss";
-import {Button} from "./ui";
+import {Button, IconLabel} from "./ui";
 
 function AddTask(props: {view: App.View["addTask"]; send(ev: App.Event): void}) {
   return (
@@ -174,7 +174,7 @@ function FilterButton(props: {filter: App.FilterBarView["filters"][number]; send
         }}
         onContextMenu={(ev) => ev.preventDefault()}
       >
-        {props.filter.label}
+        <IconLabel icon={props.filter.icon}>{props.filter.label}</IconLabel>
       </button>
     </div>
   );

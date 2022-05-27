@@ -1,5 +1,5 @@
 import * as React from "react";
-import Icon from "@mdi/react";
+import MdiIcon from "@mdi/react";
 import * as Mdi from "@mdi/js";
 
 import * as styles from "./ui.module.scss";
@@ -13,24 +13,35 @@ export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement> & {c
   );
 }
 
-export type BadgeColor = "green" | "orange" | "project" | "red";
-export type BadgeIcon = "project" | "ready" | "stalled" | "today";
+export type Icon = "project" | "ready" | "stalled" | "today" | "paused" | "completed";
 
-function badgeIconPath(icon: BadgeIcon) {
+export type BadgeColor = "green" | "orange" | "project" | "red";
+
+function iconPath(icon: Icon) {
   return {
     project: Mdi.mdiFolderOutline,
-    ready: Mdi.mdiCheckboxMarkedCircleOutline,
+    ready: Mdi.mdiChevronRightCircleOutline,
     stalled: Mdi.mdiHelpCircleOutline,
     today: Mdi.mdiCalendarOutline,
+    paused: Mdi.mdiPauseCircleOutline,
+    completed: Mdi.mdiCheckCircleOutline,
   }[icon];
 }
 
-export function Badge(props: {color: BadgeColor; icon?: BadgeIcon; children: React.ReactNode}) {
+export function IconLabel(props: {icon?: Icon; children?: React.ReactNode}) {
+  return (
+    <span className={styles.iconLabel}>
+      {props.icon ? <MdiIcon className={styles.labelIcon} path={iconPath(props.icon)} size="1em" /> : null}
+      <span>{props.children}</span>
+    </span>
+  );
+}
+
+export function Badge(props: {color: BadgeColor; icon?: Icon; children: React.ReactNode}) {
   const className = [styles.badge, styles[props.color]].join(" ");
   return (
     <span className={className}>
-      {props.icon ? <Icon className={styles.labelIcon} path={badgeIconPath(props.icon)} size="1em" /> : null}
-      <span>{props.children}</span>
+      <IconLabel icon={props.icon}>{props.children}</IconLabel>
     </span>
   );
 }
