@@ -4,6 +4,11 @@ on:
     tags:
       - "v*.*.*"
 jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create release
+        uses: softprops/action-gh-release@v1
   electron-linux:
     runs-on: ubuntu-latest
     steps:
