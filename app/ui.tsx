@@ -43,7 +43,7 @@ function iconPath(icon: Icon) {
 export function IconLabel(props: {icon?: Icon; extraSpace?: boolean; children?: React.ReactNode}) {
   return (
     <span className={[styles.iconLabel, props.extraSpace ? styles.extraSpace : ""].join(" ")}>
-      {props.icon ? <MdiIcon className={styles.labelIcon} path={iconPath(props.icon)} size="1em" /> : null}
+      {props.icon ? <MdiIcon path={iconPath(props.icon)} size="1em" /> : null}
       {props.children}
     </span>
   );
