@@ -1,6 +1,6 @@
 import * as React from "react";
 import {BadgeId, DropTargetView, TaskListView, TaskView} from "./tasks";
-import {Badge} from "./ui";
+import {Badge, BadgeColor, BadgeIcon} from "./ui";
 import * as Drag from "./drag";
 import {Send} from "./app";
 
@@ -18,35 +18,24 @@ function CheckBox(props: {checked: boolean; id: string; send: Send}) {
   );
 }
 
-function BadgeFor(props: {type: BadgeId}) {
-  if (props.type === "ready") {
-    return (
-      <Badge color="green" icon="ready">
-        Ready
-      </Badge>
-    );
-  } else if (props.type === "stalled") {
-    return (
-      <Badge color="orange" icon="stalled">
-        Stalled
-      </Badge>
-    );
-  } else if (props.type === "project") {
-    return (
-      <Badge color="project" icon="project">
-        Project
-      </Badge>
-    );
-  } else if (props.type === "today") {
-    return (
-      <Badge color="red" icon="today">
-        Today
-      </Badge>
-    );
-  } else {
-    const unreachable: never = props.type;
+function badgeFor(id: BadgeId): {color: BadgeColor; icon: BadgeIcon; label: string} {
+  if (id === "project") return {color: "project", icon: "project", label: "Project"};
+  else if (id === "ready") return {color: "green", icon: "ready", label: "Ready"};
+  else if (id === "stalled") return {color: "orange", icon: "stalled", label: "Stalled"};
+  else if (id === "today") return {color: "red", icon: "today", label: "Today"};
+  else {
+    const unreachable: never = id;
     return unreachable;
   }
+}
+
+function BadgeFor(props: {type: BadgeId}) {
+  const {color, icon, label} = badgeFor(props.type);
+  return (
+    <Badge color={color} icon={icon}>
+      {label}
+    </Badge>
+  );
 }
 
 function Badges(props: {task: TaskView}) {

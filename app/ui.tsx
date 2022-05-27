@@ -13,7 +13,8 @@ export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement> & {c
   );
 }
 
-type BadgeIcon = "project" | "ready" | "stalled" | "today";
+export type BadgeColor = "green" | "orange" | "project" | "red";
+export type BadgeIcon = "project" | "ready" | "stalled" | "today";
 
 function badgeIconPath(icon: BadgeIcon) {
   return {
@@ -24,11 +25,7 @@ function badgeIconPath(icon: BadgeIcon) {
   }[icon];
 }
 
-export function Badge(props: {
-  color: "green" | "orange" | "project" | "red";
-  icon?: BadgeIcon;
-  children: React.ReactNode;
-}) {
+export function Badge(props: {color: BadgeColor; icon?: BadgeIcon; children: React.ReactNode}) {
   const className = [styles.badge, styles[props.color]].join(" ");
   return (
     <span className={className}>
