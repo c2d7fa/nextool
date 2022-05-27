@@ -168,6 +168,7 @@ type TaskProperty =
   | "project"
   | "readyItself"
   | "readySubtree"
+  | "purelyReadySubtree"
   | "stalled"
   | "stalledSubtree";
 
@@ -199,6 +200,12 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
           !taskIs(state, task, "inactive") &&
           !task.children.some((child) => !taskIs(state, child, "done"));
   if (property === "readySubtree") return taskIs(state, task, "readyItself") || hasReadyDescendents(task);
+  if (property === "purelyReadySubtree")
+    return (
+      !taskIs(state, task, "project") &&
+      taskIs(state, task, "readySubtree") &&
+      !taskIs(state, task, "stalledSubtree")
+    );
   if (property === "stalled")
     return (
       !taskIs(state, task, "readyItself") &&
@@ -297,7 +304,7 @@ export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["i
 
   if (id === "paused") return hasBoth("paused");
   if (id === "done") return hasBoth("done");
-  if (id === "ready") return hasBoth("readySubtree");
+  if (id === "ready") return hasBoth("purelyReadySubtree");
 
   return false;
 }
