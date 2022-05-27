@@ -44,7 +44,7 @@ export function IconLabel(props: {icon?: Icon; extraSpace?: boolean; children?: 
   return (
     <span className={[styles.iconLabel, props.extraSpace ? styles.extraSpace : ""].join(" ")}>
       {props.icon ? <MdiIcon className={styles.labelIcon} path={iconPath(props.icon)} size="1em" /> : null}
-      <span>{props.children}</span>
+      {props.children}
     </span>
   );
 }

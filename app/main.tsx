@@ -53,7 +53,7 @@ function Filter(props: {
     >
       <span className={style.label}>
         <IconLabel extraSpace icon={props.filter.icon}>
-          {props.filter.label}
+          <span className={style.labelText}>{props.filter.label}</span>
         </IconLabel>
       </span>
       <Indicator indicator={props.filter.indicator} />
