@@ -210,7 +210,12 @@ function always<T>(x: T): (...args: unknown[]) => T {
   return () => x;
 }
 
-export function effects(state: State & {today: Date}, event: Event): Effect[] {
+export function handle(state: State & {today: Date}, ev: Event): [State, Effect[]] {
+  const nextState = updateApp(state, ev);
+  return [nextState, effects(state, ev, nextState)];
+}
+
+export function effects(state: State & {today: Date}, event: Event, nextApp?: State): Effect[] {
   if (event.tag === "storage" && event.type === "clickSaveButton") {
     return [
       {
@@ -227,7 +232,7 @@ export function effects(state: State & {today: Date}, event: Event): Effect[] {
 
   if (event.tag === "drag" && ["drag", "hover", "leave"].includes(event.type)) return [];
 
-  return [{type: "saveLocalStorage", value: Storage.saveString(updateApp(state, event).tasks)}];
+  return [{type: "saveLocalStorage", value: Storage.saveString((nextApp ?? updateApp(state, event)).tasks)}];
 }
 
 export function updateApp(state: State & {today: Date}, ev: Event): State {

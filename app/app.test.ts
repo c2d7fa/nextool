@@ -2561,6 +2561,44 @@ describe("planning", () => {
         });
       });
     });
+
+    describe("tasks completed before today are not included", () => {
+      const step1 = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Task 1"),
+        addTask("Task 2", "today"),
+        openNth(0),
+        setComponentValue("Planned", "2020-03-10"),
+        switchToFilter("today"),
+      ]);
+
+      describe("before marking either task as completed", () => {
+        test("both tasks are shown in the today tab", () => {
+          expect(tasks(step1, "title")).toEqual(["Task 1", "Task 2"]);
+        });
+
+        test("the counter shows that there are two tasks", () => {
+          expect(indicatorForFilter(step1, "Today")).toMatchObject({type: "text", text: "2", color: "red"});
+        });
+      });
+
+      const step2 = updateAll(step1, [dragToFilter(1, "done"), dragToFilter(0, "done")]);
+      const step3 = updateAll(step2, [switchToFilter("all")]);
+
+      describe("after marking both tasks as completed", () => {
+        test("only the first task is shown in the today tab", () => {
+          expect(tasks(step2, "title")).toEqual(["Task 2"]);
+        });
+
+        test("the counter shows that there are no more tasks", () => {
+          expect(indicatorForFilter(step2, "Today")).toBeNull();
+        });
+
+        test("only the second task still has the 'today' badge", () => {
+          expect(tasks(step3, "badges")).toEqual([[], ["today"]]);
+        });
+      });
+    });
   });
 });
 
