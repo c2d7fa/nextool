@@ -182,7 +182,10 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
   if (property === "archived") return IndentedList.anyAncestor(state.tasks, task, (task) => task.archived);
   if (property === "today")
     return (
-      (task.planned && (isSameDay(task.planned, state.today) || isBefore(task.planned, state.today))) ?? false
+      (task.planned &&
+        (isSameDay(task.planned, state.today) ||
+          (isBefore(task.planned, state.today) && !taskIs(state, task, "done")))) ??
+      false
     );
   if (property === "inactive")
     return taskIs(state, task, "paused") || taskIs(state, task, "done") || taskIs(state, task, "archived");
