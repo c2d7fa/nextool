@@ -163,6 +163,7 @@ type TaskProperty =
   | "paused"
   | "archived"
   | "today"
+  | "nonCompletedToday"
   | "inactive"
   | "project"
   | "readyItself"
@@ -187,6 +188,7 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
           (isBefore(task.planned, state.today) && !taskIs(state, task, "done")))) ??
       false
     );
+  if (property === "nonCompletedToday") return taskIs(state, task, "today") && !taskIs(state, task, "done");
   if (property === "inactive")
     return taskIs(state, task, "paused") || taskIs(state, task, "done") || taskIs(state, task, "archived");
   if (property === "project") return task.type === "project";
@@ -390,7 +392,8 @@ export function activeSubprojects(state: CommonState): {title: string; children:
 }
 
 export function count(state: Omit<CommonState, "filter">, filter: "today" | "ready" | "stalled"): number {
-  const subtaskProperty = filter === "today" ? "today" : filter === "ready" ? "readyItself" : "stalled";
+  const subtaskProperty =
+    filter === "today" ? "nonCompletedToday" : filter === "ready" ? "readyItself" : "stalled";
 
   return IndentedList.pickIntoList(state.tasks, (task) => doesTaskMatch({...state, filter}, task)).filter((item) =>
     taskIs(state, item, subtaskProperty),

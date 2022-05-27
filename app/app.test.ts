@@ -2590,7 +2590,7 @@ describe("planning", () => {
           expect(tasks(step2, "title")).toEqual(["Task 2"]);
         });
 
-        test.skip("the counter shows that there are no more tasks", () => {
+        test("the counter shows that there are no more tasks", () => {
           expect(indicatorForFilter(step2, "Today")).toBeNull();
         });
 
