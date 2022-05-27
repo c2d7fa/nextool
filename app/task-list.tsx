@@ -20,13 +20,29 @@ function CheckBox(props: {checked: boolean; id: string; send: Send}) {
 
 function BadgeFor(props: {type: BadgeId}) {
   if (props.type === "ready") {
-    return <Badge color="green">Ready</Badge>;
+    return (
+      <Badge color="green" icon="ready">
+        Ready
+      </Badge>
+    );
   } else if (props.type === "stalled") {
-    return <Badge color="orange">Stalled</Badge>;
+    return (
+      <Badge color="orange" icon="stalled">
+        Stalled
+      </Badge>
+    );
   } else if (props.type === "project") {
-    return <Badge color="project">Project</Badge>;
+    return (
+      <Badge color="project" icon="project">
+        Project
+      </Badge>
+    );
   } else if (props.type === "today") {
-    return <Badge color="red">Today</Badge>;
+    return (
+      <Badge color="red" icon="today">
+        Today
+      </Badge>
+    );
   } else {
     const unreachable: never = props.type;
     return unreachable;

@@ -34,3 +34,8 @@
   &.project { @include shared.badge-like(shared.$project-hue); }
   &.red { @include shared.badge-like(shared.$red-hue); }
 }
+
+.labelIcon {
+  margin-right: 0.25em;
+  opacity: 0.9;
+}
