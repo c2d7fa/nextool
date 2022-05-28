@@ -20,9 +20,25 @@ export default function Index() {
             <div className={styles.appName}>Nextool</div>
           </div>
         </header>
+        <p className={styles.introduction}>
+          Nextool is a GTD-oriented task manager that automates your reviews and lets you plan ahead.
+        </p>
+        <p style={{textAlign: "center"}}>(Download button)</p>
         <p>
-          Nextool is a GTD-oriented task manager with support for nested tasks and a focus on finding actionable
-          tasks. It's a work-in-progress that's currently usable but not yet useful.
+          <strong>Automatically review stalled tasks. </strong> A good task management system requires trust. When
+          you add a task, Nextool's algorithm ensures that the task always has actionable next steps. That way, you
+          can know for sure that you'll never forget an important task.
+        </p>
+        <p>
+          The GTD workflow requires quick capturing of thoughts, clarifying next actions, and focusing on
+          actionable tasks. In pen-and-paper GTD, you have to manually review your tasks to make sure they haven't
+          stalled &ndash; with Nextool, the reviews are automated.
+        </p>
+        <p>
+          <strong>Based on what works from GTD.</strong> Etc.
+        </p>
+        <p>
+          <strong>Use nested tasks and projects to plan ahead.</strong> Etc.
         </p>
         <div className={styles.demoContainer}>
           <Nextool.SmallDemo />
@@ -32,6 +48,8 @@ export default function Index() {
           <a href="https://github.com/c2d7fa/nextool">the GitHub repository</a> for more information.
         </p>
         <GtdSteps />
+        <p>(More in-depth description of what GTD is about, maybe with links to external resources.)</p>
+        <p>(Information about author, pricing, etc.)</p>
       </main>
 
       <script data-goatcounter="https://nextool.goatcounter.com/count" async src="//gc.zgo.at/count.js" />
