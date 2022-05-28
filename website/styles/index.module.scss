@@ -1,14 +1,14 @@
 @use "../lib/shared";
 @use "~@johv/sass-labmix" as *;
 
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500&display=swap');
+
 .main {
   color: #333;
 
   display: flex;
   flex-direction: column;
   align-items: center;
-
-  padding: 1em;
 
   row-gap: 1em;
 
@@ -26,36 +26,222 @@
     }
   }
 
-  & > h1 {
-    color: #666;
-    margin: 0;
-    font-size: 2em;
-    font-family: "Roboto Condensed";
-    text-transform: uppercase;
-    letter-spacing: 0.2ex;
-    font-weight: normal;
+  .header {
+    padding: 0.5em 1em;
+    align-self: stretch;
+
+    background-color: #FF9DB4;
+    border-bottom: 1px solid lch(60, 30, shared.$branding-hue);
+    box-shadow: 0 -3px 6px -3px lch(60, 30, shared.$branding-hue) inset;
+
+    .logoContainer {
+      font-size: 1.5em;
+
+      display: flex;
+      align-items: center;
+
+      padding: 0 0.5em;
+
+      .logo {
+        height: 1em;
+        width: 1em;
+        margin-right: 0.25em;
+      }
+
+      .appName {
+        cursor: default;
+
+        font-size: 1em;
+        font-weight: normal;
+
+        display: flex;
+        align-items: center;
+        text-align: center;
+
+        color: #773F57;
+        margin: 0;
+        
+        font-family: "Baloo 2", sans-serif;
+        text-transform: uppercase;
+      }
+    }
   }
 
-  & > h2 {
-    color: #666;
-    margin: 0;
-    font-size: 1.5em;
-    font-family: "Roboto Condensed";
-    font-weight: normal;
+  .introductionGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 2em 0;
   }
 
-  & > p {
+  .introduction {
     margin: 0;
-    width: 30em;
-    line-height: 1.5;
+    font-size: 1.8em;
+    font-weight: 500;
+    text-align: center;
+    line-height: 150%;
+  }
+
+  .introductionSubtitle {
+    margin-top: 0.5em;
+    margin-bottom: 1em;
+
+    font-size: 1.3em;
+    text-align: center;
+    line-height: 150%;
+    max-width: 30em;
+  }
+
+  .downloadSection {
+    display: grid;
+    column-gap: 1em;
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+
+    color: #aaa;
+
+    .buttonContainer {
+      display: grid;
+      background-color: #00000010;
+      border-radius: 6px;
+
+      transition: padding-top 50ms ease-out, margin-bottom 50ms ease-out;
+
+      &:active {
+        padding-top: 6px;
+        margin-bottom: -6px;
+      }
+
+      a {
+        cursor: default;
+        user-select: none;
+        -webkit-user-drag: none;
+        -moz-user-select: none;
+
+        text-align: center;
+
+        font: inherit;
+        font-size: 1.3em;
+        font-family: "Roboto";
+
+        font-weight: normal;
+
+        background: linear-gradient(
+          lch(80, 40, shared.$branding-hue),
+          lch(75, 40, shared.$branding-hue)
+        );
+        color: lch(30, 30, shared.$branding-hue);
+
+        padding: 0.5em 1.4em;
+        border-radius: 6px;
+        border: 1px solid lch(60, 30, shared.$branding-hue);
+        box-shadow: 0 3px 3px 0 lch(85, 10, shared.$branding-hue);
+
+        &:hover {
+          border-color: lch(30, 30, shared.$branding-hue);
+        }
+
+        &.grey {
+          background: linear-gradient(
+            lch(97, 0, shared.$branding-hue),
+            lch(95, 0, shared.$branding-hue)
+          );
+          color: lch(40, 0, shared.$branding-hue);
+          border: 1px solid lch(75, 0, shared.$branding-hue);
+          box-shadow: 0 3px 3px 0 lch(92, 0, shared.$branding-hue);
+        }
+      }
+    }
   }
 }
 
+.features {
+  margin-bottom: 2rem;
+
+  align-self: stretch;
+  background-color: white;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  box-shadow: 0 0 3px 0 #ccc inset;
+
+  font-size: 1.1em;
+
+  display: flex;
+  justify-content: center;
+
+  padding: 0 2em;
+
+  .feature {
+    padding: 0 1.5em;
+
+    max-width: 25em;
+    line-height: 150%;
+
+    hyphens: auto;
+    text-align: center;
+
+    display: flex;
+    align-items: center;
+
+    &:not(:last-child) {
+      border-right: 1px solid #ccc;
+    }
+  }
+}
+
+.highlightGtd {
+  background-color: lch(93, 20, shared.$branding-hue);
+}
+
+.highlightStalled {
+  background-color: lch(93, 20, shared.$orange-hue);
+}
+
+.highlightProject {
+  background-color: lch(93, 20, shared.$project-hue);
+}
+
 .demoContainer {
-  border-radius: 6px;
-  border: 1px solid #bd5391;
   box-shadow: 0 6px 6px -6px #926a82;
+
+  border-radius: 12px;
+  box-shadow: 0 0 12px #aaa;
 
   display: flex;
   height: 35em;
+}
+
+.stepsContainer {
+  margin-top: -1.5em;
+  filter: drop-shadow(0 0 12px #ccc);
+}
+
+.author {
+  &::before {
+    content: "";
+    display: block;
+    width: 10em;
+    margin: auto;
+    border-top: 1px solid #999;
+    padding-bottom: 1em;
+  }
+
+  margin-top: 4rem;
+  margin-bottom: 2rem;
+
+  font-size: 0.9em;
+  max-width: 30em;
+  text-align: center;
+  color: #888;
+
+  a {
+    color: #777;
+    font-style: italic;
+  }
+}
+
+.wip {
+  font-size: 0.55em;
+  font-weight: bold;
+  opacity: 80%;
 }
