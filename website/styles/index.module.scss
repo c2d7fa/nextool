@@ -10,8 +10,6 @@
   flex-direction: column;
   align-items: center;
 
-  padding: 1em;
-
   row-gap: 1em;
 
   a {
@@ -28,53 +26,49 @@
     }
   }
 
-  .logoContainer {
-    font-size: 1.5em;
+  .header {
+    padding: 0.5em 1em;
+    align-self: stretch;
 
     background-color: #FF9DB4;
+    border-bottom: 1px solid lch(60, 30, shared.$branding-hue);
+    box-shadow: 0 -3px 6px -3px lch(60, 30, shared.$branding-hue) inset;
 
-    display: flex;
-    align-items: center;
-
-    padding: 0 0.5em;
-
-    border-radius: 6px;
-    border: 1px solid lch(60, 30, shared.$branding-hue);
-    box-shadow: 0 3px 6px -3px lch(60, 30, shared.$branding-hue);
-
-    .logo {
-      height: 1em;
-      width: 1em;
-      margin-right: 0.25em;
-    }
-
-    .appName {
-      cursor: default;
-
-      font-size: 1em;
-      font-weight: normal;
+    .logoContainer {
+      font-size: 1.5em;
 
       display: flex;
       align-items: center;
-      text-align: center;
 
-      color: #773F57;
-      margin: 0;
-      
-      font-family: "Baloo 2", sans-serif;
-      text-transform: uppercase;
+      padding: 0 0.5em;
+
+      .logo {
+        height: 1em;
+        width: 1em;
+        margin-right: 0.25em;
+      }
+
+      .appName {
+        cursor: default;
+
+        font-size: 1em;
+        font-weight: normal;
+
+        display: flex;
+        align-items: center;
+        text-align: center;
+
+        color: #773F57;
+        margin: 0;
+        
+        font-family: "Baloo 2", sans-serif;
+        text-transform: uppercase;
+      }
     }
   }
 
-  & > h2 {
-    color: #666;
-    margin: 0;
-    font-size: 1.5em;
-    font-family: "Roboto Condensed";
-    font-weight: normal;
-  }
-
   & > p {
+    color: #444;
     margin: 0;
     width: 30em;
     line-height: 1.5;
