@@ -10,11 +10,16 @@ export default function Index() {
   return (
     <>
       <Head>
-        <title>Nextool</title>
+        <title>Nextool – GTD-oriented task manager with support for nested tasks and projects</title>
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.heading}>Nextool</h1>
+        <header className={styles.header}>
+          <div className={styles.logoContainer}>
+            <img className={styles.logo} src="/icon.svg" />
+            <div className={styles.appName}>Nextool</div>
+          </div>
+        </header>
         <p>
           Nextool is a GTD-oriented task manager with support for nested tasks and a focus on finding actionable
           tasks. It's a work-in-progress that's currently usable but not yet useful.
