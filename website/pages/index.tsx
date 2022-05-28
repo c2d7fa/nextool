@@ -13,7 +13,7 @@ export default function Index() {
         <title>Nextool – GTD-oriented task manager with support for nested tasks and projects</title>
       </Head>
 
-      <main className={styles.main}>
+      <main lang="en-US" className={styles.main}>
         <header className={styles.header}>
           <div className={styles.logoContainer}>
             <img className={styles.logo} src="/icon.svg" />
@@ -21,25 +21,41 @@ export default function Index() {
           </div>
         </header>
         <p className={styles.introduction}>
-          Nextool is a GTD-oriented task manager that automates your reviews and lets you plan ahead.
+          Nextool is a <span className={styles.highlightGtd}>GTD-oriented task manager</span> you can trust.
+        </p>
+        <p className={styles.introductionSubtitle}>
+          Simplify your reviews by{" "}
+          <span className={styles.highlightStalled}>automatically identifying stalled tasks</span>, and use{" "}
+          <span className={styles.highlightProject}>nested projects</span> to plan ahead with a single tool.
         </p>
         <p style={{textAlign: "center"}}>(Download button)</p>
-        <p>
-          <strong>Automatically review stalled tasks. </strong> A good task management system requires trust. When
-          you add a task, Nextool's algorithm ensures that the task always has actionable next steps. That way, you
-          can know for sure that you'll never forget an important task.
-        </p>
-        <p>
-          The GTD workflow requires quick capturing of thoughts, clarifying next actions, and focusing on
-          actionable tasks. In pen-and-paper GTD, you have to manually review your tasks to make sure they haven't
-          stalled &ndash; with Nextool, the reviews are automated.
-        </p>
-        <p>
-          <strong>Based on what works from GTD.</strong> Etc.
-        </p>
-        <p>
-          <strong>Use nested tasks and projects to plan ahead.</strong> Etc.
-        </p>
+        <p>(Mention alpha-quality software with many WIP features.)</p>
+        <div className={styles.features}>
+          <div className={styles.feature}>
+            <p>
+              <span className={styles.highlightGtd}>Based on what works from GTD.</span> The GTD workflow requires
+              quick capturing of thoughts, clarifying next actions, and focusing on actionable tasks. In
+              pen-and-paper GTD, you have to manually review your tasks to make sure they haven't stalled &ndash;
+              with Nextool, the reviews are automated.
+            </p>
+          </div>
+          <div className={styles.feature}>
+            <p>
+              <span className={styles.highlightStalled}>Automatically review stalled tasks. </span> A good task
+              management system requires trust. When you add a task, Nextool's algorithm ensures that the task
+              always has actionable next steps. That way, you can know for sure that you'll never forget an
+              important task.
+            </p>
+          </div>
+          <div className={styles.feature}>
+            <p>
+              <span className={styles.highlightProject}>Use nested tasks and projects to plan ahead.</span> This is
+              the missing piece from GTD. You need to manually review someday lists, because GTD only focuses on
+              right now. With nested tasks, projects, and arbitrary dependencies, you can plan ahead and extend the
+              GTD methodology to work even for large projects.
+            </p>
+          </div>
+        </div>
         <div className={styles.demoContainer}>
           <Nextool.SmallDemo />
         </div>
@@ -50,6 +66,7 @@ export default function Index() {
         <GtdSteps />
         <p>(More in-depth description of what GTD is about, maybe with links to external resources.)</p>
         <p>(Information about author, pricing, etc.)</p>
+        <p>Maybe have list of lists of external resources: Alternatives, resources about GTD, ...?</p>
       </main>
 
       <script data-goatcounter="https://nextool.goatcounter.com/count" async src="//gc.zgo.at/count.js" />

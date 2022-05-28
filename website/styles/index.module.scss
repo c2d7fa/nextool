@@ -68,11 +68,19 @@
   }
 
   .introduction {
-    margin: 2em;
+    margin-top: 2em;
 
-    font-size: 1.3em;
+    font-size: 1.5em;
     font-weight: 500;
     text-align: center;
+    line-height: 150%;
+  }
+
+  .introductionSubtitle {
+    margin: 0;
+    font-size: 1.2em;
+    text-align: center;
+    line-height: 150%;
   }
 
   & > p {
@@ -81,6 +89,40 @@
     width: 30em;
     line-height: 1.5;
   }
+}
+
+.features {
+  font-size: 1.1em;
+
+  display: grid;
+  padding: 0 2em;
+  grid-template: "left midlde right" / 1fr 1fr 1fr;
+
+  .feature {
+    padding: 0 1.5em;
+
+    max-width: 25em;
+    line-height: 150%;
+
+    hyphens: auto;
+    text-align: justify;
+
+    &:not(:last-child) {
+      border-right: 1px solid #aaa;
+    }
+  }
+}
+
+.highlightGtd {
+  background-color: lch(93, 20, shared.$branding-hue);
+}
+
+.highlightStalled {
+  background-color: lch(93, 20, shared.$orange-hue);
+}
+
+.highlightProject {
+  background-color: lch(93, 20, shared.$project-hue);
 }
 
 .demoContainer {
