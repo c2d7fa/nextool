@@ -128,18 +128,18 @@
         text-align: center;
 
         font: inherit;
-        font-size: 1.35em;
+        font-size: 1.3em;
         font-family: "Roboto";
 
         font-weight: normal;
 
         background: linear-gradient(
-          lch(86, 30, shared.$branding-hue),
-          lch(82, 30, shared.$branding-hue)
+          lch(80, 40, shared.$branding-hue),
+          lch(75, 40, shared.$branding-hue)
         );
         color: lch(30, 30, shared.$branding-hue);
 
-        padding: 0.4em 1.1em;
+        padding: 0.5em 1.4em;
         border-radius: 6px;
         border: 1px solid lch(60, 30, shared.$branding-hue);
         box-shadow: 0 3px 3px 0 lch(85, 10, shared.$branding-hue);
