@@ -72,9 +72,11 @@ export default function Index() {
         <div className={styles.stepsContainer}>
           <GtdSteps />
         </div>
-        <p>(More in-depth description of what GTD is about, maybe with links to external resources.)</p>
-        <p>(Information about author, pricing, etc.)</p>
-        <p>Maybe have list of lists of external resources: Alternatives, resources about GTD, ...?</p>
+        <p className={styles.author}>
+          Nextool is made by <a href="https://johv.dk/">Jonas Hvid</a>. You can write to me at{" "}
+          <a href="mailto:jonas@nextool.app">jonas@nextool.app</a>. If you like Nextool, consider{" "}
+          <a href="https://ko-fi.com/jonashvid">donating on Ko-Fi</a> &ndash; all donations are appreciated!
+        </p>
       </main>
 
       <script data-goatcounter="https://nextool.goatcounter.com/count" async src="//gc.zgo.at/count.js" />

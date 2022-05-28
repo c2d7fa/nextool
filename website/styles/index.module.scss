@@ -92,13 +92,6 @@
     max-width: 30em;
   }
 
-  & > p {
-    color: #444;
-    margin: 0;
-    width: 30em;
-    line-height: 1.5;
-  }
-
   .downloadSection {
     display: grid;
     column-gap: 1em;
@@ -221,4 +214,28 @@
 .stepsContainer {
   margin-top: -1.5em;
   filter: drop-shadow(0 0 12px #ccc);
+}
+
+.author {
+  &::before {
+    content: "";
+    display: block;
+    width: 10em;
+    margin: auto;
+    border-top: 1px solid #999;
+    padding-bottom: 1em;
+  }
+
+  margin-top: 4rem;
+  margin-bottom: 2rem;
+
+  font-size: 0.9em;
+  max-width: 30em;
+  text-align: center;
+  color: #888;
+
+  a {
+    color: #777;
+    font-style: italic;
+  }
 }
