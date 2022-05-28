@@ -24,7 +24,6 @@
 
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  column-gap: 1em;
 
   @mixin step($hue) {
     box-sizing: border-box;
@@ -39,8 +38,21 @@
 
     color: contrast-stretch($bg2, $bg2, 8);
 
-    border-radius: 12px;
-    box-shadow: 0 6px 6px -6px $bg2;
+    box-shadow: 0 3px 3px 0 $bg2;
+
+    &:first-child {
+      border-top-left-radius: 6px;
+      border-bottom-left-radius: 6px;
+    }
+
+    &:last-child {
+      border-top-right-radius: 6px;
+      border-bottom-right-radius: 6px;
+    }
+
+    &:not(:last-child) {
+      border-right-color: transparent;
+    }
 
     padding: 1em;
     display: flex;
@@ -50,6 +62,7 @@
     overflow: auto;
 
     h1 {
+      cursor: default;
       color: contrast-stretch($bg2, $bg2, 5);
       text-align: center;
       margin: 0;
@@ -63,6 +76,7 @@
     p {
       line-height: 1.5;
       margin: 0;
+      max-width: 12em;
 
       @supports (hyphens: auto) {
         hyphens: auto;

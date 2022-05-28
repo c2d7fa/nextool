@@ -163,6 +163,8 @@
 }
 
 .features {
+  margin-bottom: 2rem;
+
   align-self: stretch;
   background-color: white;
   border-top: 1px solid #ccc;
@@ -183,7 +185,10 @@
     line-height: 150%;
 
     hyphens: auto;
-    text-align: justify;
+    text-align: center;
+
+    display: flex;
+    align-items: center;
 
     &:not(:last-child) {
       border-right: 1px solid #ccc;
@@ -204,10 +209,16 @@
 }
 
 .demoContainer {
-  border-radius: 6px;
-  border: 1px solid #bd5391;
   box-shadow: 0 6px 6px -6px #926a82;
+
+  border-radius: 12px;
+  box-shadow: 0 0 12px #aaa;
 
   display: flex;
   height: 35em;
+}
+
+.stepsContainer {
+  margin-top: -1.5em;
+  filter: drop-shadow(0 0 12px #ccc);
 }

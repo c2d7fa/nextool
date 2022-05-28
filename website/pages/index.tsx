@@ -69,11 +69,9 @@ export default function Index() {
         <div className={styles.demoContainer}>
           <Nextool.SmallDemo />
         </div>
-        <p>
-          <Link href="/download">Download for Linux, macOS or Windows.</Link> For now, see{" "}
-          <a href="https://github.com/c2d7fa/nextool">the GitHub repository</a> for more information.
-        </p>
-        <GtdSteps />
+        <div className={styles.stepsContainer}>
+          <GtdSteps />
+        </div>
         <p>(More in-depth description of what GTD is about, maybe with links to external resources.)</p>
         <p>(Information about author, pricing, etc.)</p>
         <p>Maybe have list of lists of external resources: Alternatives, resources about GTD, ...?</p>
