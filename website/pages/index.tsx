@@ -20,22 +20,24 @@ export default function Index() {
             <div className={styles.appName}>Nextool</div>
           </div>
         </header>
-        <p className={styles.introduction}>
-          Nextool is a <span className={styles.highlightGtd}>GTD-oriented task manager</span> you can trust.
-        </p>
-        <p className={styles.introductionSubtitle}>
-          Simplify your reviews by{" "}
-          <span className={styles.highlightStalled}>automatically identifying stalled tasks</span>, and use{" "}
-          <span className={styles.highlightProject}>nested projects</span> to plan ahead with a single tool.
-        </p>
-        <div className={styles.downloadSection}>
-          <div className={styles.buttonContainer}>
-            <a className={styles.grey} href="https://github.com/c2d7fa/nextool">
-              Source Code
-            </a>
-          </div>
-          <div className={styles.buttonContainer}>
-            <a href="/download">Download</a>
+        <div className={styles.introductionGroup}>
+          <p className={styles.introduction}>
+            Nextool is a <span className={styles.highlightGtd}>GTD-oriented task manager</span> you can trust.
+          </p>
+          <p className={styles.introductionSubtitle}>
+            Simplify your reviews by{" "}
+            <span className={styles.highlightStalled}>automatically identifying stalled tasks</span>, and use{" "}
+            <span className={styles.highlightProject}>nested projects</span> to plan ahead with a single tool.
+          </p>
+          <div className={styles.downloadSection}>
+            <div className={styles.buttonContainer}>
+              <a className={styles.grey} href="https://github.com/c2d7fa/nextool">
+                Source Code
+              </a>
+            </div>
+            <div className={styles.buttonContainer}>
+              <a href="/download">Download</a>
+            </div>
           </div>
         </div>
         <div className={styles.features}>
