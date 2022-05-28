@@ -61,7 +61,7 @@ export default function Index() {
               Traditional GTD is focused on tasks that are actionable here and now, relegating future plans to the
               infamous <i>Someday</i> list. But thanks to Nextool's{" "}
               <span className={styles.highlightProject}>
-                nested projects and arbitrary inter-task dependencies,
+                nested projects and arbitrary inter-task dependencies<sup className={styles.wip}>WIP</sup>,
               </span>{" "}
               it can automatically pick out the actionable tasks from the rest.
             </p>
