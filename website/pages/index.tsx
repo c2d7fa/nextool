@@ -43,26 +43,27 @@ export default function Index() {
         <div className={styles.features}>
           <div className={styles.feature}>
             <p>
-              <span className={styles.highlightGtd}>Based on what works from GTD.</span> The GTD workflow requires
-              quick capturing of thoughts, clarifying next actions, and focusing on actionable tasks. In
-              pen-and-paper GTD, you have to manually review your tasks to make sure they haven't stalled &ndash;
-              with Nextool, the reviews are automated.
+              You need a system you can trust. That's why Nextool is based on David Allen's proven{" "}
+              <i>Getting Things Done</i> methodology. Nextool borrows{" "}
+              <span className={styles.highlightGtd}>all the best parts of GTD from other tools</span> like
+              OmniFocus or Nirvana, but adds new features that aren't possible with pen-and-paper.
             </p>
           </div>
           <div className={styles.feature}>
             <p>
-              <span className={styles.highlightStalled}>Automatically review stalled tasks. </span> A good task
-              management system requires trust. When you add a task, Nextool's algorithm ensures that the task
-              always has actionable next steps. That way, you can know for sure that you'll never forget an
-              important task.
+              Humans are forgetful. To make sure you actually do the things you need to, Nextool{" "}
+              <span className={styles.highlightStalled}>automatically identifies and collects stalled tasks</span>,
+              so you can waste less time on manual reviews and get back to the stuff that actually matters.
             </p>
           </div>
           <div className={styles.feature}>
             <p>
-              <span className={styles.highlightProject}>Use nested tasks and projects to plan ahead.</span> This is
-              the missing piece from GTD. You need to manually review someday lists, because GTD only focuses on
-              right now. With nested tasks, projects, and arbitrary dependencies, you can plan ahead and extend the
-              GTD methodology to work even for large projects.
+              Traditional GTD is focused on tasks that are actionable here and now, relegating future plans to the
+              infamous <i>Someday</i> list. But thanks to Nextool's{" "}
+              <span className={styles.highlightProject}>
+                nested projects and arbitrary inter-task dependencies,
+              </span>{" "}
+              it can automatically pick out the actionable tasks from the rest.
             </p>
           </div>
         </div>
