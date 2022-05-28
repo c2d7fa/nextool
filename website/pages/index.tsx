@@ -28,8 +28,16 @@ export default function Index() {
           <span className={styles.highlightStalled}>automatically identifying stalled tasks</span>, and use{" "}
           <span className={styles.highlightProject}>nested projects</span> to plan ahead with a single tool.
         </p>
-        <p style={{textAlign: "center"}}>(Download button)</p>
-        <p>(Mention alpha-quality software with many WIP features.)</p>
+        <div className={styles.downloadSection}>
+          <div className={styles.buttonContainer}>
+            <a className={styles.grey} href="https://github.com/c2d7fa/nextool">
+              Source Code
+            </a>
+          </div>
+          <div className={styles.buttonContainer}>
+            <a href="/download">Download</a>
+          </div>
+        </div>
         <div className={styles.features}>
           <div className={styles.feature}>
             <p>

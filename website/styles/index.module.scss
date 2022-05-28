@@ -70,7 +70,7 @@
   .introduction {
     margin-top: 2em;
 
-    font-size: 1.5em;
+    font-size: 1.8em;
     font-weight: 500;
     text-align: center;
     line-height: 150%;
@@ -78,7 +78,7 @@
 
   .introductionSubtitle {
     margin: 0;
-    font-size: 1.2em;
+    font-size: 1.3em;
     text-align: center;
     line-height: 150%;
   }
@@ -89,14 +89,84 @@
     width: 30em;
     line-height: 1.5;
   }
+
+  .downloadSection {
+    display: grid;
+    column-gap: 1em;
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+
+    margin: 1em 0;
+    color: #aaa;
+
+    .buttonContainer {
+      display: grid;
+      background-color: #00000010;
+      border-radius: 6px;
+
+      transition: padding-top 50ms ease-out, margin-bottom 50ms ease-out;
+
+      &:active {
+        padding-top: 6px;
+        margin-bottom: -6px;
+      }
+
+      a {
+        cursor: default;
+        user-select: none;
+        -webkit-user-drag: none;
+        -moz-user-select: none;
+
+        text-align: center;
+
+        font: inherit;
+        font-size: 1.35em;
+        font-family: "Roboto";
+
+        font-weight: normal;
+
+        background: linear-gradient(
+          lch(86, 30, shared.$branding-hue),
+          lch(82, 30, shared.$branding-hue)
+        );
+        color: lch(30, 30, shared.$branding-hue);
+
+        padding: 0.4em 1.1em;
+        border-radius: 6px;
+        border: 1px solid lch(60, 30, shared.$branding-hue);
+        box-shadow: 0 3px 3px 0 lch(85, 10, shared.$branding-hue);
+
+        &:hover {
+          border-color: lch(30, 30, shared.$branding-hue);
+        }
+
+        &.grey {
+          background: linear-gradient(
+            lch(97, 0, shared.$branding-hue),
+            lch(95, 0, shared.$branding-hue)
+          );
+          color: lch(40, 0, shared.$branding-hue);
+          border: 1px solid lch(75, 0, shared.$branding-hue);
+          box-shadow: 0 3px 3px 0 lch(92, 0, shared.$branding-hue);
+        }
+      }
+    }
+  }
 }
 
 .features {
+  align-self: stretch;
+  background-color: white;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  box-shadow: 0 0 3px 0 #ccc inset;
+
   font-size: 1.1em;
 
-  display: grid;
+  display: flex;
+  justify-content: center;
+
   padding: 0 2em;
-  grid-template: "left midlde right" / 1fr 1fr 1fr;
 
   .feature {
     padding: 0 1.5em;
@@ -108,7 +178,7 @@
     text-align: justify;
 
     &:not(:last-child) {
-      border-right: 1px solid #aaa;
+      border-right: 1px solid #ccc;
     }
   }
 }
