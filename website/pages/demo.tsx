@@ -43,7 +43,7 @@ export default function Index() {
         }}
       />
 
-      <script data-goatcounter="https://nextool.goatcounter.com/count" async src="//gc.zgo.at/count.js" />
+      <script data-goatcounter="https://counter.nextool.app/count" async src="//counter.nextool.app/count.js" />
     </>
   );
 }
