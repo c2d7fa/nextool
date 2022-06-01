@@ -2671,6 +2671,23 @@ describe("wait date", () => {
       expect(tasks(example, "paused")).toEqual([true, false]);
     });
   });
+
+  describe("waiting tasks cannot also be ready", () => {
+    const example = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Task 1", "ready"),
+      openNth(0),
+      setComponentValue("Wait", "2020-04-10"),
+    ]);
+
+    test("the ready task has only the waiting badge", () => {
+      expect(tasks(example, "badges")).toEqual([["waiting"]]);
+    });
+
+    test("the counter for the ready tab is zero", () => {
+      expect(indicatorForFilter(example, "Ready")).toEqual(null);
+    });
+  });
 });
 
 describe("performance", () => {

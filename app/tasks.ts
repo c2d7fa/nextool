@@ -197,11 +197,14 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
     return taskIs(state, task, "paused") || taskIs(state, task, "done") || taskIs(state, task, "archived");
   if (property === "project") return task.type === "project";
   if (property === "readyItself")
-    return taskIs(state, task, "project")
-      ? hasReadyDescendents(task)
-      : task.action &&
+    return (
+      !taskIs(state, task, "waiting") &&
+      (taskIs(state, task, "project")
+        ? hasReadyDescendents(task)
+        : task.action &&
           !taskIs(state, task, "inactive") &&
-          !task.children.some((child) => !taskIs(state, child, "done"));
+          !task.children.some((child) => !taskIs(state, child, "done")))
+    );
   if (property === "readySubtree") return taskIs(state, task, "readyItself") || hasReadyDescendents(task);
   if (property === "purelyReadySubtree")
     return (
