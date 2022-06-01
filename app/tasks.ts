@@ -230,7 +230,10 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
     return (
       taskIs(state, task, "waitingItself") ||
       IndentedList.anyAncestor(state.tasks, task, (task) =>
-        taskIs(state, IndentedList.findNode(state.tasks, task)!, "waitingItself"),
+        // Performance hack: We pretend that the task has no children, even
+        // though it does because we know that it doesn't matter for the purpose
+        // of "waitingItself".
+        taskIs(state, {...task, children: []}, "waitingItself"),
       )
     );
   return false;
