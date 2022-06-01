@@ -307,8 +307,8 @@ function doesSubtaskMatchSubtaskFilter(
 
 function doesSubtaskMatchFilter(state: CommonState, task: Task): boolean {
   if (taskIs(state, task, "archived") && state.filter !== "archive") return false;
-  if (state.filter === "stalled" || state.filter === "ready")
-    return IndentedList.anyDescendant(state.tasks, task, (subtask) => doesTaskMatch(state, subtask));
+  if (state.filter === "stalled") return taskIs(state, task, "stalledSubtree");
+  if (state.filter === "ready") return taskIs(state, task, "readySubtree");
   return true;
 }
 
