@@ -199,27 +199,26 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
   if (property === "project") return task.type === "project";
   if (property === "readyItself")
     return (
-      !taskIs(state, task, "waiting") &&
       (taskIs(state, task, "project")
         ? hasReadyDescendents(task)
         : task.action &&
           !taskIs(state, task, "inactive") &&
-          !task.children.some((child) => !taskIs(state, child, "done")))
+          !task.children.some((child) => !taskIs(state, child, "done"))) && !taskIs(state, task, "waiting")
     );
   if (property === "readySubtree") return taskIs(state, task, "readyItself") || hasReadyDescendents(task);
   if (property === "purelyReadySubtree")
     return (
-      !taskIs(state, task, "waiting") &&
       !taskIs(state, task, "project") &&
       taskIs(state, task, "readySubtree") &&
-      !taskIs(state, task, "stalledSubtree")
+      !taskIs(state, task, "stalledSubtree") &&
+      !taskIs(state, task, "waiting")
     );
   if (property === "stalled")
     return (
-      !taskIs(state, task, "waiting") &&
       !taskIs(state, task, "readyItself") &&
       !taskIs(state, task, "inactive") &&
-      (taskIs(state, task, "project") || !task.children.some((child) => !taskIs(state, child, "inactive")))
+      (taskIs(state, task, "project") || !task.children.some((child) => !taskIs(state, child, "inactive"))) &&
+      !taskIs(state, task, "waiting")
     );
   if (property === "stalledSubtree")
     return (
