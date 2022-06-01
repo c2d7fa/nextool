@@ -338,9 +338,11 @@ function doesTaskMatch(state: CommonState, task: Task): boolean {
     else return false;
   }
 
-  if (state.filter === "ready") return taskIs(state, task, "readySubtree");
+  if (state.filter === "ready")
+    return true; // Non-matching tasks will be eliminated by doesSubtaskMatchFilter instead.
   else if (state.filter === "done") return taskIs(state, task, "done");
-  else if (state.filter === "stalled") return taskIs(state, task, "stalledSubtree");
+  else if (state.filter === "stalled")
+    return true; // Non-matching tasks will be eliminated by doesSubtaskMatchFilter instead.
   else if (state.filter === "not-done") return taskIs(state, task, "not-done");
   else if (state.filter === "archive") return task.archived;
   else if (state.filter === "paused") return taskIs(state, task, "paused");
