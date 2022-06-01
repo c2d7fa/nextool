@@ -2688,6 +2688,79 @@ describe("wait date", () => {
       expect(indicatorForFilter(example, "Ready")).toEqual(null);
     });
   });
+
+  describe("children of waiting tasks are treated as waiting themselves", () => {
+    describe("children of waiting tasks have 'paused' appearance", () => {
+      const example = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Task 1"),
+        addTask("Task 2", 1),
+        addTask("Task 3", 1),
+        openNth(0),
+        setComponentValue("Wait", "2020-04-10"),
+      ]);
+
+      test("the tasks have correct dates set", () => {
+        expect(componentTitled(updateAll(example, [openNth(0)]), "Wait")).toMatchObject({
+          type: "date",
+          value: "2020-04-10",
+        });
+
+        expect(componentTitled(updateAll(example, [openNth(1)]), "Wait")).toMatchObject({
+          type: "date",
+          value: "",
+        });
+
+        expect(componentTitled(updateAll(example, [openNth(2)]), "Wait")).toMatchObject({
+          type: "date",
+          value: "",
+        });
+      });
+
+      test("the tasks all paused appearance in task list", () => {
+        expect(tasks(example, "paused")).toEqual([true, true, true]);
+      });
+    });
+
+    describe("children of waiting tasks can't be ready or stalled", () => {
+      const step1 = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Task 1"),
+        addTask("Task 2", 1, "ready"),
+        addTask("Task 3", 1),
+      ]);
+
+      const step2 = updateAll(step1, [openNth(0), setComponentValue("Wait", "2020-04-10")]);
+
+      describe("before marking parent task as waiting", () => {
+        test("the children has the correct badges", () => {
+          expect(tasks(step1, "badges")).toEqual([[], ["ready"], ["stalled"]]);
+        });
+
+        test("the counter for the ready tab is 1", () => {
+          expect(indicatorForFilter(step1, "Ready")).toEqual({type: "text", color: "green", text: "1"});
+        });
+
+        test("the counter for the stalled tab is 1", () => {
+          expect(indicatorForFilter(step1, "Stalled")).toEqual({type: "text", color: "orange", text: "1"});
+        });
+      });
+
+      describe("after marking the parent task as waiting", () => {
+        test("the children no longer have stalled or ready badges", () => {
+          expect(tasks(step2, "badges")).toEqual([["waiting"], [], []]);
+        });
+
+        test("the counter for the ready tab is zero", () => {
+          expect(indicatorForFilter(step2, "Ready")).toEqual(null);
+        });
+
+        test("the counter for the stalled tab is zero", () => {
+          expect(indicatorForFilter(step2, "Stalled")).toEqual(null);
+        });
+      });
+    });
+  });
 });
 
 describe("performance", () => {

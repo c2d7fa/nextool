@@ -173,6 +173,7 @@ type TaskProperty =
   | "purelyReadySubtree"
   | "stalled"
   | "stalledSubtree"
+  | "waitingItself"
   | "waiting";
 
 function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, property: TaskProperty): boolean {
@@ -225,7 +226,14 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
       taskIs(state, task, "stalled") ||
       IndentedList.anyDescendant(state.tasks, task, (task) => taskIs(state, task, "stalled"))
     );
-  if (property === "waiting") return (task.wait && isAfter(task.wait, state.today)) ?? false;
+  if (property === "waitingItself") return (task.wait && isAfter(task.wait, state.today)) ?? false;
+  if (property === "waiting")
+    return (
+      taskIs(state, task, "waitingItself") ||
+      IndentedList.anyAncestor(state.tasks, task, (task) =>
+        taskIs(state, IndentedList.findNode(state.tasks, task)!, "waitingItself"),
+      )
+    );
   return false;
 }
 
@@ -237,7 +245,7 @@ function badges(state: CommonState, task: Task): BadgeId[] {
     if (badge === "stalled") return taskIs(state, task, "stalled");
     if (badge === "project") return taskIs(state, task, "project");
     if (badge === "today") return taskIs(state, task, "today");
-    if (badge === "waiting") return taskIs(state, task, "waiting");
+    if (badge === "waiting") return taskIs(state, task, "waitingItself");
     return false;
   }
 
