@@ -176,11 +176,11 @@ type TaskProperty =
   | "waitingItself"
   | "waiting";
 
-function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, property: TaskProperty): boolean {
-  function hasReadyDescendents(task: Task): boolean {
-    return task.children.some((child) => taskIs(state, child, "readyItself") || hasReadyDescendents(child));
-  }
-
+function taskIs(
+  state: Pick<CommonState, "tasks" | "today">,
+  task: IndentedList.Handle & TaskData,
+  property: TaskProperty,
+): boolean {
   if (property === "done") return task.status === "done";
   if (property === "not-done") return task.status !== "done";
   if (property === "paused")
@@ -200,12 +200,17 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
   if (property === "readyItself")
     return (
       (taskIs(state, task, "project")
-        ? hasReadyDescendents(task)
+        ? IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "readyItself"))
         : task.action &&
           !taskIs(state, task, "inactive") &&
-          !task.children.some((child) => !taskIs(state, child, "done"))) && !taskIs(state, task, "waiting")
+          !IndentedList.anyDescendant(state.tasks, task, (child) => !taskIs(state, child, "done"))) &&
+      !taskIs(state, task, "waiting")
     );
-  if (property === "readySubtree") return taskIs(state, task, "readyItself") || hasReadyDescendents(task);
+  if (property === "readySubtree")
+    return (
+      taskIs(state, task, "readyItself") ||
+      IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "readyItself"))
+    );
   if (property === "purelyReadySubtree")
     return (
       !taskIs(state, task, "project") &&
@@ -217,7 +222,8 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
     return (
       !taskIs(state, task, "readyItself") &&
       !taskIs(state, task, "inactive") &&
-      (taskIs(state, task, "project") || !task.children.some((child) => !taskIs(state, child, "inactive"))) &&
+      (taskIs(state, task, "project") ||
+        !IndentedList.anyDescendant(state.tasks, task, (child) => !taskIs(state, child, "inactive"))) &&
       !taskIs(state, task, "waiting")
     );
   if (property === "stalledSubtree")
@@ -229,12 +235,7 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
   if (property === "waiting")
     return (
       taskIs(state, task, "waitingItself") ||
-      IndentedList.anyAncestor(state.tasks, task, (task) =>
-        // Performance hack: We pretend that the task has no children, even
-        // though it does because we know that it doesn't matter for the purpose
-        // of "waitingItself".
-        taskIs(state, {...task, children: []}, "waitingItself"),
-      )
+      IndentedList.anyAncestor(state.tasks, task, (task) => taskIs(state, task, "waitingItself"))
     );
   return false;
 }
