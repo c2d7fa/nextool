@@ -22,9 +22,10 @@ export type Icon =
   | "completed"
   | "allTasks"
   | "archive"
-  | "unfinished";
+  | "unfinished"
+  | "waiting";
 
-export type BadgeColor = "green" | "orange" | "project" | "red";
+export type BadgeColor = "green" | "orange" | "project" | "red" | "grey";
 
 function iconPath(icon: Icon) {
   return {
@@ -37,6 +38,7 @@ function iconPath(icon: Icon) {
     allTasks: Mdi.mdiCheckboxMultipleMarkedOutline,
     archive: Mdi.mdiArchiveOutline,
     unfinished: Mdi.mdiMinusCircleOutline,
+    waiting: Mdi.mdiCalendarClockOutline,
   }[icon];
 }
 

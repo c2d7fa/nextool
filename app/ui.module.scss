@@ -1,4 +1,5 @@
 @use "./shared";
+@use "~@johv/sass-labmix" as m;
 
 .buttonContainer {
   @include shared.button-background-container;
@@ -33,6 +34,13 @@
   &.orange { @include shared.badge-like(shared.$orange-hue); }
   &.project { @include shared.badge-like(shared.$project-hue); }
   &.red { @include shared.badge-like(shared.$red-hue); }
+  &.grey {
+    border: 1px solid m.lch(60, 0, 0);
+    background: linear-gradient(to top, m.lch(93, 0, 0), m.lch(95, 0, 0));
+    color: m.lch(50, 0, 0);
+    box-shadow: 0 2px 0px -1px m.lch(93, 0, 0);
+    font-family: 'Roboto Condensed';
+  }
 }
 
 .iconLabel {
