@@ -90,7 +90,18 @@ function convertTasks(data: unknown): Tasks.Tasks | null {
       }
     })();
 
-    return {id: data.id, title: data.title, children, status, type, archived, action, planned};
+    const wait: Date | null = (() => {
+      if (has(data, "wait", "string")) {
+        if (data.wait === "") return null;
+        const date = new Date(data.wait);
+        if (isNaN(date.getTime())) return null;
+        return date;
+      } else {
+        return null;
+      }
+    })();
+
+    return {id: data.id, title: data.title, children, status, type, archived, action, planned, wait};
   }
 
   if (typeof data !== "object" || !(data instanceof Array)) return null;

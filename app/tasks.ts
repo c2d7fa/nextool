@@ -11,6 +11,7 @@ type TaskData = {
   archived: boolean;
   action: boolean;
   planned: Date | null;
+  wait: Date | null;
 };
 
 export type Task = IndentedList.TreeNode<TaskData>;
@@ -78,6 +79,7 @@ export function add(state: CommonState, values: Partial<Task>): Tasks {
     archived: false,
     children: [],
     planned: null,
+    wait: null,
   });
 
   return edit({...state, tasks: result}, id, [{type: "moveToFilter", filter: state.filter}]);
@@ -92,7 +94,7 @@ export type EditOperation =
   | {type: "set"; property: "status"; value: "active" | "paused" | "done"}
   | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action" | "archived"; value: boolean}
-  | {type: "set"; property: "planned"; value: Date | null}
+  | {type: "set"; property: "planned" | "wait"; value: Date | null}
   | {type: "move"; target: DropTargetHandle}
   | {type: "moveToFilter"; filter: FilterId}
   | null;

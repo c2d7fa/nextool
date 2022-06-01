@@ -2602,6 +2602,41 @@ describe("planning", () => {
   });
 });
 
+describe("wait date", () => {
+  describe("wait date is saved", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), addTask("Task 1"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the wait date is not set", () => {
+        expect(componentTitled(step1, "Wait")).toMatchObject({type: "date", value: ""});
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Wait", "2020-01-01")]);
+
+    describe("after setting wait date", () => {
+      test("the wait date is set in the editor", () => {
+        expect(componentTitled(step2, "Wait")).toMatchObject({type: "date", value: "2020-01-01"});
+      });
+    });
+
+    const [_, savedEffects] = stateAndEffectsAfter(step2, [{tag: "storage", type: "clickSaveButton"}]);
+    const savedContents = (savedEffects[0] as Effect & {type: "fileDownload"}).contents;
+
+    const loaded = updateAll(empty, [
+      {tag: "storage", type: "loadFile", name: "tasks.json", contents: savedContents},
+      switchToFilter("all"),
+      openNth(0),
+    ]);
+
+    describe("after loading the file", () => {
+      test("the wait date is still set in the editor", () => {
+        expect(componentTitled(loaded, "Wait")).toMatchObject({type: "date", value: "2020-01-01"});
+      });
+    });
+  });
+});
+
 describe("performance", () => {
   function measureSeconds(callback: () => void) {
     const t1 = process.hrtime.bigint();

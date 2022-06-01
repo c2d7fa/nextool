@@ -99,11 +99,12 @@ export function editOperationsFor(state: State, ev: Event): EditOperation[] {
     if (ev.value === "task") return [{type: "set", property: "type", value: "task"}];
     if (ev.value === "project") return [{type: "set", property: "type", value: "project"}];
     else return [];
-  } else if (ev.component.id.property === "planned") {
-    if (ev.value === "") return [{type: "set", property: "planned", value: null}];
+  } else if (ev.component.id.property === "planned" || ev.component.id.property === "wait") {
+    const property = ev.component.id.property;
+    if (ev.value === "") return [{type: "set", property, value: null}];
     const date = DateFnsTz.zonedTimeToUtc(DateFns.parse(ev.value, "yyyy-MM-dd", 0), "UTC");
     if (!DateFns.isValid(date)) return [];
-    return [{type: "set", property: "planned", value: date}];
+    return [{type: "set", property, value: date}];
   } else return [];
 }
 
@@ -172,6 +173,16 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
               type: "date",
               property: "planned",
               value: task.planned ? DateFns.format(task.planned, "yyyy-MM-dd") : "",
+            },
+          ],
+        },
+        {
+          title: "Wait",
+          components: [
+            {
+              type: "date",
+              property: "wait",
+              value: task.wait ? DateFns.format(task.wait, "yyyy-MM-dd") : "",
             },
           ],
         },
