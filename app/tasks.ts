@@ -1,4 +1,4 @@
-import {isBefore, isSameDay} from "date-fns";
+import {isAfter, isBefore, isSameDay} from "date-fns";
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
 import * as IndentedList from "./indented-list";
@@ -172,7 +172,8 @@ type TaskProperty =
   | "readySubtree"
   | "purelyReadySubtree"
   | "stalled"
-  | "stalledSubtree";
+  | "stalledSubtree"
+  | "waiting";
 
 function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, property: TaskProperty): boolean {
   function hasReadyDescendents(task: Task): boolean {
@@ -204,12 +205,14 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
   if (property === "readySubtree") return taskIs(state, task, "readyItself") || hasReadyDescendents(task);
   if (property === "purelyReadySubtree")
     return (
+      !taskIs(state, task, "waiting") &&
       !taskIs(state, task, "project") &&
       taskIs(state, task, "readySubtree") &&
       !taskIs(state, task, "stalledSubtree")
     );
   if (property === "stalled")
     return (
+      !taskIs(state, task, "waiting") &&
       !taskIs(state, task, "readyItself") &&
       !taskIs(state, task, "inactive") &&
       (taskIs(state, task, "project") || !task.children.some((child) => !taskIs(state, child, "inactive")))
@@ -219,10 +222,11 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
       taskIs(state, task, "stalled") ||
       IndentedList.anyDescendant(state.tasks, task, (task) => taskIs(state, task, "stalled"))
     );
+  if (property === "waiting") return (task.wait && isAfter(task.wait, state.today)) ?? false;
   return false;
 }
 
-export type BadgeId = "ready" | "stalled" | "project" | "today";
+export type BadgeId = "ready" | "stalled" | "project" | "today" | "waiting";
 
 function badges(state: CommonState, task: Task): BadgeId[] {
   function taskHas(state: Pick<CommonState, "tasks" | "today">, task: Task, badge: BadgeId): boolean {
@@ -230,10 +234,11 @@ function badges(state: CommonState, task: Task): BadgeId[] {
     if (badge === "stalled") return taskIs(state, task, "stalled");
     if (badge === "project") return taskIs(state, task, "project");
     if (badge === "today") return taskIs(state, task, "today");
+    if (badge === "waiting") return taskIs(state, task, "waiting");
     return false;
   }
 
-  return (["project", "today", "stalled", "ready"] as const).flatMap((badge) =>
+  return (["project", "today", "stalled", "ready", "waiting"] as const).flatMap((badge) =>
     taskHas(state, task, badge) ? [badge] : [],
   );
 }
@@ -480,7 +485,7 @@ function viewRows(state: CommonState): TaskView[] {
     title: task.title,
     indentation: task.indentation,
     done: taskIs(state, task, "done"),
-    paused: taskIs(state, task, "paused"),
+    paused: taskIs(state, task, "paused") || taskIs(state, task, "waiting"),
     badges: badges(state, task),
     project: task.type === "project",
     today: taskIs(state, task, "today"),

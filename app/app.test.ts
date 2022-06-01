@@ -2635,6 +2635,42 @@ describe("wait date", () => {
       });
     });
   });
+
+  describe("waiting tasks have badge and special appearance in list", () => {
+    const example = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Task 1"),
+      addTask("Task 2"),
+      openNth(0),
+      setComponentValue("Wait", "2020-04-10"),
+      openNth(1),
+      setComponentValue("Wait", "2020-03-15"),
+    ]);
+
+    test("the tasks have correct values", () => {
+      expect(componentTitled(updateAll(example, [openNth(0)]), "Wait")).toMatchObject({
+        type: "date",
+        value: "2020-04-10",
+      });
+
+      expect(componentTitled(updateAll(example, [openNth(1)]), "Wait")).toMatchObject({
+        type: "date",
+        value: "2020-03-15",
+      });
+    });
+
+    test("task with wait date in the future has waiting badge", () => {
+      expect(tasks(example, "badges")[0]).toEqual(["waiting"]);
+    });
+
+    test("task with wait date in the past has stalled badge", () => {
+      expect(tasks(example, "badges")[1]).toEqual(["stalled"]);
+    });
+
+    test("waiting task has 'paused' appearance in task list", () => {
+      expect(tasks(example, "paused")).toEqual([true, false]);
+    });
+  });
 });
 
 describe("performance", () => {
