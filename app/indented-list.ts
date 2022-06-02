@@ -400,9 +400,19 @@ export function anyAncestor<D>(tree: Tree<D>, query: Handle, predicate: (ancesto
 
 export function anyDescendant<D>(
   tree: Tree<D>,
-  node: TreeNode<D>,
-  predicate: (descendant: TreeNode<D>) => boolean,
+  node: Handle,
+  predicate: (descendant: Handle & D) => boolean,
 ): boolean {
-  if (predicate(node)) return true;
-  return node.children.some((child) => anyDescendant(tree, child, predicate));
+  function anyDescendant_({id}: Handle) {
+    const node = tree.data[id];
+    if (!node) return false;
+    if (predicate({...node, id})) return true;
+    const children = tree.children[id];
+    if (!children) return false;
+    return children.some(anyDescendant_);
+  }
+
+  const children = tree.children[node.id];
+  if (!children) return false;
+  return children.some(anyDescendant_);
 }

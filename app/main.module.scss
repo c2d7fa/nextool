@@ -327,6 +327,13 @@
       &.green { @include shared.badge-like(shared.$green-hue); }
       &.red { @include shared.badge-like(shared.$red-hue); }
       &.project { @include shared.badge-like(shared.$project-hue); }
+      &.grey {
+        border: 1px solid m.lch(60, 0, 0);
+        background: linear-gradient(to top, m.lch(93, 0, 0), m.lch(95, 0, 0));
+        color: m.lch(50, 0, 0);
+        box-shadow: 0 2px 0px -1px m.lch(93, 0, 0);
+        font-family: 'Roboto Condensed';
+      }
 
       .text {
         font-size: 0.9em;

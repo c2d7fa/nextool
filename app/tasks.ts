@@ -1,4 +1,4 @@
-import {isBefore, isSameDay} from "date-fns";
+import {addDays, isAfter, isBefore, isSameDay} from "date-fns";
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
 import * as IndentedList from "./indented-list";
@@ -11,6 +11,7 @@ type TaskData = {
   archived: boolean;
   action: boolean;
   planned: Date | null;
+  wait: Date | null;
 };
 
 export type Task = IndentedList.TreeNode<TaskData>;
@@ -78,6 +79,7 @@ export function add(state: CommonState, values: Partial<Task>): Tasks {
     archived: false,
     children: [],
     planned: null,
+    wait: null,
   });
 
   return edit({...state, tasks: result}, id, [{type: "moveToFilter", filter: state.filter}]);
@@ -92,7 +94,7 @@ export type EditOperation =
   | {type: "set"; property: "status"; value: "active" | "paused" | "done"}
   | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action" | "archived"; value: boolean}
-  | {type: "set"; property: "planned"; value: Date | null}
+  | {type: "set"; property: "planned" | "wait"; value: Date | null}
   | {type: "move"; target: DropTargetHandle}
   | {type: "moveToFilter"; filter: FilterId}
   | null;
@@ -110,6 +112,10 @@ export function edit(state: CommonState, id: string, operations: EditOperation[]
         return IndentedList.moveInto(tasks, {id}, filter.project);
       }
 
+      function tomorrow() {
+        return addDays(state.today, 1);
+      }
+
       const update =
         filter === "ready"
           ? ({type: "set", property: "action", value: true} as const)
@@ -125,6 +131,8 @@ export function edit(state: CommonState, id: string, operations: EditOperation[]
           ? ({type: "set", property: "planned", value: state.today} as const)
           : filter === "paused"
           ? ({type: "set", property: "status", value: "paused"} as const)
+          : filter === "waiting"
+          ? ({type: "set", property: "wait", value: tomorrow()} as const)
           : null;
 
       const archiveUpdate =
@@ -170,13 +178,15 @@ type TaskProperty =
   | "readySubtree"
   | "purelyReadySubtree"
   | "stalled"
-  | "stalledSubtree";
+  | "stalledSubtree"
+  | "waitingItself"
+  | "waiting";
 
-function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, property: TaskProperty): boolean {
-  function hasReadyDescendents(task: Task): boolean {
-    return task.children.some((child) => taskIs(state, child, "readyItself") || hasReadyDescendents(child));
-  }
-
+function taskIs(
+  state: Pick<CommonState, "tasks" | "today">,
+  task: IndentedList.Handle & TaskData,
+  property: TaskProperty,
+): boolean {
   if (property === "done") return task.status === "done";
   if (property === "not-done") return task.status !== "done";
   if (property === "paused")
@@ -194,33 +204,49 @@ function taskIs(state: Pick<CommonState, "tasks" | "today">, task: Task, propert
     return taskIs(state, task, "paused") || taskIs(state, task, "done") || taskIs(state, task, "archived");
   if (property === "project") return task.type === "project";
   if (property === "readyItself")
-    return taskIs(state, task, "project")
-      ? hasReadyDescendents(task)
-      : task.action &&
+    return (
+      (taskIs(state, task, "project")
+        ? IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "readyItself"))
+        : task.action &&
           !taskIs(state, task, "inactive") &&
-          !task.children.some((child) => !taskIs(state, child, "done"));
-  if (property === "readySubtree") return taskIs(state, task, "readyItself") || hasReadyDescendents(task);
+          !IndentedList.anyDescendant(state.tasks, task, (child) => !taskIs(state, child, "done"))) &&
+      !taskIs(state, task, "waiting")
+    );
+  if (property === "readySubtree")
+    return (
+      taskIs(state, task, "readyItself") ||
+      IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "readyItself"))
+    );
   if (property === "purelyReadySubtree")
     return (
       !taskIs(state, task, "project") &&
       taskIs(state, task, "readySubtree") &&
-      !taskIs(state, task, "stalledSubtree")
+      !taskIs(state, task, "stalledSubtree") &&
+      !taskIs(state, task, "waiting")
     );
   if (property === "stalled")
     return (
       !taskIs(state, task, "readyItself") &&
       !taskIs(state, task, "inactive") &&
-      (taskIs(state, task, "project") || !task.children.some((child) => !taskIs(state, child, "inactive")))
+      (taskIs(state, task, "project") ||
+        !IndentedList.anyDescendant(state.tasks, task, (child) => !taskIs(state, child, "inactive"))) &&
+      !taskIs(state, task, "waiting")
     );
   if (property === "stalledSubtree")
     return (
       taskIs(state, task, "stalled") ||
       IndentedList.anyDescendant(state.tasks, task, (task) => taskIs(state, task, "stalled"))
     );
+  if (property === "waitingItself") return (task.wait && isAfter(task.wait, state.today)) ?? false;
+  if (property === "waiting")
+    return (
+      taskIs(state, task, "waitingItself") ||
+      IndentedList.anyAncestor(state.tasks, task, (task) => taskIs(state, task, "waitingItself"))
+    );
   return false;
 }
 
-export type BadgeId = "ready" | "stalled" | "project" | "today";
+export type BadgeId = "ready" | "stalled" | "project" | "today" | "waiting";
 
 function badges(state: CommonState, task: Task): BadgeId[] {
   function taskHas(state: Pick<CommonState, "tasks" | "today">, task: Task, badge: BadgeId): boolean {
@@ -228,10 +254,11 @@ function badges(state: CommonState, task: Task): BadgeId[] {
     if (badge === "stalled") return taskIs(state, task, "stalled");
     if (badge === "project") return taskIs(state, task, "project");
     if (badge === "today") return taskIs(state, task, "today");
+    if (badge === "waiting") return taskIs(state, task, "waitingItself");
     return false;
   }
 
-  return (["project", "today", "stalled", "ready"] as const).flatMap((badge) =>
+  return (["project", "today", "stalled", "ready", "waiting"] as const).flatMap((badge) =>
     taskHas(state, task, badge) ? [badge] : [],
   );
 }
@@ -247,6 +274,7 @@ export type FilterId =
   | "not-done"
   | "archive"
   | "paused"
+  | "waiting"
   | {type: "project"; project: {id: string}}
   | {type: "section"; section: FilterSectionId};
 
@@ -287,8 +315,8 @@ function doesSubtaskMatchSubtaskFilter(
 
 function doesSubtaskMatchFilter(state: CommonState, task: Task): boolean {
   if (taskIs(state, task, "archived") && state.filter !== "archive") return false;
-  if (state.filter === "stalled" || state.filter === "ready")
-    return IndentedList.anyDescendant(state.tasks, task, (subtask) => doesTaskMatch(state, subtask));
+  if (state.filter === "stalled") return taskIs(state, task, "stalledSubtree");
+  if (state.filter === "ready") return taskIs(state, task, "readySubtree");
   return true;
 }
 
@@ -317,13 +345,16 @@ function doesTaskMatch(state: CommonState, task: Task): boolean {
     else return false;
   }
 
-  if (state.filter === "ready") return taskIs(state, task, "readySubtree");
+  if (state.filter === "ready")
+    return true; // Non-matching tasks will be eliminated by doesSubtaskMatchFilter instead.
   else if (state.filter === "done") return taskIs(state, task, "done");
-  else if (state.filter === "stalled") return taskIs(state, task, "stalledSubtree");
+  else if (state.filter === "stalled")
+    return true; // Non-matching tasks will be eliminated by doesSubtaskMatchFilter instead.
   else if (state.filter === "not-done") return taskIs(state, task, "not-done");
   else if (state.filter === "archive") return task.archived;
   else if (state.filter === "paused") return taskIs(state, task, "paused");
   else if (state.filter === "today") return taskIs(state, task, "today");
+  else if (state.filter === "waiting") return taskIs(state, task, "waiting");
   else return true;
 }
 
@@ -398,9 +429,18 @@ export function activeSubprojects(state: CommonState): {title: string; children:
   }
 }
 
-export function count(state: Omit<CommonState, "filter">, filter: "today" | "ready" | "stalled"): number {
+export function count(
+  state: Omit<CommonState, "filter">,
+  filter: "today" | "ready" | "stalled" | "waiting",
+): number {
   const subtaskProperty =
-    filter === "today" ? "nonCompletedToday" : filter === "ready" ? "readyItself" : "stalled";
+    filter === "today"
+      ? "nonCompletedToday"
+      : filter === "ready"
+      ? "readyItself"
+      : filter === "stalled"
+      ? "stalled"
+      : "waiting";
 
   return IndentedList.pickIntoList(state.tasks, (task) => doesTaskMatch({...state, filter}, task)).filter((item) =>
     taskIs(state, item, subtaskProperty),
@@ -478,7 +518,7 @@ function viewRows(state: CommonState): TaskView[] {
     title: task.title,
     indentation: task.indentation,
     done: taskIs(state, task, "done"),
-    paused: taskIs(state, task, "paused"),
+    paused: taskIs(state, task, "paused") || taskIs(state, task, "waiting"),
     badges: badges(state, task),
     project: task.type === "project",
     today: taskIs(state, task, "today"),
@@ -488,7 +528,7 @@ function viewRows(state: CommonState): TaskView[] {
 
 function subfilters(state: CommonState, section: FilterSectionId): FilterId[] {
   if (section === "actions") return ["today", "ready", "stalled"];
-  else if (section === "tasks") return ["all", "not-done", "done", "paused"];
+  else if (section === "tasks") return ["waiting", "paused", "all", "not-done", "done"];
   else if (section === "activeProjects")
     return activeProjectList(state).map((project) => ({type: "project", project: {id: project.id}}));
   else if (section === "archive") return ["archive"];
@@ -541,6 +581,7 @@ export function filterTitle(tasks: Tasks, filter: FilterId): string {
   else if (filter === "all") return "All";
   else if (filter === "paused") return "Paused";
   else if (filter === "today") return "Today";
+  else if (filter === "waiting") return "Waiting";
   else {
     const unreachable: never = filter;
     return unreachable;

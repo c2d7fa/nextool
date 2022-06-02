@@ -1326,10 +1326,11 @@ describe("section filters", () => {
       describe("initially", () => {
         test("no filters are active", () => {
           expect(filtersInSection(step1, "Tasks")).toEqual([
+            {label: "Waiting", selected: false},
+            {label: "Paused", selected: false},
             {label: "All", selected: false},
             {label: "Unfinished", selected: false},
             {label: "Completed", selected: false},
-            {label: "Paused", selected: false},
           ]);
         });
       });
@@ -1339,10 +1340,11 @@ describe("section filters", () => {
       describe("after selecting the tasks section filter", () => {
         test("all filters in the 'tasks' section become active", () => {
           expect(filtersInSection(step2, "Tasks")).toEqual([
+            {label: "Waiting", selected: true},
+            {label: "Paused", selected: true},
             {label: "All", selected: true},
             {label: "Unfinished", selected: true},
             {label: "Completed", selected: true},
-            {label: "Paused", selected: true},
           ]);
         });
       });
@@ -2597,6 +2599,215 @@ describe("planning", () => {
         test("only the second task still has the 'today' badge", () => {
           expect(tasks(step3, "badges")).toEqual([[], ["today"]]);
         });
+      });
+    });
+  });
+});
+
+describe("wait date", () => {
+  describe("wait date is saved", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), addTask("Task 1"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the wait date is not set", () => {
+        expect(componentTitled(step1, "Wait")).toMatchObject({type: "date", value: ""});
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Wait", "2020-01-01")]);
+
+    describe("after setting wait date", () => {
+      test("the wait date is set in the editor", () => {
+        expect(componentTitled(step2, "Wait")).toMatchObject({type: "date", value: "2020-01-01"});
+      });
+    });
+
+    const [_, savedEffects] = stateAndEffectsAfter(step2, [{tag: "storage", type: "clickSaveButton"}]);
+    const savedContents = (savedEffects[0] as Effect & {type: "fileDownload"}).contents;
+
+    const loaded = updateAll(empty, [
+      {tag: "storage", type: "loadFile", name: "tasks.json", contents: savedContents},
+      switchToFilter("all"),
+      openNth(0),
+    ]);
+
+    describe("after loading the file", () => {
+      test("the wait date is still set in the editor", () => {
+        expect(componentTitled(loaded, "Wait")).toMatchObject({type: "date", value: "2020-01-01"});
+      });
+    });
+  });
+
+  describe("waiting tasks have badge and special appearance in list", () => {
+    const example = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Task 1"),
+      addTask("Task 2"),
+      openNth(0),
+      setComponentValue("Wait", "2020-04-10"),
+      openNth(1),
+      setComponentValue("Wait", "2020-03-15"),
+    ]);
+
+    test("the tasks have correct values", () => {
+      expect(componentTitled(updateAll(example, [openNth(0)]), "Wait")).toMatchObject({
+        type: "date",
+        value: "2020-04-10",
+      });
+
+      expect(componentTitled(updateAll(example, [openNth(1)]), "Wait")).toMatchObject({
+        type: "date",
+        value: "2020-03-15",
+      });
+    });
+
+    test("task with wait date in the future has waiting badge", () => {
+      expect(tasks(example, "badges")[0]).toEqual(["waiting"]);
+    });
+
+    test("task with wait date in the past has stalled badge", () => {
+      expect(tasks(example, "badges")[1]).toEqual(["stalled"]);
+    });
+
+    test("waiting task has 'paused' appearance in task list", () => {
+      expect(tasks(example, "paused")).toEqual([true, false]);
+    });
+  });
+
+  describe("waiting tasks cannot also be ready", () => {
+    const example = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Task 1", "ready"),
+      openNth(0),
+      setComponentValue("Wait", "2020-04-10"),
+    ]);
+
+    test("the ready task has only the waiting badge", () => {
+      expect(tasks(example, "badges")).toEqual([["waiting"]]);
+    });
+
+    test("the counter for the ready tab is zero", () => {
+      expect(indicatorForFilter(example, "Ready")).toEqual(null);
+    });
+  });
+
+  describe("children of waiting tasks are treated as waiting themselves", () => {
+    describe("children of waiting tasks have 'paused' appearance", () => {
+      const example = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Task 1"),
+        addTask("Task 2", 1),
+        addTask("Task 3", 1),
+        openNth(0),
+        setComponentValue("Wait", "2020-04-10"),
+      ]);
+
+      test("the tasks have correct dates set", () => {
+        expect(componentTitled(updateAll(example, [openNth(0)]), "Wait")).toMatchObject({
+          type: "date",
+          value: "2020-04-10",
+        });
+
+        expect(componentTitled(updateAll(example, [openNth(1)]), "Wait")).toMatchObject({
+          type: "date",
+          value: "",
+        });
+
+        expect(componentTitled(updateAll(example, [openNth(2)]), "Wait")).toMatchObject({
+          type: "date",
+          value: "",
+        });
+      });
+
+      test("the tasks all paused appearance in task list", () => {
+        expect(tasks(example, "paused")).toEqual([true, true, true]);
+      });
+    });
+
+    describe("children of waiting tasks can't be ready or stalled", () => {
+      const step1 = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Task 1"),
+        addTask("Task 2", 1, "ready"),
+        addTask("Task 3", 1),
+      ]);
+
+      const step2 = updateAll(step1, [openNth(0), setComponentValue("Wait", "2020-04-10")]);
+
+      describe("before marking parent task as waiting", () => {
+        test("the children has the correct badges", () => {
+          expect(tasks(step1, "badges")).toEqual([[], ["ready"], ["stalled"]]);
+        });
+
+        test("the counter for the ready tab is 1", () => {
+          expect(indicatorForFilter(step1, "Ready")).toEqual({type: "text", color: "green", text: "1"});
+        });
+
+        test("the counter for the stalled tab is 1", () => {
+          expect(indicatorForFilter(step1, "Stalled")).toEqual({type: "text", color: "orange", text: "1"});
+        });
+      });
+
+      describe("after marking the parent task as waiting", () => {
+        test("the children no longer have stalled or ready badges", () => {
+          expect(tasks(step2, "badges")).toEqual([["waiting"], [], []]);
+        });
+
+        test("the counter for the ready tab is zero", () => {
+          expect(indicatorForFilter(step2, "Ready")).toEqual(null);
+        });
+
+        test("the counter for the stalled tab is zero", () => {
+          expect(indicatorForFilter(step2, "Stalled")).toEqual(null);
+        });
+      });
+    });
+  });
+
+  describe("waiting tab", () => {
+    describe("setting wait date for task adds it to waiting tab", () => {
+      const step1 = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Task 1"),
+        addTask("Task 2", 1),
+        addTask("Task 3"),
+        openNth(0),
+        setComponentValue("Wait", "2020-04-10"),
+        switchToFilterCalled("Waiting"),
+      ]);
+
+      test("the waiting tab shows the correct tasks", () => {
+        expect(tasks(step1, "title")).toEqual(["Task 1", "Task 2"]);
+      });
+    });
+
+    describe("dragging task to waiting tab sets wait date to tomorrow", () => {
+      const step1 = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Task 1"),
+        dragToTab(0, "Waiting"),
+        openNth(0),
+      ]);
+
+      test("the wait date has been updated to tomorrow's date", () => {
+        expect(componentTitled(step1, "Wait")).toMatchObject({
+          type: "date",
+          value: "2020-03-16",
+        });
+      });
+    });
+
+    describe("waiting tab has indicator when there are waiting tasks", () => {
+      const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 1")]);
+
+      const step2 = updateAll(step1, [dragToTab(0, "Waiting")]);
+
+      test("initially, the filter has no indicator", () => {
+        expect(indicatorForFilter(step1, "Waiting")).toEqual(null);
+      });
+
+      test("after dragging to waiting tab, the filter has an indicator", () => {
+        expect(indicatorForFilter(step2, "Waiting")).toEqual({type: "text", color: "grey", text: "1"});
       });
     });
   });

@@ -55,10 +55,7 @@ export const empty: State = {
   cachedHoverInvariantTaskListView: null,
 };
 
-export type FilterIndicator =
-  | null
-  | {type: "text"; text: string; color: "red" | "orange" | "green" | "project"}
-  | {type: "dot"};
+export type FilterIndicator = null | {type: "text"; text: string; color: Ui.BadgeColor} | {type: "dot"};
 
 export type FilterView = {
   label: string;
@@ -126,14 +123,16 @@ function viewSideBar(state: State & {today: Date}) {
 
   function filterView(
     filter: Tasks.FilterId,
-    opts?: {counter: "small" | "red" | "orange" | "green" | "project"; count?: number},
+    opts?: {counter: Ui.BadgeColor | "small"; count?: number},
   ): FilterView {
     function indicator(): FilterIndicator {
       if (!opts?.counter) return null;
       if (opts.counter === "small") return {type: "dot" as const};
       const count =
         opts.count ??
-        (filter === "ready" || filter === "stalled" || filter === "today" ? Tasks.count(state, filter) : 0);
+        (filter === "ready" || filter === "stalled" || filter === "today" || filter === "waiting"
+          ? Tasks.count(state, filter)
+          : 0);
       if (count === 0) return null;
       return {type: "text" as const, text: count.toString(), color: opts.counter};
     }
@@ -151,6 +150,7 @@ function viewSideBar(state: State & {today: Date}) {
               "done": "completed",
               "not-done": "unfinished",
               "archive": "archive",
+              "waiting": "waiting",
             } as const
           )[filter];
 
@@ -194,7 +194,13 @@ function viewSideBar(state: State & {today: Date}) {
     {
       title: "Tasks",
       filter: {type: "section", section: "tasks"},
-      filters: [filterView("all"), filterView("not-done"), filterView("done"), filterView("paused")],
+      filters: [
+        filterView("waiting", {counter: "grey"}),
+        filterView("paused"),
+        filterView("all"),
+        filterView("not-done"),
+        filterView("done"),
+      ],
     },
     {
       title: "Active projects",
