@@ -1,4 +1,4 @@
-import {isAfter, isBefore, isSameDay} from "date-fns";
+import {addDays, isAfter, isBefore, isSameDay} from "date-fns";
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
 import * as IndentedList from "./indented-list";
@@ -112,6 +112,10 @@ export function edit(state: CommonState, id: string, operations: EditOperation[]
         return IndentedList.moveInto(tasks, {id}, filter.project);
       }
 
+      function tomorrow() {
+        return addDays(state.today, 1);
+      }
+
       const update =
         filter === "ready"
           ? ({type: "set", property: "action", value: true} as const)
@@ -127,6 +131,8 @@ export function edit(state: CommonState, id: string, operations: EditOperation[]
           ? ({type: "set", property: "planned", value: state.today} as const)
           : filter === "paused"
           ? ({type: "set", property: "status", value: "paused"} as const)
+          : filter === "waiting"
+          ? ({type: "set", property: "wait", value: tomorrow()} as const)
           : null;
 
       const archiveUpdate =

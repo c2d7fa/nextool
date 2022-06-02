@@ -2781,7 +2781,7 @@ describe("wait date", () => {
       });
     });
 
-    describe.skip("dragging tab to waiting tab sets wait date to tomorrow", () => {
+    describe("dragging tab to waiting tab sets wait date to tomorrow", () => {
       const step1 = updateAll(empty, [
         switchToFilter("all"),
         addTask("Task 1"),
