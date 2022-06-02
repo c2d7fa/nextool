@@ -201,17 +201,19 @@ function taskIs(
     );
   if (property === "nonCompletedToday") return taskIs(state, task, "today") && !taskIs(state, task, "done");
   if (property === "inactive")
-    return taskIs(state, task, "paused") || taskIs(state, task, "done") || taskIs(state, task, "archived");
+    return (
+      taskIs(state, task, "paused") ||
+      taskIs(state, task, "done") ||
+      taskIs(state, task, "archived") ||
+      taskIs(state, task, "waiting")
+    );
   if (property === "project") return task.type === "project";
   if (property === "readyItself")
-    return (
-      (taskIs(state, task, "project")
-        ? IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "readyItself"))
-        : task.action &&
+    return taskIs(state, task, "project")
+      ? IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "readyItself"))
+      : task.action &&
           !taskIs(state, task, "inactive") &&
-          !IndentedList.anyDescendant(state.tasks, task, (child) => !taskIs(state, child, "done"))) &&
-      !taskIs(state, task, "waiting")
-    );
+          !IndentedList.anyDescendant(state.tasks, task, (child) => !taskIs(state, child, "done"));
   if (property === "readySubtree")
     return (
       taskIs(state, task, "readyItself") ||
@@ -221,16 +223,14 @@ function taskIs(
     return (
       !taskIs(state, task, "project") &&
       taskIs(state, task, "readySubtree") &&
-      !taskIs(state, task, "stalledSubtree") &&
-      !taskIs(state, task, "waiting")
+      !taskIs(state, task, "stalledSubtree")
     );
   if (property === "stalled")
     return (
       !taskIs(state, task, "readyItself") &&
       !taskIs(state, task, "inactive") &&
       (taskIs(state, task, "project") ||
-        !IndentedList.anyDescendant(state.tasks, task, (child) => !taskIs(state, child, "inactive"))) &&
-      !taskIs(state, task, "waiting")
+        !IndentedList.anyDescendant(state.tasks, task, (child) => !taskIs(state, child, "inactive")))
     );
   if (property === "stalledSubtree")
     return (
