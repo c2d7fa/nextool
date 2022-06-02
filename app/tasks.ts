@@ -429,9 +429,18 @@ export function activeSubprojects(state: CommonState): {title: string; children:
   }
 }
 
-export function count(state: Omit<CommonState, "filter">, filter: "today" | "ready" | "stalled"): number {
+export function count(
+  state: Omit<CommonState, "filter">,
+  filter: "today" | "ready" | "stalled" | "waiting",
+): number {
   const subtaskProperty =
-    filter === "today" ? "nonCompletedToday" : filter === "ready" ? "readyItself" : "stalled";
+    filter === "today"
+      ? "nonCompletedToday"
+      : filter === "ready"
+      ? "readyItself"
+      : filter === "stalled"
+      ? "stalled"
+      : "waiting";
 
   return IndentedList.pickIntoList(state.tasks, (task) => doesTaskMatch({...state, filter}, task)).filter((item) =>
     taskIs(state, item, subtaskProperty),
