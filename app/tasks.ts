@@ -268,6 +268,7 @@ export type FilterId =
   | "not-done"
   | "archive"
   | "paused"
+  | "waiting"
   | {type: "project"; project: {id: string}}
   | {type: "section"; section: FilterSectionId};
 
@@ -511,7 +512,7 @@ function viewRows(state: CommonState): TaskView[] {
 
 function subfilters(state: CommonState, section: FilterSectionId): FilterId[] {
   if (section === "actions") return ["today", "ready", "stalled"];
-  else if (section === "tasks") return ["all", "not-done", "done", "paused"];
+  else if (section === "tasks") return ["waiting", "paused", "all", "not-done", "done"];
   else if (section === "activeProjects")
     return activeProjectList(state).map((project) => ({type: "project", project: {id: project.id}}));
   else if (section === "archive") return ["archive"];
@@ -564,6 +565,7 @@ export function filterTitle(tasks: Tasks, filter: FilterId): string {
   else if (filter === "all") return "All";
   else if (filter === "paused") return "Paused";
   else if (filter === "today") return "Today";
+  else if (filter === "waiting") return "Waiting";
   else {
     const unreachable: never = filter;
     return unreachable;

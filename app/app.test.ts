@@ -1326,10 +1326,11 @@ describe("section filters", () => {
       describe("initially", () => {
         test("no filters are active", () => {
           expect(filtersInSection(step1, "Tasks")).toEqual([
+            {label: "Waiting", selected: false},
+            {label: "Paused", selected: false},
             {label: "All", selected: false},
             {label: "Unfinished", selected: false},
             {label: "Completed", selected: false},
-            {label: "Paused", selected: false},
           ]);
         });
       });
@@ -1339,10 +1340,11 @@ describe("section filters", () => {
       describe("after selecting the tasks section filter", () => {
         test("all filters in the 'tasks' section become active", () => {
           expect(filtersInSection(step2, "Tasks")).toEqual([
+            {label: "Waiting", selected: true},
+            {label: "Paused", selected: true},
             {label: "All", selected: true},
             {label: "Unfinished", selected: true},
             {label: "Completed", selected: true},
-            {label: "Paused", selected: true},
           ]);
         });
       });
@@ -2758,6 +2760,54 @@ describe("wait date", () => {
         test("the counter for the stalled tab is zero", () => {
           expect(indicatorForFilter(step2, "Stalled")).toEqual(null);
         });
+      });
+    });
+  });
+
+  describe("waiting tab", () => {
+    describe.skip("setting wait date for task adds it to waiting tab", () => {
+      const step1 = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Task 1"),
+        addTask("Task 2", 1),
+        addTask("Task 3"),
+        openNth(0),
+        setComponentValue("Wait", "2020-04-10"),
+        switchToFilterCalled("Waiting"),
+      ]);
+
+      test("the waiting tab shows the correct tasks", () => {
+        expect(tasks(step1, "title")).toEqual(["Task 1", "Task 2"]);
+      });
+    });
+
+    describe.skip("dragging tab to waiting tab sets wait date to tomorrow", () => {
+      const step1 = updateAll(empty, [
+        switchToFilter("all"),
+        addTask("Task 1"),
+        dragToTab(0, "Waiting"),
+        openNth(0),
+      ]);
+
+      test("the wait date has been updated to tomorrow's date", () => {
+        expect(componentTitled(step1, "Wait")).toMatchObject({
+          type: "date",
+          value: "2020-03-16",
+        });
+      });
+    });
+
+    describe.skip("waiting tab has indicator when there are waiting tasks", () => {
+      const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 1")]);
+
+      const step2 = updateAll(step1, [dragToTab(0, "Waiting")]);
+
+      test("initially, the filter has no indicator", () => {
+        expect(indicatorForFilter(step1, "Waiting")).toEqual(null);
+      });
+
+      test("after dragging to waiting tab, the filter has an indicator", () => {
+        expect(indicatorForFilter(step2, "Waiting")).toEqual({type: "text", color: "grey", text: "1"});
       });
     });
   });

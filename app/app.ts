@@ -151,6 +151,7 @@ function viewSideBar(state: State & {today: Date}) {
               "done": "completed",
               "not-done": "unfinished",
               "archive": "archive",
+              "waiting": "waiting",
             } as const
           )[filter];
 
@@ -194,7 +195,13 @@ function viewSideBar(state: State & {today: Date}) {
     {
       title: "Tasks",
       filter: {type: "section", section: "tasks"},
-      filters: [filterView("all"), filterView("not-done"), filterView("done"), filterView("paused")],
+      filters: [
+        filterView("waiting"),
+        filterView("paused"),
+        filterView("all"),
+        filterView("not-done"),
+        filterView("done"),
+      ],
     },
     {
       title: "Active projects",
