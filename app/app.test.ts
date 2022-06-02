@@ -2765,7 +2765,7 @@ describe("wait date", () => {
   });
 
   describe("waiting tab", () => {
-    describe.skip("setting wait date for task adds it to waiting tab", () => {
+    describe("setting wait date for task adds it to waiting tab", () => {
       const step1 = updateAll(empty, [
         switchToFilter("all"),
         addTask("Task 1"),

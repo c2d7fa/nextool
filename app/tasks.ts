@@ -348,6 +348,7 @@ function doesTaskMatch(state: CommonState, task: Task): boolean {
   else if (state.filter === "archive") return task.archived;
   else if (state.filter === "paused") return taskIs(state, task, "paused");
   else if (state.filter === "today") return taskIs(state, task, "today");
+  else if (state.filter === "waiting") return taskIs(state, task, "waiting");
   else return true;
 }
 
