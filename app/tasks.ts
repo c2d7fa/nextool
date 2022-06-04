@@ -326,12 +326,22 @@ export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["i
     (task) => doesSubtaskMatchFilter(state, task),
   );
 
+  function someButNotAll<T>(list: T[], predicate: (item: T) => boolean): boolean {
+    return list.some((item) => predicate(item)) && !list.every((item) => predicate(item));
+  }
+
   return (
-    fullList.some(
-      (t) => !doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "include"}]}, t),
-    ) &&
-    fullList.some(
-      (t) => !doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "exclude"}]}, t),
+    someButNotAll(
+      fullList,
+      (t) =>
+        !doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "include"}]}, t) &&
+        doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "exclude"}]}, t),
+    ) ||
+    someButNotAll(
+      fullList,
+      (t) =>
+        doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "include"}]}, t) &&
+        !doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "exclude"}]}, t),
     )
   );
 }

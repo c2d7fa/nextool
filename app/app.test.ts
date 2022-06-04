@@ -3201,7 +3201,7 @@ describe("filter bar", () => {
         ]);
       });
 
-      test("the ready filter is not available in the filter bar", () => {
+      test.skip("the ready filter is not available in the filter bar", () => {
         expect(filterBarHas(view(example), "Ready")).toBe(false);
       });
     });
@@ -3222,9 +3222,21 @@ describe("filter bar", () => {
         ]);
       });
 
-      test("the ready filter is not available in the filter bar", () => {
+      test.skip("the ready filter is not available in the filter bar", () => {
         expect(filterBarHas(view(example), "Ready")).toBe(false);
       });
+    });
+  });
+
+  describe("examples of when subtask filter is shown", () => {
+    test("when completed parent task has non-completed subtask, completed filter is shown", () => {
+      const example = updateAll(empty, [switchToFilter("all"), addTask("Task 1", "done"), addTask("Task 2", 1)]);
+      expect(filterBarHas(view(example), "Completed")).toBe(true);
+    });
+
+    test("when non-completed parent task has completed subtask, completed filter is shown", () => {
+      const example = updateAll(empty, [switchToFilter("all"), addTask("Task 1"), addTask("Task 2", 1, "done")]);
+      expect(filterBarHas(view(example), "Completed")).toBe(true);
     });
   });
 });
