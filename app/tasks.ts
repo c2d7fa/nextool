@@ -326,15 +326,14 @@ export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["i
     (task) => doesSubtaskMatchFilter(state, task),
   );
 
-  function hasBoth(property: TaskProperty) {
-    return fullList.some((t) => taskIs(state, t, property)) && fullList.some((t) => !taskIs(state, t, property));
-  }
-
-  if (id === "paused") return hasBoth("paused");
-  if (id === "done") return hasBoth("done");
-  if (id === "ready") return hasBoth("purelyReadySubtree");
-
-  return false;
+  return (
+    fullList.some(
+      (t) => !doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "include"}]}, t),
+    ) &&
+    fullList.some(
+      (t) => !doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "exclude"}]}, t),
+    )
+  );
 }
 
 function doesTaskMatch(state: CommonState, task: Task): boolean {
