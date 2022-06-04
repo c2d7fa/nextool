@@ -175,6 +175,7 @@ type TaskProperty =
   | "inactive"
   | "project"
   | "readyItself"
+  | "readyTaskItself"
   | "readySubtree"
   | "purelyReadySubtree"
   | "stalled"
@@ -214,6 +215,7 @@ function taskIs(
       : task.action &&
           !taskIs(state, task, "inactive") &&
           !IndentedList.anyDescendant(state.tasks, task, (child) => !taskIs(state, child, "done"));
+  if (property === "readyTaskItself") return !taskIs(state, task, "project") && taskIs(state, task, "readyItself");
   if (property === "readySubtree")
     return (
       taskIs(state, task, "readyItself") ||
@@ -291,24 +293,27 @@ function doesSubtaskMatchSubtaskFilter(
   },
   task: Task,
 ): boolean {
-  function excludedBySubtaskFilter(filter: SubtaskFilter["id"], property: TaskProperty) {
+  function included(filter: SubtaskFilter["id"], excludeProperty: TaskProperty, includeProperty: TaskProperty) {
     const filterState = state.subtaskFilters.find((f) => f.id === filter)?.state ?? "neutral";
+
     if (filterState === "include")
-      return !IndentedList.anyDescendantInList(state.fullList, task, (subtask) =>
-        taskIs(state, subtask, property),
+      return IndentedList.anyDescendantInList(state.fullList, task, (subtask) =>
+        taskIs(state, subtask, includeProperty),
       );
+
     if (filterState === "exclude")
-      return !IndentedList.anyDescendantInList(
+      return IndentedList.anyDescendantInList(
         state.fullList,
         task,
-        (subtask) => !taskIs(state, subtask, property),
+        (subtask) => !taskIs(state, subtask, excludeProperty),
       );
-    return false;
+
+    return true;
   }
 
-  if (excludedBySubtaskFilter("done", "done")) return false;
-  if (excludedBySubtaskFilter("paused", "paused")) return false;
-  if (excludedBySubtaskFilter("ready", "readySubtree")) return false;
+  if (!included("done", "done", "done")) return false;
+  if (!included("paused", "paused", "paused")) return false;
+  if (!included("ready", "readySubtree", "readyTaskItself")) return false;
 
   return true;
 }

@@ -3201,7 +3201,7 @@ describe("filter bar", () => {
         ]);
       });
 
-      test.skip("the ready filter is not available in the filter bar", () => {
+      test("the ready filter is not available in the filter bar", () => {
         expect(filterBarHas(view(example), "Ready")).toBe(false);
       });
     });
@@ -3222,7 +3222,7 @@ describe("filter bar", () => {
         ]);
       });
 
-      test.skip("the ready filter is not available in the filter bar", () => {
+      test("the ready filter is not available in the filter bar", () => {
         expect(filterBarHas(view(example), "Ready")).toBe(false);
       });
     });
