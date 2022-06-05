@@ -177,7 +177,6 @@ type TaskProperty =
   | "readyItself"
   | "readyTaskItself"
   | "readySubtree"
-  | "purelyReadySubtree"
   | "stalled"
   | "stalledSubtree"
   | "waitingItself"
@@ -220,12 +219,6 @@ function taskIs(
     return (
       taskIs(state, task, "readyItself") ||
       IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "readyItself"))
-    );
-  if (property === "purelyReadySubtree")
-    return (
-      !taskIs(state, task, "project") &&
-      taskIs(state, task, "readySubtree") &&
-      !taskIs(state, task, "stalledSubtree")
     );
   if (property === "stalled")
     return (
