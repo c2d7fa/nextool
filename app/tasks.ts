@@ -319,6 +319,12 @@ function doesSubtaskMatchFilter(state: CommonState, task: Task): boolean {
     return (
       taskIs(state, task, "done") || IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "done"))
     );
+  if (state.filter === "paused")
+    return (
+      taskIs(state, task, "paused") ||
+      IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "paused"))
+    );
+
   return true;
 }
 
@@ -356,7 +362,6 @@ function doesTaskMatch(state: CommonState, task: Task): boolean {
     else return false;
   } else if (state.filter === "not-done") return taskIs(state, task, "not-done");
   else if (state.filter === "archive") return task.archived;
-  else if (state.filter === "paused") return taskIs(state, task, "paused");
   else if (state.filter === "today") return taskIs(state, task, "today");
   else if (state.filter === "waiting") return taskIs(state, task, "waiting");
   // We return true if non-matching tasks will be eliminated by

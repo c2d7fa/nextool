@@ -1141,29 +1141,22 @@ describe("filtered views of tasks", () => {
     });
   });
 
-  describe("the paused filter shows paused tasks", () => {
-    const step1 = updateAll(empty, [...switchToFilter("stalled"), addTask("Task 0"), addTask("Task 1")]);
+  describe("the paused filter shows paused tasks and their parents, and subtasks of paused tasks are automatically paused", () => {
+    const example = updateAll(empty, [
+      ...switchToFilter("all"),
+      addTask("Task 0"),
+      addTask("Task 1", 1, "paused"),
+      addTask("Task 2", 2),
+      addTask("Task 3"),
+      switchToFilter("paused"),
+    ]);
 
-    describe("initially", () => {
-      test("both tasks are shown in stalled filter", () => {
-        expect(tasks(step1, "title")).toEqual(["Task 0", "Task 1"]);
-      });
-
-      test("neither task is shown in paused filter", () => {
-        expect(tasks(updateAll(step1, switchToFilter("paused")), "title")).toEqual([]);
-      });
-    });
-
-    const step2 = updateAll(step1, [openNth(0), setComponentValue("Status", "paused")]);
-
-    describe("after marking first task as paused", () => {
-      test("only the second task is shown in stalled filter", () => {
-        expect(tasks(step2, "title")).toEqual(["Task 1"]);
-      });
-
-      test("the first task is shown in paused filter", () => {
-        expect(tasks(updateAll(step2, switchToFilter("paused")), "title")).toEqual(["Task 0"]);
-      });
+    test("the correct tasks are shown in this example", () => {
+      expect(tasks(example, ["title", "indentation", "paused"])).toEqual([
+        {title: "Task 0", indentation: 0, paused: false},
+        {title: "Task 1", indentation: 1, paused: true},
+        {title: "Task 2", indentation: 2, paused: true},
+      ]);
     });
   });
 });
