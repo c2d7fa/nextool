@@ -313,40 +313,24 @@ function doesSubtaskMatchSubtaskFilter(
 
 function doesSubtaskMatchFilter(state: CommonState, task: Task): boolean {
   if (taskIs(state, task, "archived") && state.filter !== "archive") return false;
-  if (state.filter === "stalled")
+
+  const filterProperties = {
+    "stalled": "stalled",
+    "ready": "readyItself",
+    "done": "done",
+    "paused": "paused",
+    "waiting": "waiting",
+    "today": "today",
+    "not-done": "not-done",
+  } as const;
+
+  if (typeof state.filter === "string" && state.filter in filterProperties) {
+    const filterId = state.filter as keyof typeof filterProperties;
     return (
-      taskIs(state, task, "stalled") ||
-      IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "stalled"))
+      taskIs(state, task, filterProperties[filterId]) ||
+      IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, filterProperties[filterId]))
     );
-  if (state.filter === "ready")
-    return (
-      taskIs(state, task, "readyTaskItself") ||
-      IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "readyTaskItself"))
-    );
-  if (state.filter === "done")
-    return (
-      taskIs(state, task, "done") || IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "done"))
-    );
-  if (state.filter === "paused")
-    return (
-      taskIs(state, task, "paused") ||
-      IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "paused"))
-    );
-  if (state.filter === "waiting")
-    return (
-      taskIs(state, task, "waiting") ||
-      IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "waiting"))
-    );
-  if (state.filter === "today")
-    return (
-      taskIs(state, task, "today") ||
-      IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "today"))
-    );
-  if (state.filter === "not-done")
-    return (
-      taskIs(state, task, "not-done") ||
-      IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "not-done"))
-    );
+  }
 
   return true;
 }
@@ -383,10 +367,12 @@ function doesTaskMatch(state: CommonState, task: Task): boolean {
   if (typeof state.filter === "object") {
     if (state.filter.type === "project" && taskProject(state, task)?.id === state.filter.project.id) return true;
     else return false;
-  } else if (state.filter === "archive") return task.archived;
-  // We return true if non-matching tasks will be eliminated by
-  // doesSubtaskMatchFilter instead.
-  else return true;
+  } else if (state.filter === "archive") {
+    return task.archived;
+  } else {
+    // Irrelevant tasks will be filtered out by doesSubtaskMatchFilter instead.
+    return true;
+  }
 }
 
 function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
