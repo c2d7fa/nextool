@@ -819,70 +819,6 @@ describe("nesting tasks with drag and drop", () => {
 });
 
 describe("drag and drop in filtered views", () => {
-  describe("example in finished view, when subtask and other top-level task are finished, but parent is not", () => {
-    const example = updateAll(empty, [
-      switchToFilter("all"),
-      addTask("Task 0"),
-      addTask("Task 1", 1, "done"),
-      addTask("Task 2", "done"),
-      switchToFilter("done"),
-    ]);
-
-    describe("initially", () => {
-      test("the correct tasks are shown in the finished view", () => {
-        expect(tasks(example, ["title", "indentation"])).toEqual([
-          {title: "Task 1", indentation: 0},
-          {title: "Task 2", indentation: 0},
-        ]);
-      });
-    });
-
-    describe("after dragging top-level task into finished child task", () => {
-      const step1 = updateAll(example, [
-        dragAndDropNth(1, 0, {side: "below", indentation: 1}),
-        switchToFilter("all"),
-      ]);
-
-      test("the correct tasks are shown in the all view", () => {
-        expect(tasks(step1, ["title", "indentation"])).toEqual([
-          {title: "Task 0", indentation: 0},
-          {title: "Task 1", indentation: 1},
-          {title: "Task 2", indentation: 2},
-        ]);
-      });
-    });
-
-    describe("after dragging child task into top-level task", () => {
-      const step1 = updateAll(example, [
-        dragAndDropNth(0, 1, {side: "below", indentation: 1}),
-        switchToFilter("all"),
-      ]);
-
-      test("the correct tasks are shown in the all view", () => {
-        expect(tasks(step1, ["title", "indentation"])).toEqual([
-          {title: "Task 0", indentation: 0},
-          {title: "Task 2", indentation: 0},
-          {title: "Task 1", indentation: 1},
-        ]);
-      });
-    });
-
-    describe("after dragging top-level task into finished child task by dropping it above itself", () => {
-      const step1 = updateAll(example, [
-        dragAndDropNth(1, 1, {side: "above", indentation: 1}),
-        switchToFilter("all"),
-      ]);
-
-      test("the correct tasks are shown in the all view", () => {
-        expect(tasks(step1, ["title", "indentation"])).toEqual([
-          {title: "Task 0", indentation: 0},
-          {title: "Task 1", indentation: 1},
-          {title: "Task 2", indentation: 2},
-        ]);
-      });
-    });
-  });
-
   describe("dragging task to first position in a project filter", () => {
     const step1 = updateAll(empty, [
       switchToFilter("all"),
@@ -1188,99 +1124,39 @@ describe("dragging a subtree of tasks", () => {
 });
 
 describe("filtered views of tasks", () => {
-  describe("in an example where a child task is finished but the parent is not", () => {
-    const exampleBeforeAll = updateAll(empty, [
-      {tag: "selectFilter", filter: "all"},
+  describe("the completed view includes the hierarchy of completed tasks, but not their subtasks", () => {
+    const example = updateAll(empty, [
+      switchToFilter("all"),
       addTask("Task 0"),
-      addTask("Task 1", 1),
+      addTask("Task 1", 1, "done"),
       addTask("Task 2", 2),
+      switchToFilter("done"),
     ]);
 
-    const exampleAfterAll = updateAll(exampleBeforeAll, [...check(view(exampleBeforeAll), 1)]);
-
-    const exampleBeforeDone = updateAll(exampleBeforeAll, [{tag: "selectFilter", filter: "done"}]);
-
-    const exampleAfterDone = updateAll(exampleAfterAll, [{tag: "selectFilter", filter: "done"}]);
-
-    describe("before marking the task as done", () => {
-      test("the correct tasks are shown in the 'all' view", () => {
-        expect(tasks(exampleBeforeAll, "title")).toEqual(["Task 0", "Task 1", "Task 2"]);
-      });
-
-      test("the tasks have the correct indentation", () => {
-        expect(tasks(exampleBeforeAll, "indentation")).toEqual([0, 1, 2]);
-      });
-
-      test("the filtered view is empty", () => {
-        expect(tasks(exampleBeforeDone, []).length).toBe(0);
-      });
-    });
-
-    describe("after marking the task as done", () => {
-      test("the same tasks are shown in the 'all' view", () => {
-        expect(tasks(exampleAfterAll, "title")).toEqual(["Task 0", "Task 1", "Task 2"]);
-      });
-
-      test("the tasks have the same indentation in the 'all' view", () => {
-        expect(tasks(exampleAfterAll, "indentation")).toEqual([0, 1, 2]);
-      });
-
-      test("the filtered view now contains the task", () => {
-        expect(tasks(exampleAfterDone, "title")).toContainEqual("Task 1");
-      });
-
-      test("the filtered view also contains the subtask, even though it doesn't match filter itself", () => {
-        expect(tasks(exampleAfterDone, "title")).toContainEqual("Task 2");
-      });
-
-      test("the filtered view contains no other tasks", () => {
-        expect(tasks(exampleAfterDone, []).length).toEqual(2);
-      });
-
-      test("the tasks in the filtered view have the correct indentation", () => {
-        expect(tasks(exampleAfterDone, "indentation")).toEqual([0, 1]);
-      });
-    });
-
-    describe("after marking the leaf task as done", () => {
-      const example2 = updateAll(exampleAfterAll, [
-        check(view(exampleAfterAll), 2),
-        {tag: "selectFilter", filter: "done"},
+    test("the correct tasks are shown", () => {
+      expect(tasks(example, ["title", "indentation", "done"])).toEqual([
+        {title: "Task 0", indentation: 0, done: false},
+        {title: "Task 1", indentation: 1, done: true},
       ]);
-
-      test("the same tasks are shown in the 'done' view (since it was already included)", () => {
-        expect(tasks(example2, "title")).toEqual(["Task 1", "Task 2"]);
-      });
-
-      test("the task is now marked as done", () => {
-        expect(nthTask(example2, 1).done).toBe(true);
-      });
     });
   });
 
-  describe("the paused filter shows paused tasks", () => {
-    const step1 = updateAll(empty, [...switchToFilter("stalled"), addTask("Task 0"), addTask("Task 1")]);
+  describe("the paused filter shows paused tasks and their parents, and subtasks of paused tasks are automatically paused", () => {
+    const example = updateAll(empty, [
+      ...switchToFilter("all"),
+      addTask("Task 0"),
+      addTask("Task 1", 1, "paused"),
+      addTask("Task 2", 2),
+      addTask("Task 3"),
+      switchToFilter("paused"),
+    ]);
 
-    describe("initially", () => {
-      test("both tasks are shown in stalled filter", () => {
-        expect(tasks(step1, "title")).toEqual(["Task 0", "Task 1"]);
-      });
-
-      test("neither task is shown in paused filter", () => {
-        expect(tasks(updateAll(step1, switchToFilter("paused")), "title")).toEqual([]);
-      });
-    });
-
-    const step2 = updateAll(step1, [openNth(0), setComponentValue("Status", "paused")]);
-
-    describe("after marking first task as paused", () => {
-      test("only the second task is shown in stalled filter", () => {
-        expect(tasks(step2, "title")).toEqual(["Task 1"]);
-      });
-
-      test("the first task is shown in paused filter", () => {
-        expect(tasks(updateAll(step2, switchToFilter("paused")), "title")).toEqual(["Task 0"]);
-      });
+    test("the correct tasks are shown in this example", () => {
+      expect(tasks(example, ["title", "indentation", "paused"])).toEqual([
+        {title: "Task 0", indentation: 0, paused: false},
+        {title: "Task 1", indentation: 1, paused: true},
+        {title: "Task 2", indentation: 2, paused: true},
+      ]);
     });
   });
 });
@@ -3225,6 +3101,18 @@ describe("filter bar", () => {
       test("the ready filter is not available in the filter bar", () => {
         expect(filterBarHas(view(example), "Ready")).toBe(false);
       });
+    });
+  });
+
+  describe("examples of when subtask filter is shown", () => {
+    test("when completed parent task has non-completed subtask, completed filter is shown", () => {
+      const example = updateAll(empty, [switchToFilter("all"), addTask("Task 1", "done"), addTask("Task 2", 1)]);
+      expect(filterBarHas(view(example), "Completed")).toBe(true);
+    });
+
+    test("when non-completed parent task has completed subtask, completed filter is shown", () => {
+      const example = updateAll(empty, [switchToFilter("all"), addTask("Task 1"), addTask("Task 2", 1, "done")]);
+      expect(filterBarHas(view(example), "Completed")).toBe(true);
     });
   });
 });

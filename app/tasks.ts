@@ -175,8 +175,8 @@ type TaskProperty =
   | "inactive"
   | "project"
   | "readyItself"
+  | "readyTaskItself"
   | "readySubtree"
-  | "purelyReadySubtree"
   | "stalled"
   | "stalledSubtree"
   | "waitingItself"
@@ -201,36 +201,31 @@ function taskIs(
     );
   if (property === "nonCompletedToday") return taskIs(state, task, "today") && !taskIs(state, task, "done");
   if (property === "inactive")
-    return taskIs(state, task, "paused") || taskIs(state, task, "done") || taskIs(state, task, "archived");
+    return (
+      taskIs(state, task, "paused") ||
+      taskIs(state, task, "done") ||
+      taskIs(state, task, "archived") ||
+      taskIs(state, task, "waiting")
+    );
   if (property === "project") return task.type === "project";
   if (property === "readyItself")
-    return (
-      (taskIs(state, task, "project")
-        ? IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "readyItself"))
-        : task.action &&
+    return taskIs(state, task, "project")
+      ? IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "readyItself"))
+      : task.action &&
           !taskIs(state, task, "inactive") &&
-          !IndentedList.anyDescendant(state.tasks, task, (child) => !taskIs(state, child, "done"))) &&
-      !taskIs(state, task, "waiting")
-    );
+          !IndentedList.anyDescendant(state.tasks, task, (child) => !taskIs(state, child, "done"));
+  if (property === "readyTaskItself") return !taskIs(state, task, "project") && taskIs(state, task, "readyItself");
   if (property === "readySubtree")
     return (
       taskIs(state, task, "readyItself") ||
       IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, "readyItself"))
-    );
-  if (property === "purelyReadySubtree")
-    return (
-      !taskIs(state, task, "project") &&
-      taskIs(state, task, "readySubtree") &&
-      !taskIs(state, task, "stalledSubtree") &&
-      !taskIs(state, task, "waiting")
     );
   if (property === "stalled")
     return (
       !taskIs(state, task, "readyItself") &&
       !taskIs(state, task, "inactive") &&
       (taskIs(state, task, "project") ||
-        !IndentedList.anyDescendant(state.tasks, task, (child) => !taskIs(state, child, "inactive"))) &&
-      !taskIs(state, task, "waiting")
+        !IndentedList.anyDescendant(state.tasks, task, (child) => !taskIs(state, child, "inactive")))
     );
   if (property === "stalledSubtree")
     return (
@@ -291,32 +286,52 @@ function doesSubtaskMatchSubtaskFilter(
   },
   task: Task,
 ): boolean {
-  function excludedBySubtaskFilter(filter: SubtaskFilter["id"], property: TaskProperty) {
+  function included(filter: SubtaskFilter["id"], excludeProperty: TaskProperty, includeProperty: TaskProperty) {
     const filterState = state.subtaskFilters.find((f) => f.id === filter)?.state ?? "neutral";
+
     if (filterState === "include")
-      return !IndentedList.anyDescendantInList(state.fullList, task, (subtask) =>
-        taskIs(state, subtask, property),
+      return IndentedList.anyDescendantInList(state.fullList, task, (subtask) =>
+        taskIs(state, subtask, includeProperty),
       );
+
     if (filterState === "exclude")
-      return !IndentedList.anyDescendantInList(
+      return IndentedList.anyDescendantInList(
         state.fullList,
         task,
-        (subtask) => !taskIs(state, subtask, property),
+        (subtask) => !taskIs(state, subtask, excludeProperty),
       );
-    return false;
+
+    return true;
   }
 
-  if (excludedBySubtaskFilter("done", "done")) return false;
-  if (excludedBySubtaskFilter("paused", "paused")) return false;
-  if (excludedBySubtaskFilter("ready", "readySubtree")) return false;
+  if (!included("done", "done", "done")) return false;
+  if (!included("paused", "paused", "paused")) return false;
+  if (!included("ready", "readySubtree", "readyTaskItself")) return false;
 
   return true;
 }
 
 function doesSubtaskMatchFilter(state: CommonState, task: Task): boolean {
   if (taskIs(state, task, "archived") && state.filter !== "archive") return false;
-  if (state.filter === "stalled") return taskIs(state, task, "stalledSubtree");
-  if (state.filter === "ready") return taskIs(state, task, "readySubtree");
+
+  const filterProperties = {
+    "stalled": "stalled",
+    "ready": "readyItself",
+    "done": "done",
+    "paused": "paused",
+    "waiting": "waiting",
+    "today": "today",
+    "not-done": "not-done",
+  } as const;
+
+  if (typeof state.filter === "string" && state.filter in filterProperties) {
+    const filterId = state.filter as keyof typeof filterProperties;
+    return (
+      taskIs(state, task, filterProperties[filterId]) ||
+      IndentedList.anyDescendant(state.tasks, task, (t) => taskIs(state, t, filterProperties[filterId]))
+    );
+  }
+
   return true;
 }
 
@@ -326,15 +341,24 @@ export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["i
     (task) => doesSubtaskMatchFilter(state, task),
   );
 
-  function hasBoth(property: TaskProperty) {
-    return fullList.some((t) => taskIs(state, t, property)) && fullList.some((t) => !taskIs(state, t, property));
+  function someButNotAll<T>(list: T[], predicate: (item: T) => boolean): boolean {
+    return list.some((item) => predicate(item)) && !list.every((item) => predicate(item));
   }
 
-  if (id === "paused") return hasBoth("paused");
-  if (id === "done") return hasBoth("done");
-  if (id === "ready") return hasBoth("purelyReadySubtree");
-
-  return false;
+  return (
+    someButNotAll(
+      fullList,
+      (t) =>
+        !doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "include"}]}, t) &&
+        doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "exclude"}]}, t),
+    ) ||
+    someButNotAll(
+      fullList,
+      (t) =>
+        doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "include"}]}, t) &&
+        !doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "exclude"}]}, t),
+    )
+  );
 }
 
 function doesTaskMatch(state: CommonState, task: Task): boolean {
@@ -343,19 +367,12 @@ function doesTaskMatch(state: CommonState, task: Task): boolean {
   if (typeof state.filter === "object") {
     if (state.filter.type === "project" && taskProject(state, task)?.id === state.filter.project.id) return true;
     else return false;
+  } else if (state.filter === "archive") {
+    return task.archived;
+  } else {
+    // Irrelevant tasks will be filtered out by doesSubtaskMatchFilter instead.
+    return true;
   }
-
-  if (state.filter === "ready")
-    return true; // Non-matching tasks will be eliminated by doesSubtaskMatchFilter instead.
-  else if (state.filter === "done") return taskIs(state, task, "done");
-  else if (state.filter === "stalled")
-    return true; // Non-matching tasks will be eliminated by doesSubtaskMatchFilter instead.
-  else if (state.filter === "not-done") return taskIs(state, task, "not-done");
-  else if (state.filter === "archive") return task.archived;
-  else if (state.filter === "paused") return taskIs(state, task, "paused");
-  else if (state.filter === "today") return taskIs(state, task, "today");
-  else if (state.filter === "waiting") return taskIs(state, task, "waiting");
-  else return true;
 }
 
 function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
