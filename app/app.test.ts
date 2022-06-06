@@ -2055,6 +2055,28 @@ describe("active projects section in sidebar", () => {
       expect(view(step1).sideBar.find((section) => section.title === "Project 0")).toBeUndefined();
     });
   });
+
+  describe("selecting the project section again doesn't do anything", () => {
+    const step1 = updateAll(empty, [
+      switchToFilter("all"),
+      addTask("Project 0", "project"),
+      addTask("Project 1", "project", 1),
+      addTask("Task 2", 1, "ready"),
+      switchToFilterCalled("Project 0"),
+    ]);
+
+    const step2 = updateAll(step1, [
+      switchToFilter(view(step1).sideBar.find((section) => section.title === "Project 0")?.filter!),
+    ]);
+
+    test("after selecting project, the correct tasks are shown", () => {
+      expect(tasks(step1, "title")).toEqual(["Project 1", "Task 2"]);
+    });
+
+    test("after selecting project header again, the same tasks are shown", () => {
+      expect(tasks(step2, "title")).toEqual(["Project 1", "Task 2"]);
+    });
+  });
 });
 
 describe("archiving tasks", () => {

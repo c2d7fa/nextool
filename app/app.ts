@@ -164,12 +164,13 @@ function viewSideBar(state: State & {today: Date}) {
     };
   }
 
-  const subprojectSections =
+  const subprojectSections: SideBarSectionView[] =
     activeSubprojects === null
       ? []
       : [
           {
             title: activeSubprojects.title,
+            filter: {type: "project", project: activeSubprojects.parentProject},
             filters: activeSubprojects.children.map((project) =>
               filterView(
                 {type: "project", project},

@@ -410,7 +410,9 @@ export function activeProjectList(state: CommonState): ActiveProjectList {
     }));
 }
 
-export function activeSubprojects(state: CommonState): {title: string; children: ActiveProjectList} | null {
+export function activeSubprojects(
+  state: CommonState,
+): {title: string; parentProject: {id: string}; children: ActiveProjectList} | null {
   if (typeof state.filter === "object" && state.filter.type === "project") {
     const list = IndentedList.pickIntoList(
       state.tasks,
@@ -434,6 +436,7 @@ export function activeSubprojects(state: CommonState): {title: string; children:
 
     return {
       title: filterTitle(state.tasks, {type: "project", project: superproject}),
+      parentProject: superproject,
       children: subprojects.map((subproject) => ({
         id: subproject.id,
         title: subproject.title,
