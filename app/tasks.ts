@@ -241,21 +241,24 @@ function taskIs(
   return false;
 }
 
-export type BadgeId = "ready" | "stalled" | "project" | "today" | "waiting";
+export type BadgeId = "ready" | "stalled" | "project" | "today" | {type: "waiting"; text: string};
 
 function badges(state: CommonState, task: Task): BadgeId[] {
-  function taskHas(state: Pick<CommonState, "tasks" | "today">, task: Task, badge: BadgeId): boolean {
+  function taskHas(state: Pick<CommonState, "tasks" | "today">, task: Task, badge: BadgeId & string): boolean {
     if (badge === "ready") return taskIs(state, task, "readyItself");
     if (badge === "stalled") return taskIs(state, task, "stalled");
     if (badge === "project") return taskIs(state, task, "project");
     if (badge === "today") return taskIs(state, task, "today");
-    if (badge === "waiting") return taskIs(state, task, "waitingItself");
     return false;
   }
 
-  return (["project", "today", "stalled", "ready", "waiting"] as const).flatMap((badge) =>
+  const simpleBadges = (["project", "today", "stalled", "ready"] as const).flatMap((badge) =>
     taskHas(state, task, badge) ? [badge] : [],
   );
+
+  const waitingBadges = taskIs(state, task, "waitingItself") ? [{type: "waiting", text: "0d"} as const] : [];
+
+  return [...simpleBadges, ...waitingBadges];
 }
 
 type FilterSectionId = "actions" | "tasks" | "activeProjects" | "archive";
