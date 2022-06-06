@@ -101,7 +101,18 @@ function convertTasks(data: unknown): Tasks.Tasks | null {
       }
     })();
 
-    return {id: data.id, title: data.title, children, status, type, archived, action, planned, wait};
+    const due: Date | null = (() => {
+      if (has(data, "due", "string")) {
+        if (data.due === "") return null;
+        const date = new Date(data.due);
+        if (isNaN(date.getTime())) return null;
+        return date;
+      } else {
+        return null;
+      }
+    })();
+
+    return {id: data.id, title: data.title, children, status, type, archived, action, planned, wait, due};
   }
 
   if (typeof data !== "object" || !(data instanceof Array)) return null;

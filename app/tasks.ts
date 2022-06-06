@@ -13,6 +13,7 @@ type TaskData = {
   action: boolean;
   planned: Date | null;
   wait: Date | null;
+  due: Date | null;
 };
 
 export type Task = IndentedList.TreeNode<TaskData>;
@@ -81,6 +82,7 @@ export function add(state: CommonState, values: Partial<Task>): Tasks {
     children: [],
     planned: null,
     wait: null,
+    due: null,
   });
 
   return edit({...state, tasks: result}, id, [{type: "moveToFilter", filter: state.filter}]);
@@ -95,7 +97,7 @@ export type EditOperation =
   | {type: "set"; property: "status"; value: "active" | "paused" | "done"}
   | {type: "set"; property: "type"; value: "task" | "project"}
   | {type: "set"; property: "action" | "archived"; value: boolean}
-  | {type: "set"; property: "planned" | "wait"; value: Date | null}
+  | {type: "set"; property: "planned" | "wait" | "due"; value: Date | null}
   | {type: "move"; target: DropTargetHandle}
   | {type: "moveToFilter"; filter: FilterId}
   | null;
@@ -172,7 +174,10 @@ type TaskProperty =
   | "paused"
   | "archived"
   | "today"
-  | "nonCompletedToday"
+  | "todayOrDueToday"
+  | "dueToday"
+  | "overdueToday"
+  | "nonCompletedTodayOrDueToday"
   | "inactive"
   | "project"
   | "readyItself"
@@ -200,7 +205,13 @@ function taskIs(
           (isBefore(task.planned, state.today) && !taskIs(state, task, "done")))) ??
       false
     );
-  if (property === "nonCompletedToday") return taskIs(state, task, "today") && !taskIs(state, task, "done");
+  if (property === "dueToday")
+    return (task.due && (isSameDay(task.due, state.today) || isBefore(task.due, state.today))) ?? false;
+  if (property === "overdueToday")
+    return (task.due && isBefore(task.due, state.today) && !isSameDay(task.due, state.today)) ?? false;
+  if (property === "todayOrDueToday") return taskIs(state, task, "today") || taskIs(state, task, "dueToday");
+  if (property === "nonCompletedTodayOrDueToday")
+    return taskIs(state, task, "todayOrDueToday") && !taskIs(state, task, "done");
   if (property === "inactive")
     return (
       taskIs(state, task, "paused") ||
@@ -259,7 +270,7 @@ function badgeFor(id: BadgeId): {color: BadgeColor; icon: Icon; label: string} {
   }
 }
 
-function badges(state: CommonState, task: Task): BadgeId[] {
+function badges(state: CommonState, task: Task): Badge[] {
   function taskHas(state: Pick<CommonState, "tasks" | "today">, task: Task, badge: BadgeId & string): boolean {
     if (badge === "ready") return taskIs(state, task, "readyItself");
     if (badge === "stalled") return taskIs(state, task, "stalled");
@@ -270,7 +281,12 @@ function badges(state: CommonState, task: Task): BadgeId[] {
 
   function daysLeftUntilWaitTime(state: CommonState, task: Task): number {
     if (!task.wait) return 0;
-    return Math.ceil(differenceInCalendarDays(task.wait, state.today));
+    return differenceInCalendarDays(task.wait, state.today);
+  }
+
+  function daysLeftUntilDueTime(state: CommonState, task: Task): number {
+    if (!task.due) return 0;
+    return differenceInCalendarDays(task.due, state.today);
   }
 
   const simpleBadges = (["project", "today", "stalled", "ready"] as const).flatMap((badge) =>
@@ -281,7 +297,17 @@ function badges(state: CommonState, task: Task): BadgeId[] {
     ? [{type: "waiting", text: `${daysLeftUntilWaitTime(state, task)}d`} as const]
     : [];
 
-  return [...simpleBadges, ...waitingBadges];
+  const dueBadges: Badge[] = (() => {
+    if (!task.due) return [];
+
+    if (taskIs(state, task, "overdueToday"))
+      return [{color: "red", icon: "due", label: `Overdue | ${-daysLeftUntilDueTime(state, task)}d`}];
+    if (taskIs(state, task, "dueToday")) return [{color: "red", icon: "due", label: "Due | Today"}];
+
+    return [{color: "red", icon: "due", label: `Due | ${daysLeftUntilDueTime(state, task)}d`}];
+  })();
+
+  return [...simpleBadges.map(badgeFor), ...waitingBadges.map(badgeFor), ...dueBadges];
 }
 
 type FilterSectionId = "actions" | "tasks" | "activeProjects" | "archive";
@@ -346,7 +372,7 @@ function doesSubtaskMatchFilter(state: CommonState, task: Task): boolean {
     "done": "done",
     "paused": "paused",
     "waiting": "waiting",
-    "today": "today",
+    "today": "todayOrDueToday",
     "not-done": "not-done",
   } as const;
 
@@ -481,7 +507,7 @@ export function count(
 ): number {
   const subtaskProperty =
     filter === "today"
-      ? "nonCompletedToday"
+      ? "nonCompletedTodayOrDueToday"
       : filter === "ready"
       ? "readyItself"
       : filter === "stalled"
@@ -565,9 +591,9 @@ function viewRows(state: CommonState): TaskView[] {
     indentation: task.indentation,
     done: taskIs(state, task, "done"),
     paused: taskIs(state, task, "paused") || taskIs(state, task, "waiting"),
-    badges: badges(state, task).map(badgeFor),
+    badges: badges(state, task),
     project: task.type === "project",
-    today: taskIs(state, task, "today"),
+    today: taskIs(state, task, "todayOrDueToday"),
     borderBelow: index < list.length - 1,
   }));
 }

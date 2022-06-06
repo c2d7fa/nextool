@@ -3,7 +3,7 @@ import {updateApp, State, view as viewApp, Event, empty, DragId, DropId, View, e
 import {DropTargetView, FilterId, TaskView} from "./tasks";
 
 function view(app: State): View {
-  return viewApp({...app, today: new Date("2020-03-15")});
+  return viewApp({...app, today: new Date("2020-03-15T12:00:00Z")});
 }
 
 type Modifications = Event | ((view: View) => readonly Event[]) | readonly Modifications[];
@@ -13,7 +13,7 @@ function updateAll(state: State, mods: Modifications): State {
 }
 
 function stateAndEffectsAfter(app: State, mods: Modifications): [State, Effect[]] {
-  const state = {...app, today: new Date("2020-03-15")};
+  const state = {...app, today: new Date("2020-03-15T12:00:00Z")};
   if (typeof mods === "function") {
     return stateAndEffectsAfter(app, mods(view(app)));
   } else if (Array.isArray(mods)) {
@@ -2740,6 +2740,103 @@ describe("wait date", () => {
       test("after dragging to waiting tab, the filter has an indicator", () => {
         expect(indicatorForFilter(step2, "Waiting")).toEqual({type: "text", color: "grey", text: "1"});
       });
+    });
+  });
+});
+
+describe("due date", () => {
+  describe("due date is saved", () => {
+    const step1 = updateAll(empty, [...switchToFilter("all"), addTask("Task 1"), openNth(0)]);
+
+    describe("initially", () => {
+      test("the due date is not set", () => {
+        expect(componentTitled(step1, "Due")).toMatchObject({type: "date", value: ""});
+      });
+    });
+
+    const step2 = updateAll(step1, [setComponentValue("Due", "2020-01-01")]);
+
+    describe("after setting due date", () => {
+      test("the due date is set in the editor", () => {
+        expect(componentTitled(step2, "Due")).toMatchObject({type: "date", value: "2020-01-01"});
+      });
+    });
+
+    const [_, savedEffects] = stateAndEffectsAfter(step2, [{tag: "storage", type: "clickSaveButton"}]);
+    const savedContents = (savedEffects[0] as Effect & {type: "fileDownload"}).contents;
+
+    const loaded = updateAll(empty, [
+      {tag: "storage", type: "loadFile", name: "tasks.json", contents: savedContents},
+      switchToFilter("all"),
+      openNth(0),
+    ]);
+
+    describe("after loading the file", () => {
+      test("the due date is still set in the editor", () => {
+        expect(componentTitled(loaded, "Due")).toMatchObject({type: "date", value: "2020-01-01"});
+      });
+    });
+  });
+
+  function setDue(n: number, date: string) {
+    return [openNth(n), setComponentValue("Due", date)];
+  }
+
+  describe("badges for due dates", () => {
+    describe("marking a single stalled task as due", () => {
+      const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 1")]);
+
+      const step2 = updateAll(step1, [setDue(0, "2020-03-20")]);
+
+      test("before setting due date, task only has stalled badge", () => {
+        expect(tasks(step1, "badges")).toEqual([[bStalled]]);
+      });
+
+      test("after setting due date, task also has due badge", () => {
+        expect(tasks(step2, "badges")).toEqual([[bStalled, {color: "red", label: "Due | 5d", icon: "due"}]]);
+      });
+    });
+  });
+
+  describe("tasks due today", () => {
+    const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 1", "ready"), setDue(0, "2020-03-15")]);
+
+    test("have badge", () => {
+      expect(tasks(step1, "badges")).toEqual([[bReady, {color: "red", label: "Due | Today", icon: "due"}]]);
+    });
+
+    test("have 'today' highlight in task list", () => {
+      expect(tasks(step1, "today")).toEqual([true]);
+    });
+
+    test("are included in the 'today' tab", () => {
+      const step2 = updateAll(step1, [switchToFilter("today")]);
+      expect(tasks(step2, "title")).toEqual(["Task 1"]);
+    });
+
+    test("are included in the 'today' count", () => {
+      expect(indicatorForFilter(step1, "Today")).toEqual({type: "text", color: "red", text: "1"});
+    });
+  });
+
+  describe("tasks due before today", () => {
+    const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 1", "ready"), setDue(0, "2020-03-10")]);
+
+    test("have badge", () => {
+      expect(tasks(step1, "badges")).toEqual([[bReady, {color: "red", label: "Overdue | 5d", icon: "due"}]]);
+    });
+
+    test("have 'today' highlight in task list", () => {
+      expect(tasks(step1, "today")).toEqual([true]);
+    });
+
+    test("are included in the 'today' tab", () => {
+      const step2 = updateAll(step1, [switchToFilter("today")]);
+      expect(tasks(step2, "title")).toEqual(["Task 1"]);
+    });
+
+    test("are included in the 'today' count", () => {
+      expect(indicatorForFilter(step1, "Today")).toEqual({type: "text", color: "red", text: "1"});
     });
   });
 });
