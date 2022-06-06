@@ -175,6 +175,8 @@ type TaskProperty =
   | "archived"
   | "today"
   | "todayOrDueToday"
+  | "dueToday"
+  | "overdueToday"
   | "nonCompletedTodayOrDueToday"
   | "inactive"
   | "project"
@@ -203,8 +205,11 @@ function taskIs(
           (isBefore(task.planned, state.today) && !taskIs(state, task, "done")))) ??
       false
     );
-  if (property === "todayOrDueToday")
-    return (taskIs(state, task, "today") || (task.due && isSameDay(task.due, state.today))) ?? false;
+  if (property === "dueToday")
+    return (task.due && (isSameDay(task.due, state.today) || isBefore(task.due, state.today))) ?? false;
+  if (property === "overdueToday")
+    return (task.due && isBefore(task.due, state.today) && !isSameDay(task.due, state.today)) ?? false;
+  if (property === "todayOrDueToday") return taskIs(state, task, "today") || taskIs(state, task, "dueToday");
   if (property === "nonCompletedTodayOrDueToday")
     return taskIs(state, task, "todayOrDueToday") && !taskIs(state, task, "done");
   if (property === "inactive")
@@ -295,7 +300,9 @@ function badges(state: CommonState, task: Task): Badge[] {
   const dueBadges: Badge[] = (() => {
     if (!task.due) return [];
 
-    if (isSameDay(task.due, state.today)) return [{color: "red", icon: "due", label: "Due | Today"}];
+    if (taskIs(state, task, "overdueToday"))
+      return [{color: "red", icon: "due", label: `Overdue | ${-daysLeftUntilDueTime(state, task)}d`}];
+    if (taskIs(state, task, "dueToday")) return [{color: "red", icon: "due", label: "Due | Today"}];
 
     return [{color: "red", icon: "due", label: `Due | ${daysLeftUntilDueTime(state, task)}d`}];
   })();

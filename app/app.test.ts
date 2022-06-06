@@ -3,7 +3,7 @@ import {updateApp, State, view as viewApp, Event, empty, DragId, DropId, View, e
 import {DropTargetView, FilterId, TaskView} from "./tasks";
 
 function view(app: State): View {
-  return viewApp({...app, today: new Date("2020-03-15")});
+  return viewApp({...app, today: new Date("2020-03-15T12:00:00Z")});
 }
 
 type Modifications = Event | ((view: View) => readonly Event[]) | readonly Modifications[];
@@ -13,7 +13,7 @@ function updateAll(state: State, mods: Modifications): State {
 }
 
 function stateAndEffectsAfter(app: State, mods: Modifications): [State, Effect[]] {
-  const state = {...app, today: new Date("2020-03-15")};
+  const state = {...app, today: new Date("2020-03-15T12:00:00Z")};
   if (typeof mods === "function") {
     return stateAndEffectsAfter(app, mods(view(app)));
   } else if (Array.isArray(mods)) {
@@ -2803,6 +2803,27 @@ describe("due date", () => {
 
     test("have badge", () => {
       expect(tasks(step1, "badges")).toEqual([[bReady, {color: "red", label: "Due | Today", icon: "due"}]]);
+    });
+
+    test("have 'today' highlight in task list", () => {
+      expect(tasks(step1, "today")).toEqual([true]);
+    });
+
+    test("are included in the 'today' tab", () => {
+      const step2 = updateAll(step1, [switchToFilter("today")]);
+      expect(tasks(step2, "title")).toEqual(["Task 1"]);
+    });
+
+    test("are included in the 'today' count", () => {
+      expect(indicatorForFilter(step1, "Today")).toEqual({type: "text", color: "red", text: "1"});
+    });
+  });
+
+  describe("tasks due before today", () => {
+    const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 1", "ready"), setDue(0, "2020-03-10")]);
+
+    test("have badge", () => {
+      expect(tasks(step1, "badges")).toEqual([[bReady, {color: "red", label: "Overdue | 5d", icon: "due"}]]);
     });
 
     test("have 'today' highlight in task list", () => {
