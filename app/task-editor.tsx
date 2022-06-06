@@ -99,7 +99,11 @@ export function editOperationsFor(state: State, ev: Event): EditOperation[] {
     if (ev.value === "task") return [{type: "set", property: "type", value: "task"}];
     if (ev.value === "project") return [{type: "set", property: "type", value: "project"}];
     else return [];
-  } else if (ev.component.id.property === "planned" || ev.component.id.property === "wait") {
+  } else if (
+    ev.component.id.property === "planned" ||
+    ev.component.id.property === "wait" ||
+    ev.component.id.property === "due"
+  ) {
     const property = ev.component.id.property;
     if (ev.value === "") return [{type: "set", property, value: null}];
     const date = DateFnsTz.zonedTimeToUtc(DateFns.parse(ev.value, "yyyy-MM-dd", 0), "UTC");
@@ -183,6 +187,16 @@ export function load({tasks}: {tasks: Tasks}, taskId: string): State {
               type: "date",
               property: "wait",
               value: task.wait ? DateFns.format(task.wait, "yyyy-MM-dd") : "",
+            },
+          ],
+        },
+        {
+          title: "Due",
+          components: [
+            {
+              type: "date",
+              property: "due",
+              value: task.due ? DateFns.format(task.due, "yyyy-MM-dd") : "",
             },
           ],
         },
