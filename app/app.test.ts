@@ -214,6 +214,11 @@ function indicatorForFilter(view: View | State, label: string) {
     .find((filter) => filter.label === label)?.indicator;
 }
 
+const bStalled = {label: "Stalled", icon: "stalled", color: "orange"};
+const bReady = {label: "Ready", icon: "ready", color: "green"};
+const bProject = {label: "Project", icon: "project", color: "project"};
+const bToday = {label: "Today", icon: "today", color: "red"};
+
 // -----
 
 describe("adding tasks", () => {
@@ -244,7 +249,7 @@ describe("adding tasks", () => {
     });
 
     test("they are marked as stalled", () => {
-      expect(tasks(example, "badges")).toEqual([["stalled"], ["stalled"], ["stalled"]]);
+      expect(tasks(example, "badges")).toEqual([[bStalled], [bStalled], [bStalled]]);
     });
   });
 });
@@ -321,7 +326,7 @@ describe("dragging tasks to filters", () => {
     ]);
 
     test("they are all marked as stalled at first", () => {
-      expect(tasks(example, "badges")).toEqual([["stalled"], ["stalled"], ["stalled"]]);
+      expect(tasks(example, "badges")).toEqual([[bStalled], [bStalled], [bStalled]]);
     });
 
     test("they are all marked unfinished at first", () => {
@@ -330,7 +335,7 @@ describe("dragging tasks to filters", () => {
 
     const action = updateAll(example, [dragToFilter(0, "ready")]);
     test("dragging a task to the action filter gives it the ready badge", () => {
-      expect(tasks(action, "badges")).toEqual([["ready"], ["stalled"], ["stalled"]]);
+      expect(tasks(action, "badges")).toEqual([[bReady], [bStalled], [bStalled]]);
     });
 
     const done = updateAll(example, [dragToFilter(0, "done")]);
@@ -340,7 +345,7 @@ describe("dragging tasks to filters", () => {
 
     test("dragging a task marked action to stalled gives it the stalled badge again", () => {
       const stalled = updateAll(action, [dragToFilter(0, "stalled")]);
-      expect(tasks(stalled, "badges")).toEqual([["stalled"], ["stalled"], ["stalled"]]);
+      expect(tasks(stalled, "badges")).toEqual([[bStalled], [bStalled], [bStalled]]);
     });
 
     test("dragging a task marked done to unfinished marks it as unfinished again", () => {
@@ -1020,7 +1025,7 @@ describe("a task that has an unfinished child task isn't stalled", () => {
       });
 
       test("the child is stalled", () => {
-        expect(nthTask(example, 1).badges).toEqual(["stalled"]);
+        expect(nthTask(example, 1).badges).toEqual([bStalled]);
       });
 
       test("the parent is not stalled", () => {
@@ -1038,7 +1043,7 @@ describe("a task that has an unfinished child task isn't stalled", () => {
       });
 
       test("the parent is stalled", () => {
-        expect(nthTask(childFinished, 0).badges).toEqual(["stalled"]);
+        expect(nthTask(childFinished, 0).badges).toEqual([bStalled]);
       });
     });
   });
@@ -1060,7 +1065,7 @@ describe("an action that has unfinished children isn't ready", () => {
       });
 
       test("the child is ready", () => {
-        expect(nthTask(example, 1).badges).toEqual(["ready"]);
+        expect(nthTask(example, 1).badges).toEqual([bReady]);
       });
 
       test("the parent is not ready", () => {
@@ -1078,7 +1083,7 @@ describe("an action that has unfinished children isn't ready", () => {
       });
 
       test("the parent becomes ready", () => {
-        expect(nthTask(childFinished, 0).badges).toEqual(["ready"]);
+        expect(nthTask(childFinished, 0).badges).toEqual([bReady]);
       });
     });
   });
@@ -1406,7 +1411,7 @@ describe("the task editor", () => {
 
     describe("initially", () => {
       test("the example task has the stalled badge in the task list", () => {
-        expect(tasks(step1, "badges")).toEqual([["stalled"]]);
+        expect(tasks(step1, "badges")).toEqual([[bStalled]]);
       });
 
       test("there is a component titled 'Actionable'", () => {
@@ -1430,7 +1435,7 @@ describe("the task editor", () => {
 
     describe("after dragging the task into the ready filter", () => {
       test("the task has the ready badge in the task list", () => {
-        expect(tasks(step2, "badges")).toEqual([["ready"]]);
+        expect(tasks(step2, "badges")).toEqual([[bReady]]);
       });
 
       test("the selected option becomes 'Ready'", () => {
@@ -1442,7 +1447,7 @@ describe("the task editor", () => {
 
     describe("after changing the task status back in the editor", () => {
       test("the task reverts to the stalled badge", () => {
-        expect(tasks(step3, "badges")).toEqual([["stalled"]]);
+        expect(tasks(step3, "badges")).toEqual([[bStalled]]);
       });
 
       test("the selected option becomes 'Not Ready' again", () => {
@@ -1458,7 +1463,7 @@ describe("paused tasks", () => {
 
     describe("initially", () => {
       test("the task has the stalled badge", () => {
-        expect(tasks(step1, "badges")).toEqual([["stalled"]]);
+        expect(tasks(step1, "badges")).toEqual([[bStalled]]);
       });
 
       test("the task is not paused", () => {
@@ -1488,7 +1493,7 @@ describe("paused tasks", () => {
       });
 
       test("the child has the stalled badge", () => {
-        expect(tasks(step1, "badges")).toEqual([[], ["stalled"]]);
+        expect(tasks(step1, "badges")).toEqual([[], [bStalled]]);
       });
     });
 
@@ -1527,7 +1532,7 @@ describe("paused tasks", () => {
 
       describe("when child is paused", () => {
         test("parent is stalled", () => {
-          expect(tasks(step1, "badges")).toEqual([["stalled"], []]);
+          expect(tasks(step1, "badges")).toEqual([[bStalled], []]);
         });
 
         test("child is paused", () => {
@@ -1539,7 +1544,7 @@ describe("paused tasks", () => {
 
       describe("after marking child as done", () => {
         test("parent becomes ready", () => {
-          expect(tasks(step2, "badges")).toEqual([["ready"], []]);
+          expect(tasks(step2, "badges")).toEqual([[bReady], []]);
         });
 
         test("child is not paused", () => {
@@ -1559,7 +1564,7 @@ describe("paused tasks", () => {
 
       describe("when child is paused", () => {
         test("parent is stalled", () => {
-          expect(tasks(step1, "badges")).toEqual([["stalled"], []]);
+          expect(tasks(step1, "badges")).toEqual([[bStalled], []]);
         });
 
         test("child is paused", () => {
@@ -1571,7 +1576,7 @@ describe("paused tasks", () => {
 
       describe("after marking child as done", () => {
         test("parent is still stalled", () => {
-          expect(tasks(step2, "badges")).toEqual([["stalled"], []]);
+          expect(tasks(step2, "badges")).toEqual([[bStalled], []]);
         });
 
         test("child is not paused", () => {
@@ -1614,8 +1619,12 @@ describe("the stalled filter", () => {
 
       test("there is a stalled subtask", () => {
         expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
-          {title: "Project", indentation: 0, badges: ["project", "stalled"]},
-          {title: "Task 1", indentation: 1, badges: ["stalled"]},
+          {
+            title: "Project",
+            indentation: 0,
+            badges: [bProject, bStalled],
+          },
+          {title: "Task 1", indentation: 1, badges: [bStalled]},
         ]);
       });
 
@@ -1636,8 +1645,8 @@ describe("the stalled filter", () => {
       test("in the example, there are three tasks shown in the view", () => {
         expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
           {title: "Task 0", indentation: 0, badges: []},
-          {title: "Task 1", indentation: 1, badges: ["stalled"]},
-          {title: "Task 2", indentation: 0, badges: ["stalled"]},
+          {title: "Task 1", indentation: 1, badges: [bStalled]},
+          {title: "Task 2", indentation: 0, badges: [bStalled]},
         ]);
       });
 
@@ -1660,9 +1669,13 @@ describe("the stalled filter", () => {
 
     test("the correct tasks are shown", () => {
       expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
-        {title: "Project", indentation: 0, badges: ["project", "stalled"]},
+        {
+          title: "Project",
+          indentation: 0,
+          badges: [bProject, bStalled],
+        },
         {title: "Task 3", indentation: 1, badges: []},
-        {title: "Task 4", indentation: 2, badges: ["stalled"]},
+        {title: "Task 4", indentation: 2, badges: [bStalled]},
       ]);
     });
   });
@@ -1681,16 +1694,28 @@ describe("the stalled filter", () => {
 
     test("the ready page shows the ready superproject and its ready task", () => {
       expect(tasks(step2, ["title", "indentation", "badges"])).toEqual([
-        {title: "Project 0", indentation: 0, badges: ["project", "ready"]},
-        {title: "Task 1", indentation: 1, badges: ["ready"]},
+        {
+          title: "Project 0",
+          indentation: 0,
+          badges: [bProject, bReady],
+        },
+        {title: "Task 1", indentation: 1, badges: [bReady]},
       ]);
     });
 
     test("the stalled page shows the ready superproject and its stalled subproject and subtask", () => {
       expect(tasks(step3, ["title", "indentation", "badges"])).toEqual([
-        {title: "Project 0", indentation: 0, badges: ["project", "ready"]},
-        {title: "Project 2", indentation: 1, badges: ["project", "stalled"]},
-        {title: "Task 3", indentation: 2, badges: ["stalled"]},
+        {
+          title: "Project 0",
+          indentation: 0,
+          badges: [bProject, bReady],
+        },
+        {
+          title: "Project 2",
+          indentation: 1,
+          badges: [bProject, bStalled],
+        },
+        {title: "Task 3", indentation: 2, badges: [bStalled]},
       ]);
     });
   });
@@ -1709,8 +1734,8 @@ describe("the stalled filter", () => {
     test("the correct tasks are shown in the example", () => {
       expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
         {title: "Task 0", indentation: 0, badges: []},
-        {title: "Task 1", indentation: 1, badges: ["stalled"]},
-        {title: "Task 4", indentation: 1, badges: ["stalled"]},
+        {title: "Task 1", indentation: 1, badges: [bStalled]},
+        {title: "Task 4", indentation: 1, badges: [bStalled]},
       ]);
     });
   });
@@ -1771,7 +1796,7 @@ describe("projects", () => {
       });
 
       test("the task has the ready badge", () => {
-        expect(tasks(step1, "badges")).toEqual([["ready"]]);
+        expect(tasks(step1, "badges")).toEqual([[bReady]]);
       });
     });
 
@@ -1783,7 +1808,7 @@ describe("projects", () => {
       });
 
       test("the project has the stalled badge", () => {
-        expect(tasks(step2, "badges")).toEqual([["project", "stalled"]]);
+        expect(tasks(step2, "badges")).toEqual([[bProject, bStalled]]);
       });
     });
   });
@@ -1798,7 +1823,7 @@ describe("projects", () => {
         addTask("Task 3", 1),
       ]);
 
-      expect(tasks(example, "badges")).toEqual([["project", "ready"], [], ["ready"], ["stalled"]]);
+      expect(tasks(example, "badges")).toEqual([[bProject, bReady], [], [bReady], [bStalled]]);
     });
 
     test("a project with only a stalled subtask is itself also stalled", () => {
@@ -1808,13 +1833,13 @@ describe("projects", () => {
         addTask("Task 1", 1),
       ]);
 
-      expect(tasks(example, "badges")).toEqual([["project", "stalled"], ["stalled"]]);
+      expect(tasks(example, "badges")).toEqual([[bProject, bStalled], [bStalled]]);
     });
 
     test("however, project isn't stalled if it's paused", () => {
       const example = updateAll(empty, [switchToFilter("all"), addTask("Project", "project", "paused")]);
 
-      expect(tasks(example, "badges")).toEqual([["project"]]);
+      expect(tasks(example, "badges")).toEqual([[bProject]]);
     });
   });
 
@@ -1831,9 +1856,13 @@ describe("projects", () => {
       const step2 = updateAll(example, [...switchToFilter("ready")]);
 
       expect(tasks(step2, ["title", "indentation", "badges"])).toEqual([
-        {title: "Project", indentation: 0, badges: ["project", "ready"]},
+        {
+          title: "Project",
+          indentation: 0,
+          badges: [bProject, bReady],
+        },
         {title: "Task 1", indentation: 1, badges: []},
-        {title: "Task 2", indentation: 2, badges: ["ready"]},
+        {title: "Task 2", indentation: 2, badges: [bReady]},
       ]);
     });
   });
@@ -2180,13 +2209,13 @@ describe("archiving tasks", () => {
     const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 1"), addTask("Task 2", 1)]);
 
     test("initially, the child task is stalled, and the parent is not", () => {
-      expect(tasks(step1, "badges")).toEqual([[], ["stalled"]]);
+      expect(tasks(step1, "badges")).toEqual([[], [bStalled]]);
     });
 
     const step2 = updateAll(step1, [archive(1)]);
 
     test("after archiving the child task, the parent becomes stalled", () => {
-      expect(tasks(step2, "badges")).toEqual([["stalled"]]);
+      expect(tasks(step2, "badges")).toEqual([[bStalled]]);
     });
   });
 });
@@ -2225,7 +2254,7 @@ describe("saving and loading files", () => {
     });
 
     test("the tasks have the correct badges", () => {
-      expect(tasks(step2, "badges")).toEqual([["ready"], []]);
+      expect(tasks(step2, "badges")).toEqual([[bReady], []]);
     });
   });
 
@@ -2379,7 +2408,7 @@ describe("planning", () => {
     ]);
 
     test("the task has the today badge", () => {
-      expect(tasks(step1, "badges")).toEqual([["today", "stalled"]]);
+      expect(tasks(step1, "badges")).toEqual([[bToday, bStalled]]);
     });
 
     test("the task has the 'today' property set in the task list", () => {
@@ -2389,7 +2418,7 @@ describe("planning", () => {
     const step2 = updateAll(step1, [setComponentValue("Planned", "")]);
 
     test("clearing the date removes the today badge", () => {
-      expect(tasks(step2, "badges")).toEqual([["stalled"]]);
+      expect(tasks(step2, "badges")).toEqual([[bStalled]]);
     });
   });
 
@@ -2402,7 +2431,7 @@ describe("planning", () => {
     ]);
 
     test("the task has the today badge", () => {
-      expect(tasks(step1, "badges")).toEqual([["today", "stalled"]]);
+      expect(tasks(step1, "badges")).toEqual([[bToday, bStalled]]);
     });
 
     test("the task has the 'today' property set in the task list", () => {
@@ -2431,7 +2460,7 @@ describe("planning", () => {
       ]);
 
       test("adds the today badge to the task", () => {
-        expect(tasks(step1, "badges")).toEqual([["today", "stalled"], ["stalled"]]);
+        expect(tasks(step1, "badges")).toEqual([[bToday, bStalled], [bStalled]]);
       });
 
       test("updates the planned date", () => {
@@ -2495,7 +2524,7 @@ describe("planning", () => {
         });
 
         test("only the second task still has the 'today' badge", () => {
-          expect(tasks(step3, "badges")).toEqual([[], ["today"]]);
+          expect(tasks(step3, "badges")).toEqual([[], [bToday]]);
         });
       });
     });
@@ -2559,12 +2588,12 @@ describe("wait date", () => {
       });
     });
 
-    test("task with wait date in the future has waiting badge", () => {
-      expect(tasks(example, "badges")[0]).toEqual(["waiting"]);
+    test("the waiting task has waiting badge", () => {
+      expect(tasks(example, "badges")[0]).toEqual([{label: "Waiting | 26d", icon: "waiting", color: "grey"}]);
     });
 
     test("task with wait date in the past has stalled badge", () => {
-      expect(tasks(example, "badges")[1]).toEqual(["stalled"]);
+      expect(tasks(example, "badges")[1]).toEqual([bStalled]);
     });
 
     test("waiting task has 'paused' appearance in task list", () => {
@@ -2581,7 +2610,7 @@ describe("wait date", () => {
     ]);
 
     test("the ready task has only the waiting badge", () => {
-      expect(tasks(example, "badges")).toEqual([["waiting"]]);
+      expect(tasks(example, "badges")).toEqual([[{label: "Waiting | 26d", icon: "waiting", color: "grey"}]]);
     });
 
     test("the counter for the ready tab is zero", () => {
@@ -2634,7 +2663,7 @@ describe("wait date", () => {
 
       describe("before marking parent task as waiting", () => {
         test("the children has the correct badges", () => {
-          expect(tasks(step1, "badges")).toEqual([[], ["ready"], ["stalled"]]);
+          expect(tasks(step1, "badges")).toEqual([[], [bReady], [bStalled]]);
         });
 
         test("the counter for the ready tab is 1", () => {
@@ -2648,7 +2677,11 @@ describe("wait date", () => {
 
       describe("after marking the parent task as waiting", () => {
         test("the children no longer have stalled or ready badges", () => {
-          expect(tasks(step2, "badges")).toEqual([["waiting"], [], []]);
+          expect(tasks(step2, "badges")).toEqual([
+            [{label: "Waiting | 26d", icon: "waiting", color: "grey"}],
+            [],
+            [],
+          ]);
         });
 
         test("the counter for the ready tab is zero", () => {
@@ -3062,21 +3095,21 @@ describe("filter bar", () => {
       test("the intial state is correct", () => {
         expect(tasks(step1, ["title", "indentation", "badges"])).toEqual([
           {title: "Task 1", indentation: 0, badges: []},
-          {title: "Task 2", indentation: 1, badges: ["ready"]},
-          {title: "Task 3", indentation: 0, badges: ["stalled"]},
+          {title: "Task 2", indentation: 1, badges: [bReady]},
+          {title: "Task 3", indentation: 0, badges: [bStalled]},
         ]);
       });
 
       test("after setting filter to include, only subtrees with ready tasks are shown", () => {
         expect(tasks(step2, ["title", "indentation", "badges"])).toEqual([
           {title: "Task 1", indentation: 0, badges: []},
-          {title: "Task 2", indentation: 1, badges: ["ready"]},
+          {title: "Task 2", indentation: 1, badges: [bReady]},
         ]);
       });
 
       test("after setting filter to exclude, only subtrees without ready tasks are shown", () => {
         expect(tasks(step3, ["title", "indentation", "badges"])).toEqual([
-          {title: "Task 3", indentation: 0, badges: ["stalled"]},
+          {title: "Task 3", indentation: 0, badges: [bStalled]},
         ]);
       });
     });
@@ -3094,8 +3127,12 @@ describe("filter bar", () => {
 
       test("the correct tasks are shown in the stalled view", () => {
         expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
-          {title: "Project", indentation: 0, badges: ["project", "ready"]},
-          {title: "Task 1", indentation: 1, badges: ["stalled"]},
+          {
+            title: "Project",
+            indentation: 0,
+            badges: [bProject, bReady],
+          },
+          {title: "Task 1", indentation: 1, badges: [bStalled]},
         ]);
       });
 
@@ -3116,7 +3153,7 @@ describe("filter bar", () => {
       test("the correct tasks are shown in the stalled view", () => {
         expect(tasks(example, ["title", "indentation", "badges"])).toEqual([
           {title: "Task 1", indentation: 0, badges: []},
-          {title: "Task 3", indentation: 1, badges: ["stalled"]},
+          {title: "Task 3", indentation: 1, badges: [bStalled]},
         ]);
       });
 

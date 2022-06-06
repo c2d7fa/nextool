@@ -4,6 +4,8 @@ import * as Mdi from "@mdi/js";
 
 import * as styles from "./ui.module.scss";
 
+import * as Tasks from "./tasks";
+
 export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement> & {color?: "magenta"}) {
   const className = [styles.button, props.className, props.color ? styles[props.color] : ""].join(" ");
   return (
@@ -51,11 +53,11 @@ export function IconLabel(props: {icon?: Icon; extraSpace?: boolean; children?: 
   );
 }
 
-export function Badge(props: {color: BadgeColor; icon?: Icon; children: React.ReactNode}) {
-  const className = [styles.badge, styles[props.color]].join(" ");
+export function Badge(props: {badge: Tasks.Badge}) {
+  const className = [styles.badge, styles[props.badge.color]].join(" ");
   return (
     <span className={className}>
-      <IconLabel icon={props.icon}>{props.children}</IconLabel>
+      <IconLabel icon={props.badge.icon}>{props.badge.label}</IconLabel>
     </span>
   );
 }

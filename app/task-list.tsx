@@ -1,6 +1,6 @@
 import * as React from "react";
-import {BadgeId, DropTargetView, TaskListView, TaskView} from "./tasks";
-import {Badge, BadgeColor, Icon} from "./ui";
+import {DropTargetView, TaskListView, TaskView} from "./tasks";
+import {Badge} from "./ui";
 import * as Drag from "./drag";
 import {Send} from "./app";
 
@@ -18,32 +18,11 @@ function CheckBox(props: {checked: boolean; id: string; send: Send}) {
   );
 }
 
-function badgeFor(id: BadgeId): {color: BadgeColor; icon: Icon; label: string} {
-  if (id === "project") return {color: "project", icon: "project", label: "Project"};
-  else if (id === "ready") return {color: "green", icon: "ready", label: "Ready"};
-  else if (id === "stalled") return {color: "orange", icon: "stalled", label: "Stalled"};
-  else if (id === "today") return {color: "red", icon: "today", label: "Today"};
-  else if (id === "waiting") return {color: "grey", icon: "waiting", label: "Waiting"};
-  else {
-    const unreachable: never = id;
-    return unreachable;
-  }
-}
-
-function BadgeFor(props: {type: BadgeId}) {
-  const {color, icon, label} = badgeFor(props.type);
-  return (
-    <Badge color={color} icon={icon}>
-      {label}
-    </Badge>
-  );
-}
-
 function Badges(props: {task: TaskView}) {
   return (
     <span className={style.badges}>
       {props.task.badges.map((badge) => (
-        <BadgeFor type={badge} key={badge} />
+        <Badge badge={badge} key={JSON.stringify(badge)} />
       ))}
     </span>
   );
