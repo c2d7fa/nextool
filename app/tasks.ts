@@ -2,6 +2,7 @@ import {addDays, differenceInCalendarDays, isAfter, isBefore, isSameDay} from "d
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
 import * as IndentedList from "./indented-list";
+import {BadgeColor, Icon} from "./ui";
 
 type TaskData = {
   id: string;
@@ -43,7 +44,7 @@ export type TaskView = {
   paused: boolean;
   project: boolean;
   today: boolean;
-  badges: BadgeId[];
+  badges: Badge[];
   borderBelow: boolean;
 };
 
@@ -241,7 +242,22 @@ function taskIs(
   return false;
 }
 
-export type BadgeId = "ready" | "stalled" | "project" | "today" | {type: "waiting"; text: string};
+type BadgeId = "ready" | "stalled" | "project" | "today" | {type: "waiting"; text: string};
+
+export type Badge = {color: BadgeColor; icon: Icon; label: string};
+
+function badgeFor(id: BadgeId): {color: BadgeColor; icon: Icon; label: string} {
+  if (id === "project") return {color: "project", icon: "project", label: "Project"};
+  else if (id === "ready") return {color: "green", icon: "ready", label: "Ready"};
+  else if (id === "stalled") return {color: "orange", icon: "stalled", label: "Stalled"};
+  else if (id === "today") return {color: "red", icon: "today", label: "Today"};
+  else if (typeof id === "object") {
+    return {color: "grey", icon: "waiting", label: "Waiting | " + id.text};
+  } else {
+    const unreachable: never = id;
+    return unreachable;
+  }
+}
 
 function badges(state: CommonState, task: Task): BadgeId[] {
   function taskHas(state: Pick<CommonState, "tasks" | "today">, task: Task, badge: BadgeId & string): boolean {
@@ -549,7 +565,7 @@ function viewRows(state: CommonState): TaskView[] {
     indentation: task.indentation,
     done: taskIs(state, task, "done"),
     paused: taskIs(state, task, "paused") || taskIs(state, task, "waiting"),
-    badges: badges(state, task),
+    badges: badges(state, task).map(badgeFor),
     project: task.type === "project",
     today: taskIs(state, task, "today"),
     borderBelow: index < list.length - 1,
