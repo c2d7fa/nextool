@@ -174,6 +174,7 @@ type TaskProperty =
   | "paused"
   | "archived"
   | "today"
+  | "todayOrDueToday"
   | "nonCompletedToday"
   | "inactive"
   | "project"
@@ -202,6 +203,8 @@ function taskIs(
           (isBefore(task.planned, state.today) && !taskIs(state, task, "done")))) ??
       false
     );
+  if (property === "todayOrDueToday")
+    return (taskIs(state, task, "today") || (task.due && isSameDay(task.due, state.today))) ?? false;
   if (property === "nonCompletedToday") return taskIs(state, task, "today") && !taskIs(state, task, "done");
   if (property === "inactive")
     return (
@@ -288,9 +291,13 @@ function badges(state: CommonState, task: Task): Badge[] {
     ? [{type: "waiting", text: `${daysLeftUntilWaitTime(state, task)}d`} as const]
     : [];
 
-  const dueBadges: Badge[] = task.due
-    ? [{color: "red", icon: "due", label: `Due | ${daysLeftUntilDueTime(state, task)}d`}]
-    : [];
+  const dueBadges: Badge[] = (() => {
+    if (!task.due) return [];
+
+    if (isSameDay(task.due, state.today)) return [{color: "red", icon: "due", label: "Due | Today"}];
+
+    return [{color: "red", icon: "due", label: `Due | ${daysLeftUntilDueTime(state, task)}d`}];
+  })();
 
   return [...simpleBadges.map(badgeFor), ...waitingBadges.map(badgeFor), ...dueBadges];
 }
@@ -578,7 +585,7 @@ function viewRows(state: CommonState): TaskView[] {
     paused: taskIs(state, task, "paused") || taskIs(state, task, "waiting"),
     badges: badges(state, task),
     project: task.type === "project",
-    today: taskIs(state, task, "today"),
+    today: taskIs(state, task, "todayOrDueToday"),
     borderBelow: index < list.length - 1,
   }));
 }

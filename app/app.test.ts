@@ -2797,6 +2797,18 @@ describe("due date", () => {
       });
     });
   });
+
+  describe("tasks due today", () => {
+    const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 1", "ready"), setDue(0, "2020-03-15")]);
+
+    test("have badge", () => {
+      expect(tasks(step1, "badges")).toEqual([[bReady, {color: "red", label: "Due | Today", icon: "due"}]]);
+    });
+
+    test("have 'today' highlight in task list", () => {
+      expect(tasks(step1, "today")).toEqual([true]);
+    });
+  });
 });
 
 describe("performance", () => {
