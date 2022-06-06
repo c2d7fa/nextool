@@ -1,4 +1,4 @@
-import {addDays, isAfter, isBefore, isSameDay} from "date-fns";
+import {addDays, differenceInCalendarDays, isAfter, isBefore, isSameDay} from "date-fns";
 import {DragId, DropId} from "./app";
 import {DragState} from "./drag";
 import * as IndentedList from "./indented-list";
@@ -252,11 +252,18 @@ function badges(state: CommonState, task: Task): BadgeId[] {
     return false;
   }
 
+  function daysLeftUntilWaitTime(state: CommonState, task: Task): number {
+    if (!task.wait) return 0;
+    return Math.ceil(differenceInCalendarDays(task.wait, state.today));
+  }
+
   const simpleBadges = (["project", "today", "stalled", "ready"] as const).flatMap((badge) =>
     taskHas(state, task, badge) ? [badge] : [],
   );
 
-  const waitingBadges = taskIs(state, task, "waitingItself") ? [{type: "waiting", text: "0d"} as const] : [];
+  const waitingBadges = taskIs(state, task, "waitingItself")
+    ? [{type: "waiting", text: `${daysLeftUntilWaitTime(state, task)}d`} as const]
+    : [];
 
   return [...simpleBadges, ...waitingBadges];
 }

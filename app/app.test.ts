@@ -2559,7 +2559,7 @@ describe("wait date", () => {
       });
     });
 
-    test.skip("the waiting task has waiting badge", () => {
+    test("the waiting task has waiting badge", () => {
       expect(tasks(example, "badges")[0]).toEqual([{type: "waiting", text: "26d"}]);
     });
 
@@ -2580,7 +2580,7 @@ describe("wait date", () => {
       setComponentValue("Wait", "2020-04-10"),
     ]);
 
-    test.skip("the ready task has only the waiting badge", () => {
+    test("the ready task has only the waiting badge", () => {
       expect(tasks(example, "badges")).toEqual([[{type: "waiting", text: "26d"}]]);
     });
 
@@ -2647,7 +2647,7 @@ describe("wait date", () => {
       });
 
       describe("after marking the parent task as waiting", () => {
-        test.skip("the children no longer have stalled or ready badges", () => {
+        test("the children no longer have stalled or ready badges", () => {
           expect(tasks(step2, "badges")).toEqual([[{type: "waiting", text: "26d"}], [], []]);
         });
 
