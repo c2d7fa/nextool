@@ -261,7 +261,7 @@ function badgeFor(id: BadgeId): {color: BadgeColor; icon: Icon; label: string} {
   }
 }
 
-function badges(state: CommonState, task: Task): BadgeId[] {
+function badges(state: CommonState, task: Task): Badge[] {
   function taskHas(state: Pick<CommonState, "tasks" | "today">, task: Task, badge: BadgeId & string): boolean {
     if (badge === "ready") return taskIs(state, task, "readyItself");
     if (badge === "stalled") return taskIs(state, task, "stalled");
@@ -272,7 +272,12 @@ function badges(state: CommonState, task: Task): BadgeId[] {
 
   function daysLeftUntilWaitTime(state: CommonState, task: Task): number {
     if (!task.wait) return 0;
-    return Math.ceil(differenceInCalendarDays(task.wait, state.today));
+    return differenceInCalendarDays(task.wait, state.today);
+  }
+
+  function daysLeftUntilDueTime(state: CommonState, task: Task): number {
+    if (!task.due) return 0;
+    return differenceInCalendarDays(task.due, state.today);
   }
 
   const simpleBadges = (["project", "today", "stalled", "ready"] as const).flatMap((badge) =>
@@ -283,7 +288,11 @@ function badges(state: CommonState, task: Task): BadgeId[] {
     ? [{type: "waiting", text: `${daysLeftUntilWaitTime(state, task)}d`} as const]
     : [];
 
-  return [...simpleBadges, ...waitingBadges];
+  const dueBadges: Badge[] = task.due
+    ? [{color: "red", icon: "due", label: `Due | ${daysLeftUntilDueTime(state, task)}d`}]
+    : [];
+
+  return [...simpleBadges.map(badgeFor), ...waitingBadges.map(badgeFor), ...dueBadges];
 }
 
 type FilterSectionId = "actions" | "tasks" | "activeProjects" | "archive";
@@ -567,7 +576,7 @@ function viewRows(state: CommonState): TaskView[] {
     indentation: task.indentation,
     done: taskIs(state, task, "done"),
     paused: taskIs(state, task, "paused") || taskIs(state, task, "waiting"),
-    badges: badges(state, task).map(badgeFor),
+    badges: badges(state, task),
     project: task.type === "project",
     today: taskIs(state, task, "today"),
     borderBelow: index < list.length - 1,

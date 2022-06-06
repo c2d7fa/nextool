@@ -2777,6 +2777,26 @@ describe("due date", () => {
       });
     });
   });
+
+  function setDue(n: number, date: string) {
+    return [openNth(n), setComponentValue("Due", date)];
+  }
+
+  describe("badges for due dates", () => {
+    describe("marking a single stalled task as due", () => {
+      const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 1")]);
+
+      const step2 = updateAll(step1, [setDue(0, "2020-03-20")]);
+
+      test("before setting due date, task only has stalled badge", () => {
+        expect(tasks(step1, "badges")).toEqual([[bStalled]]);
+      });
+
+      test("after setting due date, task also has due badge", () => {
+        expect(tasks(step2, "badges")).toEqual([[bStalled, {color: "red", label: "Due | 5d", icon: "due"}]]);
+      });
+    });
+  });
 });
 
 describe("performance", () => {

@@ -25,7 +25,8 @@ export type Icon =
   | "allTasks"
   | "archive"
   | "unfinished"
-  | "waiting";
+  | "waiting"
+  | "due";
 
 export type BadgeColor = "green" | "orange" | "project" | "red" | "grey";
 
@@ -41,6 +42,7 @@ function iconPath(icon: Icon) {
     archive: Mdi.mdiArchiveOutline,
     unfinished: Mdi.mdiMinusCircleOutline,
     waiting: Mdi.mdiCalendarClockOutline,
+    due: Mdi.mdiCalendarAlert,
   }[icon];
 }
 
