@@ -2808,6 +2808,15 @@ describe("due date", () => {
     test("have 'today' highlight in task list", () => {
       expect(tasks(step1, "today")).toEqual([true]);
     });
+
+    test("are included in the 'today' tab", () => {
+      const step2 = updateAll(step1, [switchToFilter("today")]);
+      expect(tasks(step2, "title")).toEqual(["Task 1"]);
+    });
+
+    test("are included in the 'today' count", () => {
+      expect(indicatorForFilter(step1, "Today")).toEqual({type: "text", color: "red", text: "1"});
+    });
   });
 });
 

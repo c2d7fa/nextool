@@ -175,7 +175,7 @@ type TaskProperty =
   | "archived"
   | "today"
   | "todayOrDueToday"
-  | "nonCompletedToday"
+  | "nonCompletedTodayOrDueToday"
   | "inactive"
   | "project"
   | "readyItself"
@@ -205,7 +205,8 @@ function taskIs(
     );
   if (property === "todayOrDueToday")
     return (taskIs(state, task, "today") || (task.due && isSameDay(task.due, state.today))) ?? false;
-  if (property === "nonCompletedToday") return taskIs(state, task, "today") && !taskIs(state, task, "done");
+  if (property === "nonCompletedTodayOrDueToday")
+    return taskIs(state, task, "todayOrDueToday") && !taskIs(state, task, "done");
   if (property === "inactive")
     return (
       taskIs(state, task, "paused") ||
@@ -364,7 +365,7 @@ function doesSubtaskMatchFilter(state: CommonState, task: Task): boolean {
     "done": "done",
     "paused": "paused",
     "waiting": "waiting",
-    "today": "today",
+    "today": "todayOrDueToday",
     "not-done": "not-done",
   } as const;
 
@@ -499,7 +500,7 @@ export function count(
 ): number {
   const subtaskProperty =
     filter === "today"
-      ? "nonCompletedToday"
+      ? "nonCompletedTodayOrDueToday"
       : filter === "ready"
       ? "readyItself"
       : filter === "stalled"
