@@ -2140,11 +2140,14 @@ describe("archiving tasks", () => {
 
     const step3 = updateAll(step2, [...switchToFilter("archive")]);
 
-    test("switching to the archive view shows the archived task", () => {
-      expect(tasks(step3, ["title", "indentation"])).toEqual([{title: "Task 2", indentation: 0}]);
+    test("switching to the archive view shows the archived task and its parent", () => {
+      expect(tasks(step3, ["title", "indentation", "paused"])).toEqual([
+        {title: "Task 1", indentation: 0, paused: false},
+        {title: "Task 2", indentation: 1, paused: true},
+      ]);
     });
 
-    const step4 = updateAll(step3, [dragToFilter(0, "all"), ...switchToFilter("all")]);
+    const step4 = updateAll(step3, [dragToFilter(1, "all"), ...switchToFilter("all")]);
 
     test("after unarchiving the task, it is restored to the original location in the main view", () => {
       expect(tasks(step4, ["title", "indentation"])).toEqual([
