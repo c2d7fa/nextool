@@ -420,12 +420,10 @@ function doesTaskMatch(state: CommonState, task: Task): boolean {
   if (typeof state.filter === "object") {
     if (state.filter.type === "project" && taskProject(state, task)?.id === state.filter.project.id) return true;
     else return false;
-  } else if (state.filter === "archive") {
-    return task.archived || IndentedList.anyDescendant(state.tasks, task, (t) => t.archived);
-  } else {
-    // Irrelevant tasks will be filtered out by doesSubtaskMatchFilter instead.
-    return true;
   }
+
+  // Irrelevant tasks will be filtered out by doesSubtaskMatchFilter instead.
+  return true;
 }
 
 function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
