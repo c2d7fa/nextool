@@ -590,7 +590,7 @@ function viewRows(state: CommonState): TaskView[] {
     title: task.title,
     indentation: task.indentation,
     done: taskIs(state, task, "done"),
-    paused: taskIs(state, task, "paused") || taskIs(state, task, "waiting"),
+    paused: taskIs(state, task, "paused") || taskIs(state, task, "waiting") || taskIs(state, task, "archived"),
     badges: badges(state, task),
     project: task.type === "project",
     today: taskIs(state, task, "todayOrDueToday"),
