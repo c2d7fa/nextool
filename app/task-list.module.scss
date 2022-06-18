@@ -189,6 +189,14 @@ $project-hue: shared.$project-hue;
         );
       }
     }
+
+    &.archived {
+      background: linear-gradient(
+        to right,
+        lch(95, 0, shared.$red-hue),
+        lch(99, 0, shared.$red-hue) 3em,
+      );
+    }
   }
 }
 

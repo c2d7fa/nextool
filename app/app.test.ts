@@ -2141,9 +2141,9 @@ describe("archiving tasks", () => {
     const step3 = updateAll(step2, [...switchToFilter("archive")]);
 
     test("switching to the archive view shows the archived task and its parent", () => {
-      expect(tasks(step3, ["title", "indentation", "paused"])).toEqual([
-        {title: "Task 1", indentation: 0, paused: false},
-        {title: "Task 2", indentation: 1, paused: true},
+      expect(tasks(step3, ["title", "indentation", "archived"])).toEqual([
+        {title: "Task 1", indentation: 0, archived: false},
+        {title: "Task 2", indentation: 1, archived: true},
       ]);
     });
 
@@ -2176,10 +2176,10 @@ describe("archiving tasks", () => {
     const step1 = updateAll(empty, [switchToFilter("all"), addTask("Task 1"), addTask("Task 2", 1)]);
 
     describe("before archiving tasks", () => {
-      test("the tasks are shown in the all view, unpaused", () => {
-        expect(tasks(step1, ["title", "indentation", "paused"])).toEqual([
-          {title: "Task 1", indentation: 0, paused: false},
-          {title: "Task 2", indentation: 1, paused: false},
+      test("the tasks are shown in the all view", () => {
+        expect(tasks(step1, ["title", "indentation", "archived"])).toEqual([
+          {title: "Task 1", indentation: 0, archived: false},
+          {title: "Task 2", indentation: 1, archived: false},
         ]);
       });
 
@@ -2200,9 +2200,9 @@ describe("archiving tasks", () => {
       const step2Archive = updateAll(step2, [...switchToFilter("archive")]);
 
       test("the tasks are shown in the archive view, paused", () => {
-        expect(tasks(step2Archive, ["title", "indentation", "paused"])).toEqual([
-          {title: "Task 1", indentation: 0, paused: true},
-          {title: "Task 2", indentation: 1, paused: true},
+        expect(tasks(step2Archive, ["title", "indentation", "archived"])).toEqual([
+          {title: "Task 1", indentation: 0, archived: true},
+          {title: "Task 2", indentation: 1, archived: true},
         ]);
       });
     });

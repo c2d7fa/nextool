@@ -43,6 +43,7 @@ export type TaskView = {
   indentation: number;
   done: boolean;
   paused: boolean;
+  archived: boolean;
   project: boolean;
   today: boolean;
   badges: Badge[];
@@ -586,7 +587,8 @@ function viewRows(state: CommonState): TaskView[] {
     title: task.title,
     indentation: task.indentation,
     done: taskIs(state, task, "done"),
-    paused: taskIs(state, task, "paused") || taskIs(state, task, "waiting") || taskIs(state, task, "archived"),
+    paused: taskIs(state, task, "paused") || taskIs(state, task, "waiting"),
+    archived: taskIs(state, task, "archived"),
     badges: badges(state, task),
     project: task.type === "project",
     today: taskIs(state, task, "todayOrDueToday"),

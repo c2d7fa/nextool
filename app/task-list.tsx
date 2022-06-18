@@ -81,6 +81,7 @@ const TaskRow = React.memo(
                 style.taskRow,
                 task.project ? style.project : "",
                 task.today ? style.today : "",
+                task.archived ? style.archived : "",
                 task.borderBelow ? style.borderBelow : "",
               ].join(" ")}
               onClick={() => props.send({tag: "selectEditingTask", id: task.id})}
