@@ -389,9 +389,7 @@ function isTaskIncludedInFilter(state: CommonState, task: Task): boolean {
 }
 
 export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["id"]): boolean {
-  const fullList = IndentedList.filterList(pickRootTasksIntoList(state), (task) =>
-    isTaskIncludedInFilter(state, task),
-  );
+  const fullList = filterTasksIntoList(state);
 
   function someButNotAll<T>(list: T[], predicate: (item: T) => boolean): boolean {
     return list.some((item) => predicate(item)) && !list.every((item) => predicate(item));
@@ -413,23 +411,25 @@ export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["i
   );
 }
 
-function pickRootTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
-  function isTaskValidRootInView(state: CommonState, task: Task): boolean {
-    if (typeof state.filter === "object") {
-      if (state.filter.type === "project" && taskProject(state, task)?.id === state.filter.project.id) return true;
-      else return false;
+function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
+  function pickRootTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
+    function isTaskValidRootInView(state: CommonState, task: Task): boolean {
+      if (typeof state.filter === "object") {
+        if (state.filter.type === "project" && taskProject(state, task)?.id === state.filter.project.id)
+          return true;
+        else return false;
+      }
+
+      return true;
     }
 
-    return true;
+    return IndentedList.pickIntoList(state.tasks, (task) => isTaskValidRootInView(state, task));
   }
 
-  return IndentedList.pickIntoList(state.tasks, (task) => isTaskValidRootInView(state, task));
-}
-
-function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
   const fullList = IndentedList.filterList(pickRootTasksIntoList(state), (task) =>
     isTaskIncludedInFilter(state, task),
   );
+
   return IndentedList.filterList(fullList, (task) => doesSubtaskMatchSubtaskFilter({...state, fullList}, task));
 }
 
@@ -512,7 +512,7 @@ export function count(
       ? "stalled"
       : "waiting";
 
-  return pickRootTasksIntoList({...state, filter}).filter((item) => taskIs(state, item, subtaskProperty)).length;
+  return filterTasksIntoList({...state, filter}).filter((item) => taskIs(state, item, subtaskProperty)).length;
 }
 
 type TaskListSectionOf<Row> = {title: string | null; filter: FilterId; rows: Row[]}[];
