@@ -363,7 +363,7 @@ function doesSubtaskMatchSubtaskFilter(
   return true;
 }
 
-function doesSubtaskMatchFilter(state: CommonState, task: Task): boolean {
+function isTaskIncludedInFilter(state: CommonState, task: Task): boolean {
   if (taskIs(state, task, "archived") && state.filter !== "archive") return false;
 
   const filterProperties = {
@@ -389,10 +389,7 @@ function doesSubtaskMatchFilter(state: CommonState, task: Task): boolean {
 }
 
 export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["id"]): boolean {
-  const fullList = IndentedList.filterList(
-    IndentedList.pickIntoList(state.tasks, (task) => doesTaskMatch(state, task)),
-    (task) => doesSubtaskMatchFilter(state, task),
-  );
+  const fullList = filterTasksIntoList(state);
 
   function someButNotAll<T>(list: T[], predicate: (item: T) => boolean): boolean {
     return list.some((item) => predicate(item)) && !list.every((item) => predicate(item));
@@ -414,25 +411,25 @@ export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["i
   );
 }
 
-function doesTaskMatch(state: CommonState, task: Task): boolean {
-  if (taskIs(state, task, "archived") && state.filter !== "archive") return false;
-
-  if (typeof state.filter === "object") {
-    if (state.filter.type === "project" && taskProject(state, task)?.id === state.filter.project.id) return true;
-    else return false;
-  } else if (state.filter === "archive") {
-    return task.archived || IndentedList.anyDescendant(state.tasks, task, (t) => t.archived);
-  } else {
-    // Irrelevant tasks will be filtered out by doesSubtaskMatchFilter instead.
-    return true;
-  }
-}
-
 function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
-  const fullList = IndentedList.filterList(
-    IndentedList.pickIntoList(state.tasks, (task) => doesTaskMatch(state, task)),
-    (task) => doesSubtaskMatchFilter(state, task),
+  function pickRootTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
+    function isTaskValidRootInView(state: CommonState, task: Task): boolean {
+      if (typeof state.filter === "object") {
+        if (state.filter.type === "project" && taskProject(state, task)?.id === state.filter.project.id)
+          return true;
+        else return false;
+      }
+
+      return true;
+    }
+
+    return IndentedList.pickIntoList(state.tasks, (task) => isTaskValidRootInView(state, task));
+  }
+
+  const fullList = IndentedList.filterList(pickRootTasksIntoList(state), (task) =>
+    isTaskIncludedInFilter(state, task),
   );
+
   return IndentedList.filterList(fullList, (task) => doesSubtaskMatchSubtaskFilter({...state, fullList}, task));
 }
 
@@ -515,9 +512,7 @@ export function count(
       ? "stalled"
       : "waiting";
 
-  return IndentedList.pickIntoList(state.tasks, (task) => doesTaskMatch({...state, filter}, task)).filter((item) =>
-    taskIs(state, item, subtaskProperty),
-  ).length;
+  return filterTasksIntoList({...state, filter}).filter((item) => taskIs(state, item, subtaskProperty)).length;
 }
 
 type TaskListSectionOf<Row> = {title: string | null; filter: FilterId; rows: Row[]}[];
