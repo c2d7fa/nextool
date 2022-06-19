@@ -414,17 +414,12 @@ export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["i
 
 function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
   function pickRootTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
-    function isTaskValidRootInView(state: CommonState, task: Task): boolean {
-      if (typeof state.filter === "object") {
-        if (state.filter.type === "project" && taskProject(state, task)?.id === state.filter.project.id)
-          return true;
-        else return false;
-      }
-
-      return true;
+    if (typeof state.filter === "object" && state.filter.type === "project") {
+      const project = state.filter.project;
+      return IndentedList.pickIntoList(state.tasks, (task) => taskProject(state, task)?.id === project.id);
+    } else {
+      return IndentedList.pickIntoList(state.tasks, (task) => true);
     }
-
-    return IndentedList.pickIntoList(state.tasks, (task) => isTaskValidRootInView(state, task));
   }
 
   const fullList = IndentedList.filterList(pickRootTasksIntoList(state), (task) =>
