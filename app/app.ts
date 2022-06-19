@@ -121,6 +121,8 @@ function viewSideBar(state: State & {today: Date}) {
   const activeProjects = Tasks.activeProjectList(state);
   const activeSubprojects = Tasks.activeSubprojects(state);
 
+  const counts = Tasks.counts(state);
+
   function filterView(
     filter: Tasks.FilterId,
     opts?: {counter: Ui.BadgeColor | "small"; count?: number},
@@ -131,7 +133,7 @@ function viewSideBar(state: State & {today: Date}) {
       const count =
         opts.count ??
         (filter === "ready" || filter === "stalled" || filter === "today" || filter === "waiting"
-          ? Tasks.count(state, filter)
+          ? counts[filter]
           : 0);
       if (count === 0) return null;
       return {type: "text" as const, text: count.toString(), color: opts.counter};

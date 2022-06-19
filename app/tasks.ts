@@ -500,20 +500,30 @@ export function activeSubprojects(
   }
 }
 
-export function count(
-  state: Omit<CommonState, "filter">,
-  filter: "today" | "ready" | "stalled" | "waiting",
-): number {
-  const subtaskProperty =
-    filter === "today"
-      ? "nonCompletedTodayOrDueToday"
-      : filter === "ready"
-      ? "readyItself"
-      : filter === "stalled"
-      ? "stalled"
-      : "waiting";
+export function counts(state: Omit<CommonState, "filter">): {
+  [filter in "today" | "ready" | "stalled" | "waiting"]: number;
+} {
+  const list = IndentedList.toList(IndentedList.roots(state.tasks));
 
-  return filterTasksIntoList({...state, filter}).filter((item) => taskIs(state, item, subtaskProperty)).length;
+  function countFilter(filter: "today" | "ready" | "stalled" | "waiting"): number {
+    const subtaskProperty =
+      filter === "today"
+        ? "nonCompletedTodayOrDueToday"
+        : filter === "ready"
+        ? "readyItself"
+        : filter === "stalled"
+        ? "stalled"
+        : "waiting";
+
+    return list.filter((task) => taskIs(state, task, subtaskProperty)).length;
+  }
+
+  return {
+    today: countFilter("today"),
+    ready: countFilter("ready"),
+    stalled: countFilter("stalled"),
+    waiting: countFilter("waiting"),
+  };
 }
 
 type TaskListSectionOf<Row> = {title: string | null; filter: FilterId; rows: Row[]}[];
