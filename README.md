@@ -157,6 +157,14 @@ To build a production release of the Electron application, run:
     $ npm run build-linux # or build-macos, build-windows
     $ cp dist/Nextool-*.AppImage ~/bin/nextool # or dist/Nextool-*.dmg, dist/Nextool-*.exe
 
+### Code formatting
+
+To format code, install Prettier and run `prettier -w .`. It's recommended that
+you add the following script to `.git/hooks/pre-commit`:
+
+    #!/bin/bash
+    prettier -c .
+
 ### Release new version
 
 1. Update version number in `app/package.json` and `electron/package.json`

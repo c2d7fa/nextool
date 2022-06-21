@@ -1,0 +1,13 @@
+**/.git
+**/dist
+**/node_modules
+**/.next
+**/.github
+**/*.scss
+**/*.js
+**/*.html
+**/*.json
+**/*.md
+**/*.css
+.prettierrc
+
