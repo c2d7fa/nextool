@@ -69,6 +69,14 @@ export function pickIntoList<D>(tree: Tree<D>, pick: (node: TreeNode<D>) => bool
   return toList(search(roots(tree)));
 }
 
+export function zoomIntoList<D>(tree: Tree<D>, root: null | {id: string}): IndentedList<D> {
+  function isChildOf<D>(tree: Tree<D>, child: {id: string}, parent: {id: string}): boolean {
+    return tree.parents[child.id]?.id === parent.id;
+  }
+
+  return pickIntoList(tree, (node) => (root ? isChildOf(tree, node, root) : true));
+}
+
 export function filterList<D>(
   list: IndentedList<D>,
   include: (node: IndentedListItem<D>) => boolean,

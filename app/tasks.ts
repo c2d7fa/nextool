@@ -413,19 +413,9 @@ export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["i
 }
 
 function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
-  function pickRootTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
-    if (typeof state.filter === "object" && state.filter.type === "project") {
-      const project = state.filter.project;
-      return IndentedList.pickIntoList(state.tasks, (task) => taskProject(state, task)?.id === project.id);
-    } else {
-      return IndentedList.pickIntoList(state.tasks, (task) => true);
-    }
-  }
-
-  const fullList = IndentedList.filterList(pickRootTasksIntoList(state), (task) =>
-    isTaskIncludedInFilter(state, task),
-  );
-
+  const root = typeof state.filter === "object" && state.filter.type === "project" ? state.filter.project : null;
+  const globalList = IndentedList.zoomIntoList(state.tasks, root);
+  const fullList = IndentedList.filterList(globalList, (task) => isTaskIncludedInFilter(state, task));
   return IndentedList.filterList(fullList, (task) => doesSubtaskMatchSubtaskFilter({...state, fullList}, task));
 }
 
