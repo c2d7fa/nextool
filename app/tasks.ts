@@ -392,24 +392,13 @@ function isTaskIncludedInFilter(state: CommonState, task: Task): boolean {
 export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["id"]): boolean {
   const fullList = filterTasksIntoList(state);
 
-  function someButNotAll<T>(list: T[], predicate: (item: T) => boolean): boolean {
-    return list.some((item) => predicate(item)) && !list.every((item) => predicate(item));
+  function wouldAnyMatch(filterState: "include" | "exclude"): boolean {
+    return fullList.some((t) =>
+      doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: filterState}]}, t),
+    );
   }
 
-  return (
-    someButNotAll(
-      fullList,
-      (t) =>
-        !doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "include"}]}, t) &&
-        doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "exclude"}]}, t),
-    ) ||
-    someButNotAll(
-      fullList,
-      (t) =>
-        doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "include"}]}, t) &&
-        !doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: "exclude"}]}, t),
-    )
-  );
+  return wouldAnyMatch("exclude") && wouldAnyMatch("include");
 }
 
 function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<TaskData> {
