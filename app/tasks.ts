@@ -334,20 +334,19 @@ function taskProject(state: CommonState, task: Task): null | {id: string} {
 }
 
 function doesSubtaskMatchSubtaskFilter(
-  state: Pick<CommonState, "tasks" | "today" | "subtaskFilters"> & {
+  state: Pick<CommonState, "tasks" | "today"> & {
     fullList: IndentedList.IndentedListItem<TaskData>[];
   },
   task: Task,
+  subtaskFilter: SubtaskFilter,
 ): boolean {
-  function included(filter: SubtaskFilter["id"], excludeProperty: TaskProperty, includeProperty: TaskProperty) {
-    const filterState = state.subtaskFilters.find((f) => f.id === filter)?.state ?? "neutral";
-
-    if (filterState === "include")
+  function included(filter: SubtaskFilter, excludeProperty: TaskProperty, includeProperty: TaskProperty) {
+    if (filter.state === "include")
       return IndentedList.anyDescendantInList(state.fullList, task, (subtask) =>
         taskIs(state, subtask, includeProperty),
       );
 
-    if (filterState === "exclude")
+    if (filter.state === "exclude")
       return IndentedList.anyDescendantInList(
         state.fullList,
         task,
@@ -357,11 +356,22 @@ function doesSubtaskMatchSubtaskFilter(
     return true;
   }
 
-  if (!included("done", "done", "done")) return false;
-  if (!included("paused", "paused", "paused")) return false;
-  if (!included("ready", "readySubtree", "readyTaskItself")) return false;
+  if (subtaskFilter.id === "done" && !included(subtaskFilter, "done", "done")) return false;
+  if (subtaskFilter.id === "paused" && !included(subtaskFilter, "paused", "paused")) return false;
+  if (subtaskFilter.id === "ready" && !included(subtaskFilter, "readySubtree", "readyTaskItself")) return false;
 
   return true;
+}
+
+function doesSubtaskMatchSubtaskFilters(
+  state: Pick<CommonState, "tasks" | "today" | "subtaskFilters"> & {
+    fullList: IndentedList.IndentedListItem<TaskData>[];
+  },
+  task: Task,
+): boolean {
+  return state.subtaskFilters.every((filter) => {
+    return doesSubtaskMatchSubtaskFilter(state, task, filter);
+  });
 }
 
 function isTaskIncludedInFilter(state: CommonState, task: Task): boolean {
@@ -393,9 +403,7 @@ export function isSubtaskFilterRelevant(state: CommonState, id: SubtaskFilter["i
   const fullList = filterTasksIntoList(state);
 
   function wouldAnyMatch(filterState: "include" | "exclude"): boolean {
-    return fullList.some((t) =>
-      doesSubtaskMatchSubtaskFilter({...state, fullList, subtaskFilters: [{id, state: filterState}]}, t),
-    );
+    return fullList.some((t) => doesSubtaskMatchSubtaskFilter({...state, fullList}, t, {id, state: filterState}));
   }
 
   return wouldAnyMatch("exclude") && wouldAnyMatch("include");
@@ -405,7 +413,7 @@ function filterTasksIntoList(state: CommonState): IndentedList.IndentedList<Task
   const root = typeof state.filter === "object" && state.filter.type === "project" ? state.filter.project : null;
   const globalList = IndentedList.zoomIntoList(state.tasks, root);
   const fullList = IndentedList.filterList(globalList, (task) => isTaskIncludedInFilter(state, task));
-  return IndentedList.filterList(fullList, (task) => doesSubtaskMatchSubtaskFilter({...state, fullList}, task));
+  return IndentedList.filterList(fullList, (task) => doesSubtaskMatchSubtaskFilters({...state, fullList}, task));
 }
 
 export type ActiveProjectList = {id: string; title: string; count?: number; isStalled: boolean}[];
